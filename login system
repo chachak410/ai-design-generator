@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Firebase App</title>
+</head>
+<body>
+    <h1>Welcome to My Website</h1>
+    <p>This page has Firebase connected.</p>
+    <!-- Your Firebase code goes here -->
+    <script type="module">
+        // Your Firebase code
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        const firebaseConfig = {
+            apiKey: "AIzaSyBtF_37PsX1ItQobFZkOVSMUEio2NPmdoM",
+            authDomain: "login-system-ae45f.firebaseapp.com",
+            projectId: "login-system-ae45f",
+            storageBucket: "login-system-ae45f.firebasestorage.app",
+            messagingSenderId: "178893070717",
+            appId: "1:178893070717:web:e2bc8f79ce87f85391ec14",
+            measurementId: "G-Y4H7X7DJ88"
+        };
+        const app = initializeApp(firebaseConfig);
+        export const auth = getAuth(app);
+        export const db = getFirestore(app);
+        console.log("Firebase initialized");
+    </script>
+</body>
+</html>
