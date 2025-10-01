@@ -1,3 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Design Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin:0; }
+    .modal-bg {
+      position: fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.25); z-index:1000; display:flex; align-items:center; justify-content:center;
+    }
+    .login-modal {
+      background:#fff; border-radius:10px; box-shadow:0 4px 24px #0002; padding:32px 28px; min-width:320px; max-width:90vw;
+    }
+    .login-modal h2 { text-align:center; color:#007bff; margin-bottom:18px; }
+    .login-modal label { display:block; margin-top:12px; }
+    .login-modal input { width:100%; padding:8px; margin-top:4px; border:1px solid #ccc; border-radius:4px; }
+    .login-modal button { width:100%; padding:10px; margin-top:18px; background:#007bff; color:#fff; border:none; border-radius:4px; font-size:16px; cursor:pointer; }
+    .login-modal button:hover { background:#0056b3; }
+    .login-modal .msg { color:#e74c3c; text-align:center; min-height:22px; margin-top:10px; }
+    .login-modal .switch-link { text-align:center; margin-top:12px; font-size:15px; }
+    .login-modal .switch-link a { color:#007bff; text-decoration:none; }
+    .login-modal .switch-link a:hover { text-decoration:underline; }
+  </style>
+</head>
+<body>
+  <div id="main-content" style="display:none;">
+    <!-- ...你原有的主页内容... -->
+  </div>
+  <div id="login-modal-bg" class="modal-bg" style="display:none;">
+    <div class="login-modal">
+      <h2 id="modal-title">Sign In</h2>
+      <form id="login-form">
+        <label for="login-email">Email</label>
+        <input id="login-email" type="email" required autocomplete="username">
+        <label for="login-password">Password</label>
+        <input id="login-password" type="password" required autocomplete="current-password">
+        <button type="submit">Sign In</button>
+        <div class="msg" id="login-msg"></div>
+      </form>
+      <form id="register-form" style="display:none;">
+        <label for="register-email">Email</label>
+        <input id="register-email" type="email" required autocomplete="username">
+        <label for="register-password">Password</label>
+        <input id="register-password" type="password" required autocomplete="new-password">
+        <button type="submit">Sign Up</button>
+        <div class="msg" id="register-msg"></div>
+      </form>
+      <div class="switch-link">
+        <span id="switch-to-register">Don't have an account? <a href="#" onclick="showRegister();return false;">Sign up</a></span>
+        <span id="switch-to-login" style="display:none;">Already have an account? <a href="#" onclick="showLogin();return false;">Sign in</a></span>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Your Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyBtF_37PsX1ItQobFZkOVSMUEio2NPmdoM",
+      authDomain: "login-system-ae45f.firebaseapp.com",
+      projectId: "login-system-ae45f",
+      storageBucket: "login-system-ae45f.firebasestorage.app",
+      messagingSenderId: "178893070717",
+      appId: "1:178893070717:web:e2bc8f79ce87f85391ec14",
+      measurementId: "G-Y4H7X7DJ88"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    // Modal logic
+    function showLogin() {
+      document.getElementById('login-form').style.display = '';
+      document.getElementById('register-form').style.display = 'none';
+      document.getElementById('modal-title').innerText = 'Sign In';
+      document.getElementById('switch-to-register').style.display = '';
+      document.getElementById('switch-to-login').style.display = 'none';
+      document.getElementById('login-msg').innerText = '';
+    }
+    function showRegister() {
+      document.getElementById('login-form').style.display = 'none';
+      document.getElementById('register-form').style.display = '';
+      document.getElementById('modal-title').innerText = 'Sign Up';
+      document.getElementById('switch-to-register').style.display = 'none';
+      document.getElementById('switch-to-login').style.display = '';
+      document.getElementById('register-msg').innerText = '';
+    }
+
+    // 登录表单
+    document.getElementById('login-form').onsubmit = async function(e) {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      try {
+        await auth.signInWithEmailAndPassword(email, password);
+        document.getElementById('login-msg').innerText = '';
+      } catch (err) {
+        document.getElementById('login-msg').innerText = err.message;
+        return;
+      }
+      showMain();
+    };
+    // 注册表单
+    document.getElementById('register-form').onsubmit = async function(e) {
+      e.preventDefault();
+      const email = document.getElementById('register-email').value;
+      const password = document.getElementById('register-password').value;
+      try {
+        await auth.createUserWithEmailAndPassword(email, password);
+        document.getElementById('register-msg').innerText = '';
+      } catch (err) {
+        document.getElementById('register-msg').innerText = err.message;
+        return;
+      }
+      showMain();
+    };
+
+    // 显示主页内容
+    function showMain() {
+      document.getElementById('login-modal-bg').style.display = 'none';
+      document.getElementById('main-content').style.display = '';
+    }
+
+    // 检查登录状态
+    auth.onAuthStateChanged(function(user) {
+      if (user) {
+        showMain();
+      } else {
+        document.getElementById('main-content').style.display = 'none';
+        document.getElementById('login-modal-bg').style.display = '';
+        showLogin();
+      }
+    });
+  </script>
+</body>
+</html>
 <!doctype html>
 <html>
 <head>
