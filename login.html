@@ -1,14 +1,126 @@
-<form id="login-form" autocomplete="on">
-  <input id="login-email" type="email" placeholder="Email" required />
-  <input id="login-password" type="password" placeholder="Password" required />
-  <button class="primary" type="submit">Login</button>
-  <div id="login-error" class="error"></div>
-  
-</form>
-<form id="register-form" style="display:none" autocomplete="on">
-  <input id="reg-email" type="email" placeholder="Email" required />
-  <input id="reg-password" type="password" placeholder="Password (min 6 chars)" minlength="6" required />
-  <button class="primary" type="submit">Create account</button>
-  <div class="hint">You’ll be signed in automatically after creating an account.</div>
-  <div id="register-error" class="error"></div>
-</form>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      background: linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .login-container {
+      background: #fff;
+      padding: 40px 32px 32px 32px;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px #0002;
+      width: 100%;
+      max-width: 350px;
+      box-sizing: border-box;
+    }
+    .login-container h2 {
+      text-align: center;
+      margin-bottom: 28px;
+      color: #007bff;
+      font-weight: 600;
+    }
+    .login-container label {
+      display: block;
+      margin-bottom: 6px;
+      color: #333;
+      font-size: 15px;
+    }
+    .login-container input[type="text"],
+    .login-container input[type="password"] {
+      width: 100%;
+      padding: 10px 12px;
+      margin-bottom: 18px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 15px;
+      background: #f8faff;
+      transition: border 0.2s;
+    }
+    .login-container input:focus {
+      border: 1.5px solid #007bff;
+      outline: none;
+    }
+    .login-container button {
+      width: 100%;
+      padding: 12px;
+      background: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.2s;
+    }
+    .login-container button:hover {
+      background: #0056b3;
+    }
+    .login-container .error {
+      color: #e74c3c;
+      text-align: center;
+      margin-top: 10px;
+      min-height: 22px;
+      font-size: 14px;
+    }
+    .login-container .register-link {
+      text-align: center;
+      margin-top: 18px;
+      font-size: 15px;
+    }
+    .login-container .register-link a {
+      color: #007bff;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .login-container .register-link a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h2>Sign In</h2>
+    <form id="login-form" autocomplete="on">
+      <label for="login-email">Email or Username</label>
+      <input id="login-email" type="text" placeholder="Enter your email or username" required />
+      <label for="login-password">Password</label>
+      <input id="login-password" type="password" placeholder="Enter your password" required />
+      <button type="submit">Login</button>
+      <div id="login-error" class="error"></div>
+    </form>
+    <div class="register-link">
+      Don't have an account? <a href="setup.html">Sign up</a>
+    </div>
+  </div>
+  <script>
+  document.getElementById('login-form').onsubmit = async function(e) {
+    e.preventDefault();
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const result = await res.json();
+    if (result.success) {
+      window.location.href = 'index.html';
+    } else {
+      document.getElementById('login-error').innerText = result.message || 'Login failed';
+    }
+  };
+  </script>
+</body>
+</html>
