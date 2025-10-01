@@ -37,16 +37,36 @@
         <input id="login-email" type="email" required autocomplete="username">
         <label for="login-password">Password</label>
         <input id="login-password" type="password" required autocomplete="current-password">
+        <label for="login-template">Template (optional)</label>
+        <input id="login-template" type="text" placeholder="Leave blank for now">
         <button type="submit">Sign In</button>
         <div class="msg" id="login-msg"></div>
       </form>
       <form id="register-form" style="display:none;">
-        <label for="register-email">Email</label>
-        <input id="register-email" type="email" required autocomplete="username">
-        <label for="register-password">Password</label>
-        <input id="register-password" type="password" required autocomplete="new-password">
-        <button type="submit">Sign Up</button>
-        <div class="msg" id="register-msg"></div>
+        <div id="register-step1">
+          <label for="register-email">Email</label>
+          <input id="register-email" type="email" required autocomplete="username">
+          <button type="button" id="send-code-btn">Send Code</button>
+          <div class="msg" id="register-msg-step1"></div>
+        </div>
+        <div id="register-step2" style="display:none;">
+          <label for="register-code">Verification Code</label>
+          <input id="register-code" type="text" required>
+          <button type="button" id="verify-code-btn">Verify Code</button>
+          <div class="msg" id="register-msg-step2"></div>
+        </div>
+        <div id="register-step3" style="display:none;">
+          <label for="register-password">Password</label>
+          <input id="register-password" type="password" required autocomplete="new-password">
+          <label for="register-password2">Repeat Password</label>
+          <input id="register-password2" type="password" required autocomplete="new-password">
+          <label for="register-name">Name</label>
+          <input id="register-name" type="text" required>
+          <label for="register-other">Other Info</label>
+          <input id="register-other" type="text">
+          <button type="submit">Sign Up</button>
+          <div class="msg" id="register-msg-step3"></div>
+        </div>
       </form>
       <div class="switch-link">
         <span id="switch-to-register">Don't have an account? <a href="#" onclick="showRegister();return false;">Sign up</a></span>
@@ -100,16 +120,60 @@
       }
       showMain();
     };
-    // 注册表单
+    // 注册分步逻辑
+    let registerEmail = "";
+    let emailVerificationId = null;
+    let emailVerified = false;
+
+    // 步骤1：发送验证码
+    document.getElementById('send-code-btn').onclick = async function() {
+      const email = document.getElementById('register-email').value.trim();
+      if (!email) {
+        document.getElementById('register-msg-step1').innerText = 'Please enter your email.';
+        return;
+      }
+      // 使用 Firebase 发送验证码（模拟，实际用 sendSignInLinkToEmail 或自定义云函数）
+      try {
+        // 这里只能模拟，真实邮箱验证码需用云函数或第三方服务
+        window._registerCode = Math.floor(100000 + Math.random() * 900000).toString();
+        window._registerEmail = email;
+        document.getElementById('register-msg-step1').innerText = 'Verification code sent to your email (demo: ' + window._registerCode + ')';
+        document.getElementById('register-step1').style.display = 'none';
+        document.getElementById('register-step2').style.display = '';
+      } catch (err) {
+        document.getElementById('register-msg-step1').innerText = err.message;
+      }
+    };
+
+    // 步骤2：校验验证码
+    document.getElementById('verify-code-btn').onclick = function() {
+      const code = document.getElementById('register-code').value.trim();
+      if (code === window._registerCode) {
+        document.getElementById('register-msg-step2').innerText = '';
+        document.getElementById('register-step2').style.display = 'none';
+        document.getElementById('register-step3').style.display = '';
+      } else {
+        document.getElementById('register-msg-step2').innerText = 'Incorrect code.';
+      }
+    };
+
+    // 步骤3：填写密码和信息，完成注册
     document.getElementById('register-form').onsubmit = async function(e) {
       e.preventDefault();
-      const email = document.getElementById('register-email').value;
       const password = document.getElementById('register-password').value;
+      const password2 = document.getElementById('register-password2').value;
+      const name = document.getElementById('register-name').value;
+      const other = document.getElementById('register-other').value;
+      if (password !== password2) {
+        document.getElementById('register-msg-step3').innerText = 'Passwords do not match.';
+        return;
+      }
       try {
-        await auth.createUserWithEmailAndPassword(email, password);
-        document.getElementById('register-msg').innerText = '';
+        await auth.createUserWithEmailAndPassword(window._registerEmail, password);
+        // 可选：保存 name/other 到 Firestore
+        document.getElementById('register-msg-step3').innerText = '';
       } catch (err) {
-        document.getElementById('register-msg').innerText = err.message;
+        document.getElementById('register-msg-step3').innerText = err.message;
         return;
       }
       showMain();
@@ -121,11 +185,19 @@
       document.getElementById('main-content').style.display = '';
     }
 
-    // 每次打开页面都强制登出
+    // 每次打开页面都强制登出，并重置注册表单
     auth.signOut().then(() => {
       document.getElementById('main-content').style.display = 'none';
       document.getElementById('login-modal-bg').style.display = '';
       showLogin();
+      // 注册表单重置
+      document.getElementById('register-step1').style.display = '';
+      document.getElementById('register-step2').style.display = 'none';
+      document.getElementById('register-step3').style.display = 'none';
+      document.getElementById('register-form').reset();
+      document.getElementById('register-msg-step1').innerText = '';
+      document.getElementById('register-msg-step2').innerText = '';
+      document.getElementById('register-msg-step3').innerText = '';
     });
     // 登录状态变化时
     auth.onAuthStateChanged(function(user) {
