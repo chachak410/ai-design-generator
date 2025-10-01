@@ -121,14 +121,16 @@
       document.getElementById('main-content').style.display = '';
     }
 
-    // 检查登录状态
+    // 每次打开页面都强制登出
+    auth.signOut().then(() => {
+      document.getElementById('main-content').style.display = 'none';
+      document.getElementById('login-modal-bg').style.display = '';
+      showLogin();
+    });
+    // 登录状态变化时
     auth.onAuthStateChanged(function(user) {
       if (user) {
         showMain();
-      } else {
-        document.getElementById('main-content').style.display = 'none';
-        document.getElementById('login-modal-bg').style.display = '';
-        showLogin();
       }
     });
   </script>
