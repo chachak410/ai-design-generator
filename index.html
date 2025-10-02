@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
   <style>
     body { font-family: Arial, sans-serif; margin:0; }
     .modal-bg {
@@ -42,21 +43,34 @@
         <button type="submit">Sign In</button>
         <div class="msg" id="login-msg"></div>
       </form>
-     <label for="register-email">Email</label>
-<div style="display:flex;align-items:center;gap:8px;width:100%;">
-  <input id="register-email" type="email" required autocomplete="username" style="flex:1;min-width:0;max-width:100%;box-sizing:border-box;" />
-  <button type="button" id="send-code-btn" style="white-space:nowrap;">Send Code</button>
-</div>
-<div class="msg" id="register-msg-step1"></div>
-<label for="register-code">Verification Code</label>
-<input id="register-code" type="text" required style="width:100%;box-sizing:border-box;">
-<div class="msg" id="register-msg-step2"></div>
-<label for="register-password">Password</label>
-<input id="register-password" type="password" required autocomplete="new-password" style="width:100%;box-sizing:border-box;">
-<label for="register-password2">Repeat Password</label>
-<input id="register-password2" type="password" required autocomplete="new-password" style="width:100%;box-sizing:border-box;">
-<button type="submit">Sign Up</button>
-<div class="msg" id="register-msg-step3"></div>
+      <form id="register-form" style="display:none;">
+        <div id="register-step1">
+          <label for="register-email">Email</label>
+          <div style="display:flex;align-items:center;gap:8px;width:100%;">
+            <input id="register-email" type="email" required autocomplete="username" style="flex:1;min-width:0;max-width:100%;box-sizing:border-box;" />
+            <button type="button" id="send-code-btn" style="white-space:nowrap;">Send Code</button>
+          </div>
+          <div class="msg" id="register-msg-step1"></div>
+        </div>
+        <div id="register-step2" style="display:none;">
+          <label for="register-code">Verification Code</label>
+          <input id="register-code" type="text" required style="width:100%;box-sizing:border-box;">
+          <button type="button" id="verify-code-btn">Verify Code</button>
+          <div class="msg" id="register-msg-step2"></div>
+        </div>
+        <div id="register-step3" style="display:none;">
+          <label for="register-password">Password</label>
+          <input id="register-password" type="password" required autocomplete="new-password" style="width:100%;box-sizing:border-box;">
+          <label for="register-password2">Repeat Password</label>
+          <input id="register-password2" type="password" required autocomplete="new-password" style="width:100%;box-sizing:border-box;">
+          <label for="register-name">Name</label>
+          <input id="register-name" type="text" required style="width:100%;box-sizing:border-box;">
+          <label for="register-other">Other Info</label>
+          <input id="register-other" type="text" style="width:100%;box-sizing:border-box;">
+          <button type="submit">Sign Up</button>
+          <div class="msg" id="register-msg-step3"></div>
+        </div>
+      </form>
       <div class="switch-link">
         <span id="switch-to-register">Don't have an account? <a href="#" onclick="showRegister();return false;">Sign up</a></span>
         <span id="switch-to-login" style="display:none;">Already have an account? <a href="#" onclick="showLogin();return false;">Sign in</a></span>
@@ -64,6 +78,10 @@
     </div>
   </div>
   <script>
+  // EmailJS 配置（请替换为你的实际 ID）
+  const EMAILJS_SERVICE_ID = 'your_service_id';
+  const EMAILJS_TEMPLATE_ID = 'your_template_id';
+  emailjs.init('your_user_id');
     // Your Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyBtF_37PsX1ItQobFZkOVSMUEio2NPmdoM",
