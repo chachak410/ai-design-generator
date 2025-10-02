@@ -8,153 +8,527 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; margin:0; }
-    .modal-bg {
-      position: fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.25); z-index:1000; display:flex; align-items:center; justify-content:center;
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
-    .login-modal {
-      background:#fff; border-radius:10px; box-shadow:0 4px 24px #0002; padding:32px 28px; min-width:340px; max-width:98vw; width:400px;
+    
+    body { 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    .login-modal h2 { text-align:center; color:#007bff; margin-bottom:18px; }
-    .login-modal label { display:block; margin-top:12px; }
-    .login-modal input { width:100%; padding:8px; margin-top:4px; border:1px solid #ccc; border-radius:4px; }
-    .login-modal button { width:100%; padding:10px; margin-top:18px; background:#007bff; color:#fff; border:none; border-radius:4px; font-size:16px; cursor:pointer; }
-    .login-modal button:hover { background:#0056b3; }
-    .login-modal .msg { color:#e74c3c; text-align:center; min-height:22px; margin-top:10px; }
-    .login-modal .switch-link { text-align:center; margin-top:12px; font-size:15px; }
-    .login-modal .switch-link a { color:#007bff; text-decoration:none; }
-    .login-modal .switch-link a:hover { text-decoration:underline; }
+    
+    /* Authentication Styles */
+    .auth-container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      overflow: hidden;
+      width: 100%;
+      max-width: 450px;
+      margin: 20px;
+    }
+    
+    .auth-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 40px 30px;
+      text-align: center;
+    }
+    
+    .auth-header h1 {
+      font-size: 2.2em;
+      margin-bottom: 10px;
+      font-weight: 300;
+    }
+    
+    .auth-header p {
+      opacity: 0.9;
+      font-size: 1.1em;
+    }
+    
+    .auth-content {
+      padding: 40px 30px;
+    }
+    
+    .form-group {
+      margin-bottom: 25px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #333;
+    }
+    
+    .form-group input {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid #e1e5e9;
+      border-radius: 10px;
+      font-size: 16px;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    
+    .form-group input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .btn {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .btn-secondary {
+      background: #6c757d;
+      margin-top: 10px;
+    }
+    
+    .btn-code {
+      width: auto;
+      padding: 10px 20px;
+      margin-left: 10px;
+      font-size: 14px;
+    }
+    
+    .message {
+      padding: 12px;
+      border-radius: 8px;
+      margin: 15px 0;
+      text-align: center;
+      font-weight: 500;
+    }
+    
+    .message.error {
+      background: #ffebee;
+      color: #c62828;
+      border: 1px solid #ffcdd2;
+    }
+    
+    .message.success {
+      background: #e8f5e8;
+      color: #2e7d32;
+      border: 1px solid #c8e6c9;
+    }
+    
+    .message.info {
+      background: #e3f2fd;
+      color: #1976d2;
+      border: 1px solid #bbdefb;
+    }
+    
+    .switch-link {
+      text-align: center;
+      margin-top: 25px;
+      padding-top: 25px;
+      border-top: 1px solid #e1e5e9;
+    }
+    
+    .switch-link a {
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    
+    .switch-link a:hover {
+      text-decoration: underline;
+    }
+    
+    .code-input-group {
+      display: flex;
+      align-items: center;
+    }
+    
+    .code-input-group input {
+      flex: 1;
+    }
+    
+    .hidden {
+      display: none !important;
+    }
+    
+    /* Main App Styles */
+    .main-app {
+      display: none;
+      min-height: 100vh;
+      width: 100%;
+      background: #f8f9fa;
+    }
+    
+    .main-app.show {
+      display: block;
+    }
+    
+    .app-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .app-header h1 {
+      font-size: 1.8em;
+      font-weight: 300;
+    }
+    
+    .logout-btn {
+      padding: 10px 20px;
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    .logout-btn:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    
+    .app-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 30px 20px;
+    }
+    
+    .controls {
+      background: white;
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+    }
+    
+    .row { 
+      display: flex; 
+      gap: 20px; 
+      flex-wrap: wrap; 
+      margin-bottom: 25px; 
+      align-items: end;
+    }
+    
+    .row > * {
+      flex: 1;
+      min-width: 200px;
+    }
+    
+    .controls textarea, .controls input, .controls select, .controls button { 
+      padding: 12px; 
+      font-size: 14px; 
+      border: 2px solid #e1e5e9;
+      border-radius: 8px;
+      transition: border-color 0.3s;
+    }
+    
+    .controls textarea:focus, .controls input:focus, .controls select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    .controls textarea { 
+      width: 100%; 
+      height: 120px; 
+      resize: vertical;
+      font-family: inherit;
+    }
+    
+    .controls label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #333;
+    }
+    
+    .generate-btn {
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      font-size: 16px;
+      font-weight: 500;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .generate-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(17, 153, 142, 0.4);
+    }
+    
+    .generate-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+      gap: 20px; 
+    }
+    
+    .card { 
+      background: white;
+      border-radius: 12px; 
+      padding: 15px; 
+      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+    
+    .card img { 
+      width: 100%; 
+      height: auto; 
+      display: block; 
+      border-radius: 8px; 
+      margin-bottom: 10px;
+    }
+    
+    .badge { 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+      color: white;
+      padding: 5px 12px; 
+      border-radius: 20px; 
+      font-size: 12px; 
+      font-weight: 500;
+      display: inline-block;
+      margin-bottom: 10px;
+    }
+    
+    #status { 
+      margin: 15px 0; 
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: 500;
+    }
+    
+    .status-working {
+      background: #e3f2fd;
+      color: #1976d2;
+      border: 1px solid #bbdefb;
+    }
+    
+    .status-success {
+      background: #e8f5e8;
+      color: #2e7d32;
+      border: 1px solid #c8e6c9;
+    }
+    
+    .status-error {
+      background: #ffebee;
+      color: #c62828;
+      border: 1px solid #ffcdd2;
+    }
+    
+    @media (max-width: 768px) {
+      .row {
+        flex-direction: column;
+      }
+      
+      .row > * {
+        min-width: unset;
+      }
+      
+      .app-header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+      }
+      
+      .controls {
+        padding: 20px;
+      }
+      
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
-  <div id="main-content">
-    <h1>AI Design Generator</h1>
-    <div class="controls">
-      <div class="row">
-        <textarea id="prompt" placeholder="Describe your design (e.g., 'Minimalist product hero shot, studio lighting, soft shadows, high detail')"></textarea>
-      </div>
-      <div class="row">
-        <label>Provider:
-          <select id="provider">
-            <option value="auto" selected>Auto (Horde -> Pollinations)</option>
-            <option value="pollinations">Pollinations only</option>
-            <option value="stable_horde">Stable Horde only</option>
-            <option value="one_each">One from each</option>
-          </select>
-        </label>
-        <label>Count:
-          <input id="count" type="number" min="1" max="8" value="3"/>
-        </label>
-        <label>Aspect ratio:
-          <select id="aspect">
-            <option>1:1</option>
-            <option selected>3:4</option>
-            <option>4:3</option>
-            <option>9:16</option>
-            <option>16:9</option>
-          </select>
-        </label>
-        <label>Seed (optional):
-          <input id="seed" type="number" placeholder="e.g. 12345"/>
-        </label>
-      </div>
-      <div class="row">
-        <label>Horde API key (optional):
-          <input id="hordeKey" type="text" placeholder="leave empty for anonymous"/>
-        </label>
-        <label>Horde Proxy URL (optional):
-          <input id="hordeProxy" type="text" placeholder="https://your-worker.workers.dev"/>
-        </label>
-        <button id="go">Generate</button>
-      </div>
-      <div id="status" class="hint"></div>
+  <!-- Authentication Container -->
+  <div id="auth-container" class="auth-container">
+    <div class="auth-header">
+      <h1>🎨 AI Design Generator</h1>
+      <p>Create stunning images with AI</p>
     </div>
-    <div id="results" class="grid"></div>
-    <style>
-      .row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
-      textarea, input, select, button { padding: 8px; font-size: 14px; }
-      textarea { width: 100%; height: 140px; }
-      .controls { max-width: 900px; }
-      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
-      .card { border: 1px solid #ddd; border-radius: 8px; padding: 8px; }
-      .card img { width: 100%; height: auto; display: block; border-radius: 4px; }
-      .hint { color: #666; font-size: 12px; }
-      .badge { background:#eee; padding:2px 6px; border-radius: 4px; font-size: 12px; }
-      #status { margin: 8px 0; }
-    </style>
-  </div>
-  <div id="login-modal-bg" class="modal-bg" style="display:none;">
-    <div class="login-modal">
-      <h2 id="modal-title">Sign In</h2>
+    
+    <div class="auth-content">
+      <!-- Login Form -->
       <form id="login-form">
-        <label for="login-email">Email</label>
-        <input id="login-email" type="email" required autocomplete="username" style="width:100%;box-sizing:border-box;">
-        <label for="login-password">Password</label>
-        <input id="login-password" type="password" required autocomplete="current-password" style="width:100%;box-sizing:border-box;">
-        <label for="login-template">Template (optional)</label>
-        <input id="login-template" type="text" placeholder="Leave blank for now" style="width:100%;box-sizing:border-box;">
-        <button type="submit">Sign In</button>
-        <div class="msg" id="login-msg"></div>
+        <div class="form-group">
+          <label for="login-email">Email Address</label>
+          <input id="login-email" type="email" required autocomplete="username" placeholder="Enter your email">
+        </div>
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <input id="login-password" type="password" required autocomplete="current-password" placeholder="Enter your password">
+        </div>
+        <button type="submit" class="btn">Sign In</button>
+        <div id="login-msg" class="message" style="display: none;"></div>
       </form>
-      <form id="register-form" style="display:none;">
+      
+      <!-- Registration Form -->
+      <form id="register-form" class="hidden">
+        <!-- Step 1: Email -->
         <div id="register-step1">
-          <label for="register-email">Email</label>
-          <div style="display:flex;align-items:center;gap:8px;width:100%;">
-            <input id="register-email" type="email" required autocomplete="username" style="flex:1;min-width:120px;max-width:100%;box-sizing:border-box;" />
-            <button type="button" id="send-code-btn" style="white-space:nowrap;min-width:90px;">Send Code</button>
+          <div class="form-group">
+            <label for="register-email">Email Address</label>
+            <div class="code-input-group">
+              <input id="register-email" type="email" required autocomplete="username" placeholder="Enter your email">
+              <button type="button" id="send-code-btn" class="btn btn-code">Send Code</button>
+            </div>
           </div>
-          <div class="msg" id="register-msg-step1"></div>
+          <div id="register-msg-step1" class="message" style="display: none;"></div>
         </div>
-        <div id="register-step2" style="display:none;">
-          <label for="register-code">Verification Code</label>
-          <input id="register-code" type="text" required style="width:100%;box-sizing:border-box;">
-          <div style="display:flex;gap:8px;margin-top:10px;">
-            <button type="button" id="verify-code-btn" style="flex:1;">Verify Code</button>
-            <button type="button" id="back-to-step1" style="flex:1;background:#ccc;color:#333;">Back</button>
+        
+        <!-- Step 2: Verification -->
+        <div id="register-step2" class="hidden">
+          <div class="form-group">
+            <label for="register-code">Verification Code</label>
+            <input id="register-code" type="text" required placeholder="Enter 6-digit code">
           </div>
-          <div class="msg" id="register-msg-step2"></div>
+          <button type="button" id="verify-code-btn" class="btn">Verify Code</button>
+          <button type="button" id="back-to-step1" class="btn btn-secondary">Back</button>
+          <div id="register-msg-step2" class="message" style="display: none;"></div>
         </div>
-        <div id="register-step3" style="display:none;">
-          <label for="register-password">Password</label>
-          <input id="register-password" type="password" required autocomplete="new-password" style="width:100%;box-sizing:border-box;">
-          <label for="register-password2">Repeat Password</label>
-          <input id="register-password2" type="password" required autocomplete="new-password" style="width:100%;box-sizing:border-box;">
-          <label for="register-name">Name</label>
-          <input id="register-name" type="text" required style="width:100%;box-sizing:border-box;">
-          <label for="register-other">Other Info</label>
-          <input id="register-other" type="text" style="width:100%;box-sizing:border-box;">
-          <div style="display:flex;gap:8px;margin-top:10px;">
-            <button type="submit" style="flex:1;">Sign Up</button>
-            <button type="button" id="back-to-step2" style="flex:1;background:#ccc;color:#333;">Back</button>
+        
+        <!-- Step 3: Complete Registration -->
+        <div id="register-step3" class="hidden">
+          <div class="form-group">
+            <label for="register-password">Password</label>
+            <input id="register-password" type="password" required autocomplete="new-password" placeholder="Create a password">
           </div>
-          <div class="msg" id="register-msg-step3"></div>
+          <div class="form-group">
+            <label for="register-password2">Confirm Password</label>
+            <input id="register-password2" type="password" required autocomplete="new-password" placeholder="Confirm your password">
+          </div>
+          <div class="form-group">
+            <label for="register-name">Full Name</label>
+            <input id="register-name" type="text" required placeholder="Enter your full name">
+          </div>
+          <button type="submit" class="btn">Create Account</button>
+          <button type="button" id="back-to-step2" class="btn btn-secondary">Back</button>
+          <div id="register-msg-step3" class="message" style="display: none;"></div>
         </div>
       </form>
+      
       <div class="switch-link">
-        <span id="switch-to-register">Don't have an account? <a href="#" onclick="showRegister();return false;">Sign up</a></span>
-        <span id="switch-to-login" style="display:none;">Already have an account? <a href="#" onclick="showLogin();return false;">Sign in</a></span>
+        <span id="switch-to-register">Don't have an account? <a href="#" onclick="showRegister(); return false;">Sign up</a></span>
+        <span id="switch-to-login" class="hidden">Already have an account? <a href="#" onclick="showLogin(); return false;">Sign in</a></span>
       </div>
     </div>
   </div>
+
+  <!-- Main Application -->
+  <div id="main-app" class="main-app">
+    <div class="app-header">
+      <h1>🎨 AI Design Generator</h1>
+      <button id="logout-btn" class="logout-btn">Logout</button>
+    </div>
+    
+    <div class="app-content">
+      <div class="controls">
+        <div class="row">
+          <div style="flex: 2;">
+            <label for="prompt">Describe your design</label>
+            <textarea id="prompt" placeholder="e.g., 'Minimalist product hero shot, studio lighting, soft shadows, high detail'"></textarea>
+          </div>
+        </div>
+        
+        <div class="row">
+          <div>
+            <label for="provider">AI Provider</label>
+            <select id="provider">
+              <option value="auto" selected>🚀 Auto (Best Quality)</option>
+              <option value="pollinations">🌸 Pollinations (Fast)</option>
+              <option value="stable_horde">🎯 Stable Horde (High Quality)</option>
+              <option value="one_each">🔄 One from Each</option>
+            </select>
+          </div>
+          <div>
+            <label for="count">Image Count</label>
+            <input id="count" type="number" min="1" max="8" value="3"/>
+          </div>
+          <div>
+            <label for="aspect">Aspect Ratio</label>
+            <select id="aspect">
+              <option>1:1</option>
+              <option selected>3:4</option>
+              <option>4:3</option>
+              <option>9:16</option>
+              <option>16:9</option>
+            </select>
+          </div>
+          <div>
+            <label for="seed">Seed (Optional)</label>
+            <input id="seed" type="number" placeholder="e.g. 12345"/>
+          </div>
+        </div>
+        
+        <div class="row">
+          <div>
+            <label for="hordeKey">Horde API Key (Optional)</label>
+            <input id="hordeKey" type="text" placeholder="Leave empty for anonymous"/>
+          </div>
+          <div>
+            <label for="hordeProxy">Horde Proxy URL (Optional)</label>
+            <input id="hordeProxy" type="text" placeholder="https://your-worker.workers.dev"/>
+          </div>
+          <div style="display: flex; align-items: end;">
+            <button id="go" class="generate-btn">✨ Generate Images</button>
+          </div>
+        </div>
+        
+        <div id="status"></div>
+      </div>
+      
+      <div id="results" class="grid"></div>
+    </div>
+  </div>
+
   <script>
-    // 注册流程返回按钮逻辑
-    document.addEventListener('DOMContentLoaded', function() {
-      const back1 = document.getElementById('back-to-step1');
-      if (back1) back1.onclick = function() {
-        document.getElementById('register-step2').style.display = 'none';
-        document.getElementById('register-step1').style.display = '';
-      };
-      const back2 = document.getElementById('back-to-step2');
-      if (back2) back2.onclick = function() {
-        document.getElementById('register-step3').style.display = 'none';
-        document.getElementById('register-step2').style.display = '';
-      };
-    });
-  // EmailJS 配置（请替换为你的实际 ID）
-  const EMAILJS_SERVICE_ID = 'service_ghvr7ui';
-  const EMAILJS_TEMPLATE_ID = 'template_x4lt4dk';
-  emailjs.init('gtluK1AW_Y5bE9mVp');
-    // Your Firebase config
+    // EmailJS Configuration
+    const EMAILJS_SERVICE_ID = 'service_ghvr7ui';
+    const EMAILJS_TEMPLATE_ID = 'template_x4lt4dk';
+    emailjs.init('gtluK1AW_Y5bE9mVp');
+
+    // Firebase Configuration
     const firebaseConfig = {
       apiKey: "AIzaSyBtF_37PsX1ItQobFZkOVSMUEio2NPmdoM",
       authDomain: "login-system-ae45f.firebaseapp.com",
@@ -167,116 +541,209 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
 
-    // Modal logic
-    function showLogin() {
-      document.getElementById('login-form').style.display = '';
-      document.getElementById('register-form').style.display = 'none';
-      document.getElementById('modal-title').innerText = 'Sign In';
-      document.getElementById('switch-to-register').style.display = '';
-      document.getElementById('switch-to-login').style.display = 'none';
-      document.getElementById('login-msg').innerText = '';
-    }
-    function showRegister() {
-      document.getElementById('login-form').style.display = 'none';
-      document.getElementById('register-form').style.display = '';
-      document.getElementById('modal-title').innerText = 'Sign Up';
-      document.getElementById('switch-to-register').style.display = 'none';
-      document.getElementById('switch-to-login').style.display = '';
-      document.getElementById('register-msg').innerText = '';
+    // Global state
+    let currentUser = null;
+
+    // UI Helper Functions
+    function showElement(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('hidden');
     }
 
-    // 显示主页内容
-    function showMain() {
-      document.getElementById('login-modal-bg').style.display = 'none';
+    function hideElement(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('hidden');
     }
-    // 每次打开页面只弹出登录弹窗，不隐藏主页
-    auth.signOut().then(() => {
-      document.getElementById('login-modal-bg').style.display = '';
-      showLogin();
-      // 注册表单重置
-      document.getElementById('register-step1').style.display = '';
-      document.getElementById('register-step2').style.display = 'none';
-      document.getElementById('register-step3').style.display = 'none';
+
+    function showMessage(id, message, type = 'info') {
+      const el = document.getElementById(id);
+      if (el) {
+        el.textContent = message;
+        el.className = `message ${type}`;
+        el.style.display = 'block';
+      }
+    }
+
+    function hideMessage(id) {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    }
+
+    function showLogin() {
+      showElement('login-form');
+      hideElement('register-form');
+      showElement('switch-to-register');
+      hideElement('switch-to-login');
+      hideMessage('login-msg');
+    }
+
+    function showRegister() {
+      hideElement('login-form');
+      showElement('register-form');
+      hideElement('switch-to-register');
+      showElement('switch-to-login');
+      // Reset registration form
+      showElement('register-step1');
+      hideElement('register-step2');
+      hideElement('register-step3');
       document.getElementById('register-form').reset();
-      document.getElementById('register-msg-step1').innerText = '';
-      document.getElementById('register-msg-step2').innerText = '';
-      document.getElementById('register-msg-step3').innerText = '';
-    });
-    // Step 1: Send verification code to email using EmailJS
-    document.getElementById('send-code-btn').onclick = async function() {
+      hideMessage('register-msg-step1');
+      hideMessage('register-msg-step2');
+      hideMessage('register-msg-step3');
+    }
+
+    function showMainApp() {
+      document.getElementById('auth-container').style.display = 'none';
+      document.getElementById('main-app').classList.add('show');
+    }
+
+    function showAuth() {
+      document.getElementById('auth-container').style.display = 'block';
+      document.getElementById('main-app').classList.remove('show');
+      showLogin();
+    }
+
+    // Authentication Functions
+    async function handleLogin(email, password) {
+      try {
+        showMessage('login-msg', 'Signing in...', 'info');
+        const result = await auth.signInWithEmailAndPassword(email, password);
+        currentUser = result.user;
+        hideMessage('login-msg');
+        showMainApp();
+      } catch (err) {
+        showMessage('login-msg', err.message, 'error');
+      }
+    }
+
+    function handleLogout() {
+      auth.signOut().then(() => {
+        currentUser = null;
+        showAuth();
+      });
+    }
+
+    // Registration Functions
+    async function sendVerificationCode() {
       const email = document.getElementById('register-email').value.trim();
       if (!email) {
-        document.getElementById('register-msg-step1').innerText = 'Please enter your email.';
+        showMessage('register-msg-step1', 'Please enter your email address.', 'error');
         return;
       }
-      // Generate a 6-digit code
+      
       window._registerCode = Math.floor(100000 + Math.random() * 900000).toString();
       window._registerEmail = email;
-      // Send code via EmailJS
+      
       try {
+        showMessage('register-msg-step1', 'Sending verification code...', 'info');
         await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
           email: email,
           code: window._registerCode
         });
-        document.getElementById('register-msg-step1').innerText = 'Verification code sent to your email.';
-        document.getElementById('register-step1').style.display = 'none';
-        document.getElementById('register-step2').style.display = '';
+        showMessage('register-msg-step1', 'Verification code sent to your email!', 'success');
+        hideElement('register-step1');
+        showElement('register-step2');
       } catch (err) {
-        document.getElementById('register-msg-step1').innerText = 'Failed to send email: ' + (err.text || err.message);
+        showMessage('register-msg-step1', 'Failed to send email: ' + (err.text || err.message), 'error');
       }
-    };
+    }
 
-    // 步骤2：校验验证码
-    document.getElementById('verify-code-btn').onclick = function() {
+    function verifyCode() {
       const code = document.getElementById('register-code').value.trim();
       if (code === window._registerCode) {
-        document.getElementById('register-msg-step2').innerText = '';
-        document.getElementById('register-step2').style.display = 'none';
-        document.getElementById('register-step3').style.display = '';
+        hideMessage('register-msg-step2');
+        hideElement('register-step2');
+        showElement('register-step3');
       } else {
-        document.getElementById('register-msg-step2').innerText = 'Incorrect code.';
+        showMessage('register-msg-step2', 'Incorrect verification code.', 'error');
       }
-    };
+    }
 
-    // 步骤3：填写密码和信息，完成注册
-    document.getElementById('register-form').onsubmit = async function(e) {
-      e.preventDefault();
+    async function completeRegistration() {
       const password = document.getElementById('register-password').value;
       const password2 = document.getElementById('register-password2').value;
       const name = document.getElementById('register-name').value;
-      const other = document.getElementById('register-other').value;
+      
       if (password !== password2) {
-        document.getElementById('register-msg-step3').innerText = 'Passwords do not match.';
+        showMessage('register-msg-step3', 'Passwords do not match.', 'error');
         return;
       }
+      
+      if (password.length < 6) {
+        showMessage('register-msg-step3', 'Password must be at least 6 characters.', 'error');
+        return;
+      }
+      
       try {
-        await auth.createUserWithEmailAndPassword(window._registerEmail, password);
-        // 可选：保存 name/other 到 Firestore
-        document.getElementById('register-msg-step3').innerText = '';
+        showMessage('register-msg-step3', 'Creating your account...', 'info');
+        const result = await auth.createUserWithEmailAndPassword(window._registerEmail, password);
+        currentUser = result.user;
+        showMessage('register-msg-step3', 'Account created successfully!', 'success');
+        setTimeout(() => showMainApp(), 1000);
       } catch (err) {
-        document.getElementById('register-msg-step3').innerText = err.message;
-        return;
+        showMessage('register-msg-step3', err.message, 'error');
       }
-  showMain();
-    };
-
-    // 显示主页内容
-    function showMain() {
-      document.getElementById('login-modal-bg').style.display = 'none';
-      // 注册成功后自动滚动到主页顶部
-      window.scrollTo({top:0,behavior:'smooth'});
     }
-    // 产图功能脚本
+
+    // Event Listeners
+    document.addEventListener('DOMContentLoaded', function() {
+      // Login form
+      document.getElementById('login-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+        handleLogin(email, password);
+      });
+
+      // Registration events
+      document.getElementById('send-code-btn').addEventListener('click', sendVerificationCode);
+      document.getElementById('verify-code-btn').addEventListener('click', verifyCode);
+      
+      document.getElementById('register-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        completeRegistration();
+      });
+
+      // Navigation buttons
+      document.getElementById('back-to-step1').addEventListener('click', function() {
+        hideElement('register-step2');
+        showElement('register-step1');
+      });
+
+      document.getElementById('back-to-step2').addEventListener('click', function() {
+        hideElement('register-step3');
+        showElement('register-step2');
+      });
+
+      // Logout
+      document.getElementById('logout-btn').addEventListener('click', handleLogout);
+
+      // Generate button
+      document.getElementById('go').addEventListener('click', generate);
+
+      // Initialize
+      showAuth();
+    });
+
+    // AI Generation Functions (same as before)
     function aspectToSize(ar) {
-      const map = { "1:1": [768,768], "3:4": [768,1024], "4:3": [1024,768], "9:16": [768,1365], "16:9": [1365,768] };
+      const map = { 
+        "1:1": [768,768], 
+        "3:4": [768,1024], 
+        "4:3": [1024,768], 
+        "9:16": [768,1365], 
+        "16:9": [1365,768] 
+      };
       return map[ar] || [768,1024];
     }
+
     function pollinationsUrls(prompt, count, width, height, seed) {
       const quoted = encodeURIComponent(prompt);
       const base = `https://image.pollinations.ai/prompt/${quoted}?width=${width}&height=${height}&n=1`;
       const startSeed = Number.isInteger(seed) ? seed : Date.now();
       return Array.from({length: count}, (_, i) => `${base}&seed=${startSeed + i}`);
     }
+
     async function hordeSubmit(prompt, width, height, seed, apiKey, proxyBase) {
       const payload = {
         prompt,
@@ -309,6 +776,7 @@
       if (!j.id) throw new Error("No job id from Horde");
       return j.id;
     }
+
     async function hordePoll(id, apiKey, proxyBase, timeoutMs = 240000, pollMs = 4000) {
       const start = Date.now();
       const base = proxyBase || "https://stablehorde.net/api/v2";
@@ -324,21 +792,40 @@
       }
       throw new Error("Horde timed out");
     }
+
+    function updateStatus(message, type = '') {
+      const statusEl = document.getElementById("status");
+      statusEl.textContent = message;
+      statusEl.className = type ? `status-${type}` : '';
+    }
+
     function render(items) {
       const container = document.getElementById("results");
       container.innerHTML = "";
+      
+      if (items.length === 0) {
+        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;">No images generated</div>';
+        return;
+      }
+      
       items.forEach((it, idx) => {
         const card = document.createElement("div");
         card.className = "card";
         const src = it.url || (it.b64 ? ("data:image/png;base64," + it.b64) : "");
         card.innerHTML = `
           <div class="badge">${it.provider || "unknown"}</div>
-          ${src ? `<img src="${src}" alt="img-${idx}"/>` : "<div>No image</div>"}
+          ${src ? `<img src="${src}" alt="Generated image ${idx + 1}" loading="lazy"/>` : "<div>❌ Failed to generate</div>"}
         `;
         container.appendChild(card);
       });
     }
+
     async function generate() {
+      if (!currentUser) {
+        updateStatus("⚠️ Please sign in first.", "error");
+        return;
+      }
+
       const prompt = document.getElementById("prompt").value.trim();
       const count = parseInt(document.getElementById("count").value || "1", 10);
       const aspect = document.getElementById("aspect").value;
@@ -347,23 +834,31 @@
       const provider = document.getElementById("provider").value;
       const hordeKey = document.getElementById("hordeKey").value.trim() || null;
       const proxy = document.getElementById("hordeProxy").value.trim() || null;
+      
       if (!prompt) {
-        document.getElementById("status").textContent = "Please enter a prompt.";
+        updateStatus("⚠️ Please enter a prompt to generate images.", "error");
         return;
       }
+      
       const [w, h] = aspectToSize(aspect);
-      document.getElementById("status").textContent = "Working...";
+      updateStatus("🎨 Generating your images... This may take a moment.", "working");
       document.getElementById("go").disabled = true;
+      
       try {
         let items = [];
+        
         if (provider === "pollinations") {
           items = pollinationsUrls(prompt, count, w, h, seed).map(u => ({ provider: "pollinations", url: u }));
         } else if (provider === "stable_horde") {
           for (let i = 0; i < count; i++) {
-            const id = await hordeSubmit(prompt, w, h, Number.isInteger(seed) ? seed + i : null, hordeKey, proxy);
-            const status = await hordePoll(id, hordeKey, proxy);
-            const gen = status.generations.find(g => g.img);
-            if (gen && gen.img) items.push({ provider: "stable_horde", b64: gen.img });
+            try {
+              const id = await hordeSubmit(prompt, w, h, Number.isInteger(seed) ? seed + i : null, hordeKey, proxy);
+              const status = await hordePoll(id, hordeKey, proxy);
+              const gen = status.generations.find(g => g.img);
+              if (gen && gen.img) items.push({ provider: "stable_horde", b64: gen.img });
+            } catch (e) {
+              console.warn(`Horde generation ${i + 1} failed:`, e);
+            }
           }
         } else if (provider === "one_each") {
           try {
@@ -374,23 +869,30 @@
           } catch (e) {
             console.warn("Horde failed:", e);
           }
+          
           items.push({ provider: "pollinations", url: pollinationsUrls(prompt, 1, w, h, seed)[0] });
+          
           while (items.length < count) {
             const s = Number.isInteger(seed) ? seed + items.length : null;
             items.push({ provider: "pollinations", url: pollinationsUrls(prompt, 1, w, h, s)[0] });
           }
         } else {
-          // Auto: try Horde then fallback to Pollinations
           try {
             for (let i = 0; i < count; i++) {
-              const id = await hordeSubmit(prompt, w, h, Number.isInteger(seed) ? seed + i : null, hordeKey, proxy);
-              const status = await hordePoll(id, hordeKey, proxy);
-              const gen = status.generations.find(g => g.img);
-              if (gen && gen.img) items.push({ provider: "stable_horde", b64: gen.img });
+              try {
+                const id = await hordeSubmit(prompt, w, h, Number.isInteger(seed) ? seed + i : null, hordeKey, proxy);
+                const status = await hordePoll(id, hordeKey, proxy);
+                const gen = status.generations.find(g => g.img);
+                if (gen && gen.img) items.push({ provider: "stable_horde", b64: gen.img });
+              } catch (e) {
+                console.warn(`Horde generation ${i + 1} failed, will use Pollinations:`, e);
+                break;
+              }
             }
           } catch (e) {
             console.warn("Horde failed, using Pollinations:", e);
           }
+          
           if (items.length < count) {
             const needed = count - items.length;
             const start = Number.isInteger(seed) ? seed + items.length : null;
@@ -398,43 +900,16 @@
             items.push(...urls.map(u => ({ provider: "pollinations", url: u })));
           }
         }
+        
         render(items);
-        document.getElementById("status").textContent = `Done. Returned ${items.length} image(s).`;
+        updateStatus(`✅ Generated ${items.length} image${items.length !== 1 ? 's' : ''} successfully!`, "success");
       } catch (e) {
         console.error(e);
-        document.getElementById("status").textContent = "Error: " + (e.message || e);
+        updateStatus(`❌ Error: ${e.message || e}`, "error");
       } finally {
         document.getElementById("go").disabled = false;
       }
     }
-    document.getElementById("go").onclick = generate;
-
-    // 每次打开页面都强制登出，并重置注册表单
-    auth.signOut().then(() => {
-      document.getElementById('main-content').style.display = 'none';
-      document.getElementById('login-modal-bg').style.display = '';
-      showLogin();
-      // 注册表单重置
-      document.getElementById('register-step1').style.display = '';
-      document.getElementById('register-step2').style.display = 'none';
-      document.getElementById('register-step3').style.display = 'none';
-      document.getElementById('register-form').reset();
-      document.getElementById('register-msg-step1').innerText = '';
-      document.getElementById('register-msg-step2').innerText = '';
-      document.getElementById('register-msg-step3').innerText = '';
-    });
-    // 登录状态变化时
-    auth.onAuthStateChanged(function(user) {
-      if (user) {
-        showMain();
-      }
-    });
-
-  // ...existing code...
-  </script>
-</body>
-</
-  // ...existing code...
   </script>
 </body>
 </html>
