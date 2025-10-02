@@ -27,7 +27,7 @@
   </style>
 </head>
 <body>
-  <div id="main-content" style="display:none;">
+  <div id="main-content">
     <h1>AI Design Generator</h1>
     <p>欢迎使用！登录后可使用全部功能。</p>
     <!-- 你可以在这里添加主页内容 -->
@@ -134,25 +134,23 @@
       document.getElementById('register-msg').innerText = '';
     }
 
-    // 登录表单
-    document.getElementById('login-form').onsubmit = async function(e) {
-      e.preventDefault();
-      const email = document.getElementById('login-email').value;
-      const password = document.getElementById('login-password').value;
-      try {
-        await auth.signInWithEmailAndPassword(email, password);
-        document.getElementById('login-msg').innerText = '';
-      } catch (err) {
-        document.getElementById('login-msg').innerText = err.message;
-        return;
-      }
-      showMain();
-    };
-    // 注册分步逻辑
-    let registerEmail = "";
-    let emailVerificationId = null;
-    let emailVerified = false;
-
+    // 显示主页内容
+    function showMain() {
+      document.getElementById('login-modal-bg').style.display = 'none';
+    }
+    // 每次打开页面只弹出登录弹窗，不隐藏主页
+    auth.signOut().then(() => {
+      document.getElementById('login-modal-bg').style.display = '';
+      showLogin();
+      // 注册表单重置
+      document.getElementById('register-step1').style.display = '';
+      document.getElementById('register-step2').style.display = 'none';
+      document.getElementById('register-step3').style.display = 'none';
+      document.getElementById('register-form').reset();
+      document.getElementById('register-msg-step1').innerText = '';
+      document.getElementById('register-msg-step2').innerText = '';
+      document.getElementById('register-msg-step3').innerText = '';
+    });
     // Step 1: Send verification code to email using EmailJS
     document.getElementById('send-code-btn').onclick = async function() {
       const email = document.getElementById('register-email').value.trim();
