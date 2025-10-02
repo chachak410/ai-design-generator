@@ -34,42 +34,32 @@
       <h2 id="modal-title">Sign In</h2>
       <form id="login-form">
         <label for="login-email">Email</label>
-        <input id="login-email" type="email" required autocomplete="username">
+        <input id="login-email" type="email" required autocomplete="username" style="width:100%;box-sizing:border-box;">
         <label for="login-password">Password</label>
-        <input id="login-password" type="password" required autocomplete="current-password">
+        <input id="login-password" type="password" required autocomplete="current-password" style="width:100%;box-sizing:border-box;">
         <label for="login-template">Template (optional)</label>
-        <input id="login-template" type="text" placeholder="Leave blank for now">
+        <input id="login-template" type="text" placeholder="Leave blank for now" style="width:100%;box-sizing:border-box;">
         <button type="submit">Sign In</button>
         <div class="msg" id="login-msg"></div>
       </form>
       <form id="register-form" style="display:none;">
         <div id="register-step1">
           <label for="register-email">Email</label>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <input id="register-email" type="email" required autocomplete="username" style="flex:1;">
+          <div style="display:flex;align-items:center;gap:8px;width:100%;">
+            <input id="register-email" type="email" required autocomplete="username" style="flex:1;min-width:0;max-width:100%;box-sizing:border-box;">
             <button type="button" id="send-code-btn" style="white-space:nowrap;">Send Code</button>
           </div>
           <div class="msg" id="register-msg-step1"></div>
         </div>
   <!-- EmailJS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
-  // EmailJS config (replace with your own IDs)
-  // See: https://dashboard.emailjs.com/admin/account
-    // EmailJS config (replace with your own IDs)
-    // public key: gtluK1AW_Y5bE9mVp
-    // service id: service_ghvr7ui
-    // template id: template_codeverify (create this in EmailJS, see below)
+  <script>
+    // EmailJS config
     const EMAILJS_USER_ID = 'gtluK1AW_Y5bE9mVp';
     const EMAILJS_SERVICE_ID = 'service_ghvr7ui';
-  const EMAILJS_TEMPLATE_ID = 'template_x4lt4dk';
-    // Initialize EmailJS
+    const EMAILJS_TEMPLATE_ID = 'template_x4lt4dk';
     emailjs.init(EMAILJS_USER_ID);
-    /*
-      EmailJS template (template_codeverify) example:
-      Subject: Your verification code
-      Content: Hello, your verification code is: {{code}}
-      Make sure to add a variable named 'code' in the template.
-    */
+  </script>
         <div id="register-step2" style="display:none;">
           <label for="register-code">Verification Code</label>
           <input id="register-code" type="text" required>
