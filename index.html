@@ -45,10 +45,31 @@
       <form id="register-form" style="display:none;">
         <div id="register-step1">
           <label for="register-email">Email</label>
-          <input id="register-email" type="email" required autocomplete="username">
-          <button type="button" id="send-code-btn">Send Code</button>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input id="register-email" type="email" required autocomplete="username" style="flex:1;">
+            <button type="button" id="send-code-btn" style="white-space:nowrap;">Send Code</button>
+          </div>
           <div class="msg" id="register-msg-step1"></div>
         </div>
+  <!-- EmailJS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+  // EmailJS config (replace with your own IDs)
+  // See: https://dashboard.emailjs.com/admin/account
+    // EmailJS config (replace with your own IDs)
+    // public key: gtluK1AW_Y5bE9mVp
+    // service id: service_ghvr7ui
+    // template id: template_codeverify (create this in EmailJS, see below)
+    const EMAILJS_USER_ID = 'gtluK1AW_Y5bE9mVp';
+    const EMAILJS_SERVICE_ID = 'service_ghvr7ui';
+  const EMAILJS_TEMPLATE_ID = 'template_x4lt4dk';
+    // Initialize EmailJS
+    emailjs.init(EMAILJS_USER_ID);
+    /*
+      EmailJS template (template_codeverify) example:
+      Subject: Your verification code
+      Content: Hello, your verification code is: {{code}}
+      Make sure to add a variable named 'code' in the template.
+    */
         <div id="register-step2" style="display:none;">
           <label for="register-code">Verification Code</label>
           <input id="register-code" type="text" required>
@@ -125,23 +146,27 @@
     let emailVerificationId = null;
     let emailVerified = false;
 
-    // 步骤1：发送验证码
+    // Step 1: Send verification code to email using EmailJS
     document.getElementById('send-code-btn').onclick = async function() {
       const email = document.getElementById('register-email').value.trim();
       if (!email) {
         document.getElementById('register-msg-step1').innerText = 'Please enter your email.';
         return;
       }
-      // 使用 Firebase 发送验证码（模拟，实际用 sendSignInLinkToEmail 或自定义云函数）
+      // Generate a 6-digit code
+      window._registerCode = Math.floor(100000 + Math.random() * 900000).toString();
+      window._registerEmail = email;
+      // Send code via EmailJS
       try {
-        // 这里只能模拟，真实邮箱验证码需用云函数或第三方服务
-        window._registerCode = Math.floor(100000 + Math.random() * 900000).toString();
-        window._registerEmail = email;
-        document.getElementById('register-msg-step1').innerText = 'Verification code sent to your email (demo: ' + window._registerCode + ')';
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+          to_email: email,
+          code: window._registerCode
+        });
+        document.getElementById('register-msg-step1').innerText = 'Verification code sent to your email.';
         document.getElementById('register-step1').style.display = 'none';
         document.getElementById('register-step2').style.display = '';
       } catch (err) {
-        document.getElementById('register-msg-step1').innerText = err.message;
+        document.getElementById('register-msg-step1').innerText = 'Failed to send email: ' + err.text || err.message;
       }
     };
 
