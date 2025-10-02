@@ -13,7 +13,7 @@
       position: fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.25); z-index:1000; display:flex; align-items:center; justify-content:center;
     }
     .login-modal {
-      background:#fff; border-radius:10px; box-shadow:0 4px 24px #0002; padding:32px 28px; min-width:320px; max-width:90vw;
+      background:#fff; border-radius:10px; box-shadow:0 4px 24px #0002; padding:32px 28px; min-width:340px; max-width:98vw; width:400px;
     }
     .login-modal h2 { text-align:center; color:#007bff; margin-bottom:18px; }
     .login-modal label { display:block; margin-top:12px; }
@@ -28,7 +28,9 @@
 </head>
 <body>
   <div id="main-content" style="display:none;">
-    <!-- ...你原有的主页内容... -->
+    <h1>AI Design Generator</h1>
+    <p>欢迎使用！登录后可使用全部功能。</p>
+    <!-- 你可以在这里添加主页内容 -->
   </div>
   <div id="login-modal-bg" class="modal-bg" style="display:none;">
     <div class="login-modal">
@@ -47,15 +49,18 @@
         <div id="register-step1">
           <label for="register-email">Email</label>
           <div style="display:flex;align-items:center;gap:8px;width:100%;">
-            <input id="register-email" type="email" required autocomplete="username" style="flex:1;min-width:0;max-width:100%;box-sizing:border-box;" />
-            <button type="button" id="send-code-btn" style="white-space:nowrap;">Send Code</button>
+            <input id="register-email" type="email" required autocomplete="username" style="flex:1;min-width:120px;max-width:100%;box-sizing:border-box;" />
+            <button type="button" id="send-code-btn" style="white-space:nowrap;min-width:90px;">Send Code</button>
           </div>
           <div class="msg" id="register-msg-step1"></div>
         </div>
         <div id="register-step2" style="display:none;">
           <label for="register-code">Verification Code</label>
           <input id="register-code" type="text" required style="width:100%;box-sizing:border-box;">
-          <button type="button" id="verify-code-btn">Verify Code</button>
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <button type="button" id="verify-code-btn" style="flex:1;">Verify Code</button>
+            <button type="button" id="back-to-step1" style="flex:1;background:#ccc;color:#333;">Back</button>
+          </div>
           <div class="msg" id="register-msg-step2"></div>
         </div>
         <div id="register-step3" style="display:none;">
@@ -67,7 +72,10 @@
           <input id="register-name" type="text" required style="width:100%;box-sizing:border-box;">
           <label for="register-other">Other Info</label>
           <input id="register-other" type="text" style="width:100%;box-sizing:border-box;">
-          <button type="submit">Sign Up</button>
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <button type="submit" style="flex:1;">Sign Up</button>
+            <button type="button" id="back-to-step2" style="flex:1;background:#ccc;color:#333;">Back</button>
+          </div>
           <div class="msg" id="register-msg-step3"></div>
         </div>
       </form>
@@ -78,6 +86,19 @@
     </div>
   </div>
   <script>
+    // 注册流程返回按钮逻辑
+    document.addEventListener('DOMContentLoaded', function() {
+      const back1 = document.getElementById('back-to-step1');
+      if (back1) back1.onclick = function() {
+        document.getElementById('register-step2').style.display = 'none';
+        document.getElementById('register-step1').style.display = '';
+      };
+      const back2 = document.getElementById('back-to-step2');
+      if (back2) back2.onclick = function() {
+        document.getElementById('register-step3').style.display = 'none';
+        document.getElementById('register-step2').style.display = '';
+      };
+    });
   // EmailJS 配置（请替换为你的实际 ID）
   const EMAILJS_SERVICE_ID = 'service_ghvr7ui';
   const EMAILJS_TEMPLATE_ID = 'template_x4lt4dk';
