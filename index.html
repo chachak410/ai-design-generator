@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
   <style>
     * {
@@ -67,7 +68,7 @@
       color: #333;
     }
     
-    .form-group input {
+    .form-group input, .form-group select {
       width: 100%;
       padding: 15px;
       border: 2px solid #e1e5e9;
@@ -76,7 +77,7 @@
       transition: border-color 0.3s, box-shadow 0.3s;
     }
     
-    .form-group input:focus {
+    .form-group input:focus, .form-group select:focus {
       outline: none;
       border-color: #667eea;
       box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
@@ -199,6 +200,17 @@
     .app-header h1 {
       font-size: 1.8em;
       font-weight: 300;
+    }
+    
+    .nav-links a {
+      color: white;
+      margin-left: 20px;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    
+    .nav-links a:hover {
+      text-decoration: underline;
     }
     
     .logout-btn {
@@ -355,6 +367,29 @@
       border: 1px solid #ffcdd2;
     }
     
+    .template-checkboxes label {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    
+    .template-checkboxes input[type="checkbox"] {
+      margin-right: 10px;
+    }
+    
+    .image-feedback {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 10px;
+    }
+    
+    .image-feedback button {
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    
     @media (max-width: 768px) {
       .row {
         flex-direction: column;
@@ -405,14 +440,18 @@
       
       <!-- Registration Form -->
       <form id="register-form" class="hidden">
-        <!-- Step 1: Email -->
+        <!-- Step 1: Email and Industry Code -->
         <div id="register-step1">
           <div class="form-group">
             <label for="register-email">Email Address</label>
-            <div class="code-input-group">
-              <input id="register-email" type="email" required autocomplete="username" placeholder="Enter your email">
-              <button type="button" id="send-code-btn" class="btn btn-code">Send Code</button>
-            </div>
+            <input id="register-email" type="email" required autocomplete="username" placeholder="Enter your email">
+          </div>
+          <div class="form-group">
+            <label for="register-industry-code">Industry Code</label>
+            <input id="register-industry-code" type="text" required placeholder="Enter industry code">
+          </div>
+          <div class="code-input-group">
+            <button type="button" id="send-code-btn" class="btn btn-code">Send Verification Code</button>
           </div>
           <div id="register-msg-step1" class="message" style="display: none;"></div>
         </div>
@@ -459,66 +498,92 @@
   <div id="main-app" class="main-app">
     <div class="app-header">
       <h1>🎨 AI Design Generator</h1>
-      <button id="logout-btn" class="logout-btn">Logout</button>
+      <div class="nav-links">
+        <a href="#" onclick="showPage('setup-page'); return false;">Setup</a>
+        <a href="#" onclick="showPage('account-page'); return false;">Account</a>
+        <a href="#" onclick="showPage('template-page'); return false;">Templates</a>
+        <a href="#" onclick="showPage('records-page'); return false;">Past Records</a>
+        <a href="#" id="create-account-link" onclick="showPage('create-account-page'); return false;" class="hidden">Create Account</a>
+        <button id="logout-btn" class="logout-btn">Logout</button>
+      </div>
     </div>
     
     <div class="app-content">
-      <div class="controls">
-        <div class="row">
-          <div style="flex: 2;">
-            <label for="prompt">Describe your design</label>
-            <textarea id="prompt" placeholder="e.g., 'Minimalist product hero shot, studio lighting, soft shadows, high detail'"></textarea>
+      <!-- Setup Page -->
+      <div id="setup-page" class="controls hidden">
+        <h2>Setup Your Profile</h2>
+        <form id="setup-form">
+          <div class="form-group">
+            <label for="setup-name">Full Name</label>
+            <input id="setup-name" type="text" required placeholder="Enter your full name">
           </div>
-        </div>
-        
-        <div class="row">
-          <div>
-            <label for="provider">AI Provider</label>
-            <select id="provider">
-              <option value="auto" selected>🚀 Auto (Best Quality)</option>
-              <option value="pollinations">🌸 Pollinations (Fast)</option>
-              <option value="stable_horde">🎯 Stable Horde (High Quality)</option>
-              <option value="one_each">🔄 One from Each</option>
-            </select>
+          <div class="form-group">
+            <label for="setup-industry">Industry</label>
+            <input id="setup-industry" type="text" placeholder="Enter your industry (optional)">
           </div>
-          <div>
-            <label for="count">Image Count</label>
-            <input id="count" type="number" min="1" max="8" value="3"/>
-          </div>
-          <div>
-            <label for="aspect">Aspect Ratio</label>
-            <select id="aspect">
-              <option>1:1</option>
-              <option selected>3:4</option>
-              <option>4:3</option>
-              <option>9:16</option>
-              <option>16:9</option>
-            </select>
-          </div>
-          <div>
-            <label for="seed">Seed (Optional)</label>
-            <input id="seed" type="number" placeholder="e.g. 12345"/>
-          </div>
-        </div>
-        
-        <div class="row">
-          <div>
-            <label for="hordeKey">Horde API Key (Optional)</label>
-            <input id="hordeKey" type="text" placeholder="Leave empty for anonymous"/>
-          </div>
-          <div>
-            <label for="hordeProxy">Horde Proxy URL (Optional)</label>
-            <input id="hordeProxy" type="text" placeholder="https://your-worker.workers.dev"/>
-          </div>
-          <div style="display: flex; align-items: end;">
-            <button id="go" class="generate-btn">✨ Generate Images</button>
-          </div>
-        </div>
-        
-        <div id="status"></div>
+          <button type="submit" class="btn">Save Profile</button>
+          <div id="setup-msg" class="message" style="display: none;"></div>
+        </form>
       </div>
       
-      <div id="results" class="grid"></div>
+      <!-- Account Page -->
+      <div id="account-page" class="controls hidden">
+        <h2>Your Account</h2>
+        <div id="account-info"></div>
+        <form id="account-form" class="hidden">
+          <div class="form-group">
+            <label for="account-name">Full Name</label>
+            <input id="account-name" type="text" required placeholder="Enter your full name">
+          </div>
+          <div class="form-group">
+            <label for="account-industry">Industry</label>
+            <input id="account-industry" type="text" placeholder="Enter your industry (optional)">
+          </div>
+          <button type="submit" class="btn">Update Profile</button>
+          <button type="button" id="cancel-edit" class="btn btn-secondary">Cancel</button>
+          <div id="account-msg" class="message" style="display: none;"></div>
+        </form>
+        <button id="edit-account-btn" class="btn">Edit Profile</button>
+      </div>
+      
+      <!-- Template Page -->
+      <div id="template-page" class="controls">
+        <h2>Select Template</h2>
+        <div class="template-checkboxes" id="template-checkboxes"></div>
+        <button id="generate-images-btn" class="generate-btn">✨ Generate Images</button>
+        <div id="template-status" class="message" style="display: none;"></div>
+        <div id="generated-images" class="grid"></div>
+      </div>
+      
+      <!-- Past Records Page -->
+      <div id="records-page" class="controls hidden">
+        <h2>Past Generation Records</h2>
+        <div id="records-list" class="grid"></div>
+        <div id="records-msg" class="message" style="display: none;"></div>
+      </div>
+      
+      <!-- Create Account Page (Master Only) -->
+      <div id="create-account-page" class="controls hidden">
+        <h2>Create Industry Account</h2>
+        <form id="create-account-form">
+          <div class="form-group">
+            <label for="industry-name">Industry Name</label>
+            <input id="industry-name" type="text" required placeholder="Enter industry name">
+          </div>
+          <div class="form-group">
+            <label for="industry-template">Select Template</label>
+            <select id="industry-template" required>
+              <option value="">Select a template</option>
+              <option value="modern">Modern Design</option>
+              <option value="classic">Classic Design</option>
+              <option value="minimalist">Minimalist Design</option>
+            </select>
+          </div>
+          <button type="submit" class="btn">Generate Industry Code</button>
+          <div id="create-account-msg" class="message" style="display: none;"></div>
+        </form>
+        <div id="generated-code" class="message" style="display: none;"></div>
+      </div>
     </div>
   </div>
 
@@ -540,9 +605,13 @@
     };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
+    const db = firebase.firestore();
 
     // Global state
     let currentUser = null;
+    let userRole = null;
+    let userTemplates = [];
+    let generationCount = 0;
 
     // UI Helper Functions
     function showElement(id) {
@@ -582,7 +651,6 @@
       showElement('register-form');
       hideElement('switch-to-register');
       showElement('switch-to-login');
-      // Reset registration form
       showElement('register-step1');
       hideElement('register-step2');
       hideElement('register-step3');
@@ -592,9 +660,21 @@
       hideMessage('register-msg-step3');
     }
 
+    function showPage(pageId) {
+      const pages = ['setup-page', 'account-page', 'template-page', 'records-page', 'create-account-page'];
+      pages.forEach(id => hideElement(id));
+      showElement(pageId);
+      if (pageId === 'template-page') loadTemplates();
+      if (pageId === 'records-page') loadRecords();
+    }
+
     function showMainApp() {
       document.getElementById('auth-container').style.display = 'none';
       document.getElementById('main-app').classList.add('show');
+      showPage(currentUser && !currentUser.displayName ? 'setup-page' : 'template-page');
+      if (userRole === 'master') {
+        showElement('create-account-link');
+      }
     }
 
     function showAuth() {
@@ -609,6 +689,7 @@
         showMessage('login-msg', 'Signing in...', 'info');
         const result = await auth.signInWithEmailAndPassword(email, password);
         currentUser = result.user;
+        await checkUserRole();
         hideMessage('login-msg');
         showMainApp();
       } catch (err) {
@@ -616,9 +697,20 @@
       }
     }
 
+    async function checkUserRole() {
+      if (currentUser.email === 'langtechgroup5@gmail.com') {
+        userRole = 'master';
+        return;
+      }
+      const userDoc = await db.collection('users').doc(currentUser.uid).get();
+      userRole = userDoc.exists ? userDoc.data().role || 'client' : 'client';
+    }
+
     function handleLogout() {
       auth.signOut().then(() => {
         currentUser = null;
+        userRole = null;
+        userTemplates = [];
         showAuth();
       });
     }
@@ -626,14 +718,22 @@
     // Registration Functions
     async function sendVerificationCode() {
       const email = document.getElementById('register-email').value.trim();
-      if (!email) {
-        showMessage('register-msg-step1', 'Please enter your email address.', 'error');
+      const industryCode = document.getElementById('register-industry-code').value.trim();
+      if (!email || !industryCode) {
+        showMessage('register-msg-step1', 'Please enter your email and industry code.', 'error');
         return;
       }
-      
+
+      const codeDoc = await db.collection('industryCodes').doc(industryCode).get();
+      if (!codeDoc.exists) {
+        showMessage('register-msg-step1', 'Invalid industry code.', 'error');
+        return;
+      }
+
       window._registerCode = Math.floor(100000 + Math.random() * 900000).toString();
       window._registerEmail = email;
-      
+      window._industryCode = industryCode;
+
       try {
         showMessage('register-msg-step1', 'Sending verification code...', 'info');
         await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
@@ -663,26 +763,283 @@
       const password = document.getElementById('register-password').value;
       const password2 = document.getElementById('register-password2').value;
       const name = document.getElementById('register-name').value;
-      
+
       if (password !== password2) {
         showMessage('register-msg-step3', 'Passwords do not match.', 'error');
         return;
       }
-      
+
       if (password.length < 6) {
         showMessage('register-msg-step3', 'Password must be at least 6 characters.', 'error');
         return;
       }
-      
+
       try {
         showMessage('register-msg-step3', 'Creating your account...', 'info');
         const result = await auth.createUserWithEmailAndPassword(window._registerEmail, password);
         currentUser = result.user;
+
+        const codeDoc = await db.collection('industryCodes').doc(window._industryCode).get();
+        const template = codeDoc.data().template;
+
+        await db.collection('users').doc(currentUser.uid).set({
+          email: window._registerEmail,
+          name: name,
+          role: 'client',
+          template: template,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        userRole = 'client';
+        userTemplates = [template];
         showMessage('register-msg-step3', 'Account created successfully!', 'success');
         setTimeout(() => showMainApp(), 1000);
       } catch (err) {
         showMessage('register-msg-step3', err.message, 'error');
       }
+    }
+
+    // Setup Page Functions
+    async function handleSetup(e) {
+      e.preventDefault();
+      const name = document.getElementById('setup-name').value.trim();
+      const industry = document.getElementById('setup-industry').value.trim();
+
+      if (!name) {
+        showMessage('setup-msg', 'Please enter your full name.', 'error');
+        return;
+      }
+
+      try {
+        showMessage('setup-msg', 'Saving profile...', 'info');
+        await db.collection('users').doc(currentUser.uid).update({
+          name: name,
+          industry: industry || null,
+          setupCompleted: true
+        });
+        await currentUser.updateProfile({ displayName: name });
+        showMessage('setup-msg', 'Profile saved successfully!', 'success');
+        setTimeout(() => showPage('template-page'), 1000);
+      } catch (err) {
+        showMessage('setup-msg', 'Error saving profile: ' + err.message, 'error');
+      }
+    }
+
+    // Account Page Functions
+    async function loadAccountInfo() {
+      const userDoc = await db.collection('users').doc(currentUser.uid).get();
+      if (userDoc.exists) {
+        const data = userDoc.data();
+        document.getElementById('account-info').innerHTML = `
+          <p><strong>Name:</strong> ${data.name}</p>
+          <p><strong>Email:</strong> ${currentUser.email}</p>
+          <p><strong>Industry:</strong> ${data.industry || 'Not specified'}</p>
+          <p><strong>Template:</strong> ${data.template || 'None'}</p>
+        `;
+      }
+    }
+
+    async function handleAccountUpdate(e) {
+      e.preventDefault();
+      const name = document.getElementById('account-name').value.trim();
+      const industry = document.getElementById('account-industry').value.trim();
+
+      if (!name) {
+        showMessage('account-msg', 'Please enter your full name.', 'error');
+        return;
+      }
+
+      try {
+        showMessage('account-msg', 'Updating profile...', 'info');
+        await db.collection('users').doc(currentUser.uid).update({
+          name: name,
+          industry: industry || null
+        });
+        await currentUser.updateProfile({ displayName: name });
+        showMessage('account-msg', 'Profile updated successfully!', 'success');
+        hideElement('account-form');
+        showElement('edit-account-btn');
+        loadAccountInfo();
+      } catch (err) {
+        showMessage('account-msg', 'Error updating profile: ' + err.message, 'error');
+      }
+    }
+
+    // Template Page Functions
+    async function loadTemplates() {
+      if (userRole === 'master') {
+        userTemplates = ['modern', 'classic', 'minimalist'];
+      } else {
+        const userDoc = await db.collection('users').doc(currentUser.uid).get();
+        userTemplates = userDoc.exists && userDoc.data().template ? [userDoc.data().template] : [];
+      }
+
+      const checkboxes = document.getElementById('template-checkboxes');
+      checkboxes.innerHTML = userTemplates.map(template => `
+        <label><input type="checkbox" value="${template}" ${template === userTemplates[0] ? 'checked' : ''}> ${template.charAt(0).toUpperCase() + template.slice(1)}</label>
+      `).join('');
+    }
+
+    async function generateImages() {
+      if (!currentUser) {
+        showMessage('template-status', 'Please sign in first.', 'error');
+        return;
+      }
+
+      const selectedTemplates = Array.from(document.querySelectorAll('#template-checkboxes input:checked')).map(input => input.value);
+      if (selectedTemplates.length === 0) {
+        showMessage('template-status', 'Please select at least one template.', 'error');
+        return;
+      }
+
+      if (generationCount >= 20) {
+        showMessage('template-status', 'Maximum regeneration limit reached.', 'error');
+        return;
+      }
+
+      const prompt = `Generate a design based on ${selectedTemplates.join(', ')} style`;
+      const [w, h] = [768, 1024]; // Default size for simplicity
+      showMessage('template-status', 'Generating images...', 'info');
+      document.getElementById('generate-images-btn').disabled = true;
+
+      try {
+        const items = pollinationsUrls(prompt, 2, w, h, Date.now()).map(u => ({ provider: 'pollinations', url: u }));
+        renderImages(items);
+        generationCount++;
+
+        // Save to Firestore
+        const generationRef = db.collection('generations').doc();
+        await generationRef.set({
+          userId: currentUser.uid,
+          templates: selectedTemplates,
+          images: items.map(item => item.url),
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Keep only the last three records
+        const userGenerations = await db.collection('generations')
+          .where('userId', '==', currentUser.uid)
+          .orderBy('createdAt', 'desc')
+          .get();
+        const toDelete = userGenerations.docs.slice(3);
+        toDelete.forEach(doc => doc.ref.delete());
+
+        showMessage('template-status', 'Images generated successfully!', 'success');
+      } catch (err) {
+        showMessage('template-status', 'Error generating images: ' + err.message, 'error');
+      } finally {
+        document.getElementById('generate-images-btn').disabled = false;
+      }
+    }
+
+    function renderImages(items) {
+      const container = document.getElementById('generated-images');
+      container.innerHTML = '';
+      items.forEach((item, idx) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="badge">${item.provider}</div>
+          <img src="${item.url}" alt="Generated image ${idx + 1}" loading="lazy"/>
+          <div class="image-feedback">
+            <button onclick="downloadImage('${item.url}', ${idx})">I like this</button>
+            ${idx === 0 ? `<button onclick="downloadImage('${items[1].url}', 1)">I like that</button>` : ''}
+            ${idx === 0 ? `<button onclick="handleBothBad()">Both bad</button>` : ''}
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function downloadImage(url, idx) {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `generated-image-${idx + 1}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showMessage('template-status', `Image ${idx + 1} downloaded!`, 'success');
+    }
+
+    function handleBothBad() {
+      generationCount++;
+      generateImages();
+    }
+
+    // Past Records Functions
+    async function loadRecords() {
+      const recordsList = document.getElementById('records-list');
+      recordsList.innerHTML = '';
+      try {
+        const generations = await db.collection('generations')
+          .where('userId', '==', currentUser.uid)
+          .orderBy('createdAt', 'desc')
+          .limit(3)
+          .get();
+
+        if (generations.empty) {
+          showMessage('records-msg', 'No generation records found.', 'info');
+          return;
+        }
+
+        generations.forEach(doc => {
+          const data = doc.data();
+          data.images.forEach((url, idx) => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+              <div class="badge">${data.templates.join(', ')}</div>
+              <img src="${url}" alt="Generated image" loading="lazy"/>
+              <button onclick="downloadImage('${url}', ${idx})" class="btn">Download</button>
+            `;
+            recordsList.appendChild(card);
+          });
+        });
+        hideMessage('records-msg');
+      } catch (err) {
+        showMessage('records-msg', 'Error loading records: ' + err.message, 'error');
+      }
+    }
+
+    // Create Account (Master) Functions
+    async function handleCreateAccount(e) {
+      e.preventDefault();
+      if (userRole !== 'master') {
+        showMessage('create-account-msg', 'Unauthorized access.', 'error');
+        return;
+      }
+
+      const industryName = document.getElementById('industry-name').value.trim();
+      const template = document.getElementById('industry-template').value;
+
+      if (!industryName || !template) {
+        showMessage('create-account-msg', 'Please fill all fields.', 'error');
+        return;
+      }
+
+      try {
+        showMessage('create-account-msg', 'Generating industry code...', 'info');
+        const industryCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+        await db.collection('industryCodes').doc(industryCode).set({
+          industry: industryName,
+          template: template,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        showMessage('create-account-msg', 'Industry code generated successfully!', 'success');
+        document.getElementById('generated-code').innerHTML = `Industry Code: <strong>${industryCode}</strong>`;
+        showElement('generated-code');
+        document.getElementById('create-account-form').reset();
+      } catch (err) {
+        showMessage('create-account-msg', 'Error generating code: ' + err.message, 'error');
+      }
+    }
+
+    // AI Generation Functions
+    function pollinationsUrls(prompt, count, width, height, seed) {
+      const quoted = encodeURIComponent(prompt);
+      const base = `https://image.pollinations.ai/prompt/${quoted}?width=${width}&height=${height}&n=1`;
+      const startSeed = Number.isInteger(seed) ? seed : Date.now();
+      return Array.from({length: count}, (_, i) => `${base}&seed=${startSeed + i}`);
     }
 
     // Event Listeners
@@ -698,7 +1055,6 @@
       // Registration events
       document.getElementById('send-code-btn').addEventListener('click', sendVerificationCode);
       document.getElementById('verify-code-btn').addEventListener('click', verifyCode);
-      
       document.getElementById('register-form').addEventListener('submit', function(e) {
         e.preventDefault();
         completeRegistration();
@@ -715,201 +1071,49 @@
         showElement('register-step2');
       });
 
+      // Setup form
+      document.getElementById('setup-form').addEventListener('submit', handleSetup);
+
+      // Account form
+      document.getElementById('edit-account-btn').addEventListener('click', function() {
+        showElement('account-form');
+        hideElement('edit-account-btn');
+        const userDoc = db.collection('users').doc(currentUser.uid).get().then(doc => {
+          if (doc.exists) {
+            document.getElementById('account-name').value = doc.data().name || '';
+            document.getElementById('account-industry').value = doc.data().industry || '';
+          }
+        });
+      });
+
+      document.getElementById('account-form').addEventListener('submit', handleAccountUpdate);
+      document.getElementById('cancel-edit').addEventListener('click', function() {
+        hideElement('account-form');
+        showElement('edit-account-btn');
+      });
+
+      // Template generation
+      document.getElementById('generate-images-btn').addEventListener('click', generateImages);
+
+      // Create account (master)
+      document.getElementById('create-account-form').addEventListener('submit', handleCreateAccount);
+
       // Logout
       document.getElementById('logout-btn').addEventListener('click', handleLogout);
 
-      // Generate button
-      document.getElementById('go').addEventListener('click', generate);
-
       // Initialize
-      showAuth();
-    });
-
-    // AI Generation Functions (same as before)
-    function aspectToSize(ar) {
-      const map = { 
-        "1:1": [768,768], 
-        "3:4": [768,1024], 
-        "4:3": [1024,768], 
-        "9:16": [768,1365], 
-        "16:9": [1365,768] 
-      };
-      return map[ar] || [768,1024];
-    }
-
-    function pollinationsUrls(prompt, count, width, height, seed) {
-      const quoted = encodeURIComponent(prompt);
-      const base = `https://image.pollinations.ai/prompt/${quoted}?width=${width}&height=${height}&n=1`;
-      const startSeed = Number.isInteger(seed) ? seed : Date.now();
-      return Array.from({length: count}, (_, i) => `${base}&seed=${startSeed + i}`);
-    }
-
-    async function hordeSubmit(prompt, width, height, seed, apiKey, proxyBase) {
-      const payload = {
-        prompt,
-        params: {
-          sampler_name: "k_euler",
-          cfg_scale: 7,
-          seed: Number.isInteger(seed) ? seed : null,
-          steps: 28,
-          width: Math.round(width / 64) * 64,
-          height: Math.round(height / 64) * 64
-        },
-        nsfw: false,
-        censor_nsfw: true,
-        trusted_workers: false,
-        slow_workers: true
-      };
-      const base = proxyBase || "https://stablehorde.net/api/v2";
-      const r = await fetch(base + "/generate/async", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "accept": "application/json",
-          "apikey": apiKey || "0000000000"
-        },
-        body: JSON.stringify(payload),
-        mode: "cors"
-      });
-      if (!r.ok) throw new Error("Horde submit failed: " + r.status);
-      const j = await r.json();
-      if (!j.id) throw new Error("No job id from Horde");
-      return j.id;
-    }
-
-    async function hordePoll(id, apiKey, proxyBase, timeoutMs = 240000, pollMs = 4000) {
-      const start = Date.now();
-      const base = proxyBase || "https://stablehorde.net/api/v2";
-      while (Date.now() - start < timeoutMs) {
-        const r = await fetch(`${base}/generate/status/${id}`, {
-          headers: { "accept": "application/json", "apikey": apiKey || "0000000000" },
-          mode: "cors",
-        });
-        if (!r.ok) throw new Error("Horde status failed: " + r.status);
-        const j = await r.json();
-        if (j.done && j.generations && j.generations.length) return j;
-        await new Promise(res => setTimeout(res, pollMs));
-      }
-      throw new Error("Horde timed out");
-    }
-
-    function updateStatus(message, type = '') {
-      const statusEl = document.getElementById("status");
-      statusEl.textContent = message;
-      statusEl.className = type ? `status-${type}` : '';
-    }
-
-    function render(items) {
-      const container = document.getElementById("results");
-      container.innerHTML = "";
-      
-      if (items.length === 0) {
-        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;">No images generated</div>';
-        return;
-      }
-      
-      items.forEach((it, idx) => {
-        const card = document.createElement("div");
-        card.className = "card";
-        const src = it.url || (it.b64 ? ("data:image/png;base64," + it.b64) : "");
-        card.innerHTML = `
-          <div class="badge">${it.provider || "unknown"}</div>
-          ${src ? `<img src="${src}" alt="Generated image ${idx + 1}" loading="lazy"/>` : "<div>❌ Failed to generate</div>"}
-        `;
-        container.appendChild(card);
-      });
-    }
-
-    async function generate() {
-      if (!currentUser) {
-        updateStatus("⚠️ Please sign in first.", "error");
-        return;
-      }
-
-      const prompt = document.getElementById("prompt").value.trim();
-      const count = parseInt(document.getElementById("count").value || "1", 10);
-      const aspect = document.getElementById("aspect").value;
-      const seedRaw = document.getElementById("seed").value.trim();
-      const seed = seedRaw ? parseInt(seedRaw, 10) : null;
-      const provider = document.getElementById("provider").value;
-      const hordeKey = document.getElementById("hordeKey").value.trim() || null;
-      const proxy = document.getElementById("hordeProxy").value.trim() || null;
-      
-      if (!prompt) {
-        updateStatus("⚠️ Please enter a prompt to generate images.", "error");
-        return;
-      }
-      
-      const [w, h] = aspectToSize(aspect);
-      updateStatus("🎨 Generating your images... This may take a moment.", "working");
-      document.getElementById("go").disabled = true;
-      
-      try {
-        let items = [];
-        
-        if (provider === "pollinations") {
-          items = pollinationsUrls(prompt, count, w, h, seed).map(u => ({ provider: "pollinations", url: u }));
-        } else if (provider === "stable_horde") {
-          for (let i = 0; i < count; i++) {
-            try {
-              const id = await hordeSubmit(prompt, w, h, Number.isInteger(seed) ? seed + i : null, hordeKey, proxy);
-              const status = await hordePoll(id, hordeKey, proxy);
-              const gen = status.generations.find(g => g.img);
-              if (gen && gen.img) items.push({ provider: "stable_horde", b64: gen.img });
-            } catch (e) {
-              console.warn(`Horde generation ${i + 1} failed:`, e);
-            }
-          }
-        } else if (provider === "one_each") {
-          try {
-            const id = await hordeSubmit(prompt, w, h, seed, hordeKey, proxy);
-            const status = await hordePoll(id, hordeKey, proxy);
-            const gen = status.generations.find(g => g.img);
-            if (gen && gen.img) items.push({ provider: "stable_horde", b64: gen.img });
-          } catch (e) {
-            console.warn("Horde failed:", e);
-          }
-          
-          items.push({ provider: "pollinations", url: pollinationsUrls(prompt, 1, w, h, seed)[0] });
-          
-          while (items.length < count) {
-            const s = Number.isInteger(seed) ? seed + items.length : null;
-            items.push({ provider: "pollinations", url: pollinationsUrls(prompt, 1, w, h, s)[0] });
-          }
+      auth.onAuthStateChanged(user => {
+        if (user) {
+          currentUser = user;
+          checkUserRole().then(() => {
+            loadAccountInfo();
+            showMainApp();
+          });
         } else {
-          try {
-            for (let i = 0; i < count; i++) {
-              try {
-                const id = await hordeSubmit(prompt, w, h, Number.isInteger(seed) ? seed + i : null, hordeKey, proxy);
-                const status = await hordePoll(id, hordeKey, proxy);
-                const gen = status.generations.find(g => g.img);
-                if (gen && gen.img) items.push({ provider: "stable_horde", b64: gen.img });
-              } catch (e) {
-                console.warn(`Horde generation ${i + 1} failed, will use Pollinations:`, e);
-                break;
-              }
-            }
-          } catch (e) {
-            console.warn("Horde failed, using Pollinations:", e);
-          }
-          
-          if (items.length < count) {
-            const needed = count - items.length;
-            const start = Number.isInteger(seed) ? seed + items.length : null;
-            const urls = pollinationsUrls(prompt, needed, w, h, start);
-            items.push(...urls.map(u => ({ provider: "pollinations", url: u })));
-          }
+          showAuth();
         }
-        
-        render(items);
-        updateStatus(`✅ Generated ${items.length} image${items.length !== 1 ? 's' : ''} successfully!`, "success");
-      } catch (e) {
-        console.error(e);
-        updateStatus(`❌ Error: ${e.message || e}`, "error");
-      } finally {
-        document.getElementById("go").disabled = false;
-      }
-    }
+      });
+    });
   </script>
 </body>
 </html>
