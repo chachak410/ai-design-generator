@@ -434,6 +434,9 @@
           <label for="login-password">Password</label>
           <input id="login-password" type="password" required autocomplete="current-password" placeholder="Enter your password">
         </div>
+        <div class="form-group">
+          <a href="#" id="reset-password-link" onclick="resetPassword(); return false;">Forgot password?</a>
+        </div>
         <button type="submit" class="btn">Sign In</button>
         <div id="login-msg" class="message" style="display: none;"></div>
       </form>
@@ -595,13 +598,13 @@
 
     // Firebase Configuration
     const firebaseConfig = {
-      apiKey: "AIzaSyBtF_37PsX1ItQobFZkOVSMUEio2NPmdoM",
-      authDomain: "login-system-ae45f.firebaseapp.com",
-      projectId: "login-system-ae45f",
-      storageBucket: "login-system-ae45f.firebasestorage.app",
-      messagingSenderId: "178893070717",
-      appId: "1:178893070717:web:e2bc8f79ce87f85391ec14",
-      measurementId: "G-Y4H7X7DJ88"
+      apiKey: "AIzaSyC0P-rmy6ZiKCBnivZQBahKWaPcqg4nDnU",
+      authDomain: "image-generator-c51e2.firebaseapp.com",
+      projectId: "image-generator-c51e2",
+      storageBucket: "image-generator-c51e2.firebasestorage.app",
+      messagingSenderId: "222706847155",
+      appId: "1:222706847155:web:824453eca61077f5f0cfc6",
+      measurementId: "G-JSK1FHFEMT"
     };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
@@ -685,15 +688,45 @@
 
     // Authentication Functions
     async function handleLogin(email, password) {
+      console.log('Attempting login with email:', email);
       try {
         showMessage('login-msg', 'Signing in...', 'info');
         const result = await auth.signInWithEmailAndPassword(email, password);
+        console.log('Login successful, user:', result.user.uid);
         currentUser = result.user;
         await checkUserRole();
+        console.log('User role:', userRole);
         hideMessage('login-msg');
         showMainApp();
       } catch (err) {
-        showMessage('login-msg', err.message, 'error');
+        let errorMessage = 'An error occurred during login. Please try again.';
+        if (err.code === 'auth/invalid-login-credentials') {
+          errorMessage = 'Incorrect email or password. Please check your credentials or reset your password.';
+        } else if (err.code === 'auth/user-not-found') {
+          errorMessage = 'No account found with this email. Please sign up.';
+        } else if (err.code === 'auth/wrong-password') {
+          errorMessage = 'Incorrect password. Please try again or reset your password.';
+        } else if (err.code === 'auth/too-many-requests') {
+          errorMessage = 'Too many login attempts. Please try again later.';
+        }
+        showMessage('login-msg', errorMessage, 'error');
+        console.error('Login error:', err);
+      }
+    }
+
+    async function resetPassword() {
+      const email = document.getElementById('login-email').value.trim();
+      if (!email) {
+        showMessage('login-msg', 'Please enter your email to reset password.', 'error');
+        return;
+      }
+      try {
+        showMessage('login-msg', 'Sending password reset email...', 'info');
+        await auth.sendPasswordResetEmail(email);
+        showMessage('login-msg', 'Password reset email sent. Check your inbox.', 'success');
+      } catch (err) {
+        showMessage('login-msg', 'Error sending reset email: ' + err.message, 'error');
+        console.error('Password reset error:', err);
       }
     }
 
@@ -1051,6 +1084,9 @@
         const password = document.getElementById('login-password').value;
         handleLogin(email, password);
       });
+
+      // Password reset
+      document.getElementById('reset-password-link').addEventListener('click', resetPassword);
 
       // Registration events
       document.getElementById('send-code-btn').addEventListener('click', sendVerificationCode);
