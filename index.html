@@ -571,9 +571,13 @@
             <label for="setup-name">Full Name</label>
             <input id="setup-name" type="text" required placeholder="Enter your full name">
           </div>
-          <div class="form-group">
+          <div class="form-group hidden" id="setup-industry-group">
             <label for="setup-industry">Industry</label>
             <input id="setup-industry" type="text" placeholder="Enter your industry (optional)">
+          </div>
+          <div class="form-group">
+            <label for="setup-product">Product Name</label>
+            <input id="setup-product" type="text" required placeholder="Enter product name (e.g., lip gloss, phone)">
           </div>
           <button type="submit" class="btn">Save Profile</button>
           <div id="setup-msg" class="message" style="display: none;"></div>
@@ -589,7 +593,7 @@
             <label for="account-name">Full Name</label>
             <input id="account-name" type="text" required placeholder="Enter your full name">
           </div>
-          <div class="form-group">
+          <div class="form-group hidden" id="account-industry-group">
             <label for="account-industry">Industry</label>
             <input id="account-industry" type="text" placeholder="Enter your industry (optional)">
           </div>
@@ -680,6 +684,7 @@
     let userTemplates = [];
     let generationCount = 0;
     let userProductName = '';
+    let userIndustryCode = null;
 
     // UI Helper Functions
     function showElement(id) {
@@ -754,6 +759,11 @@
 
     function showPage(pageId) {
       const pages = ['setup-page', 'account-page', 'template-page', 'records-page', 'create-account-page'];
+      if (pageId === 'create-account-page' && userRole !== 'master') {
+        console.log('Client attempted to access create-account-page; redirecting to template-page');
+        showMessage('template-status', 'Access denied: Only master accounts can create industry codes.', 'error');
+        pageId = 'template-page';
+      }
       pages.forEach(id => hideElement(id));
       showElement(pageId);
       if (pageId === 'create-account-page') {
@@ -771,15 +781,18 @@
       }
       if (pageId === 'template-page') loadTemplates();
       if (pageId === 'records-page') loadRecords();
+      if (pageId === 'account-page') loadAccountInfo();
     }
 
     function showMainApp() {
       document.getElementById('auth-container').style.display = 'none';
       document.getElementById('main-app').classList.add('show');
-      showPage(currentUser && !currentUser.displayName ? 'setup-page' : 'template-page');
       if (userRole === 'master') {
         showElement('create-account-link');
+      } else {
+        hideElement('create-account-link');
       }
+      showPage(currentUser && !currentUser.displayName ? 'setup-page' : 'template-page');
     }
 
     function showAuth() {
@@ -857,6 +870,14 @@
       }
       const userDoc = await db.collection('users').doc(currentUser.uid).get();
       userRole = userDoc.exists ? userDoc.data().role || 'client' : 'client';
+      userIndustryCode = userDoc.exists ? userDoc.data().industryCode || null : null;
+      if (userRole === 'client') {
+        hideElement('setup-industry-group');
+        hideElement('account-industry-group');
+      } else {
+        showElement('setup-industry-group');
+        showElement('account-industry-group');
+      }
     }
 
     function handleLogout() {
@@ -865,6 +886,7 @@
         userRole = null;
         userTemplates = [];
         userProductName = '';
+        userIndustryCode = null;
         showAuth();
       });
     }
@@ -934,12 +956,14 @@
         currentUser = result.user;
 
         const codeDoc = await db.collection('industryCodes').doc(window._industryCode).get();
-        const { template, productName } = codeDoc.data();
+        const { industry, template, productName } = codeDoc.data();
 
         await db.collection('users').doc(currentUser.uid).set({
           email: window._registerEmail,
           name: name,
           role: 'client',
+          industryCode: window._industryCode,
+          industry: industry,
           template: template,
           productName: productName || 'Product',
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -948,6 +972,9 @@
         userRole = 'client';
         userTemplates = [template];
         userProductName = productName || 'Product';
+        userIndustryCode = window._industryCode;
+        hideElement('setup-industry-group');
+        hideElement('account-industry-group');
         showMessage('register-msg-step3', 'Account created successfully!', 'success');
         setTimeout(() => showMainApp(), 1000);
       } catch (err) {
@@ -959,24 +986,27 @@
     async function handleSetup(e) {
       e.preventDefault();
       const name = document.getElementById('setup-name').value.trim();
-      const industry = document.getElementById('setup-industry').value.trim();
+      const productName = document.getElementById('setup-product').value.trim();
+      const industry = userRole === 'master' ? document.getElementById('setup-industry').value.trim() : null;
 
-      if (!name) {
-        showMessage('setup-msg', 'Please enter your full name.', 'error');
+      if (!name || !productName) {
+        showMessage('setup-msg', 'Please enter your full name and product name.', 'error');
         return;
       }
 
       try {
         showMessage('setup-msg', 'Saving profile...', 'info');
         const userDoc = await db.collection('users').doc(currentUser.uid).get();
-        const productName = userDoc.exists ? userDoc.data().productName || 'Product' : 'Product';
+        const existingData = userDoc.exists ? userDoc.data() : {};
         await db.collection('users').doc(currentUser.uid).set({
           name: name,
-          industry: industry || null,
+          industry: industry || existingData.industry || null,
+          industryCode: existingData.industryCode || null,
           productName: productName,
           setupCompleted: true
         }, { merge: true });
         await currentUser.updateProfile({ displayName: name });
+        userProductName = productName;
         showMessage('setup-msg', 'Profile saved successfully!', 'success');
         setTimeout(() => showPage('template-page'), 1000);
       } catch (err) {
@@ -990,10 +1020,16 @@
       if (userDoc.exists) {
         const data = userDoc.data();
         userProductName = data.productName || 'Product';
+        userIndustryCode = data.industryCode || null;
+        let industryDisplay = data.industry || 'Not specified';
+        if (userIndustryCode) {
+          const codeDoc = await db.collection('industryCodes').doc(userIndustryCode).get();
+          industryDisplay = codeDoc.exists ? codeDoc.data().industry : 'Unknown';
+        }
         document.getElementById('account-info').innerHTML = `
           <p><strong>Name:</strong> ${data.name}</p>
           <p><strong>Email:</strong> ${currentUser.email}</p>
-          <p><strong>Industry:</strong> ${data.industry || 'Not specified'}</p>
+          <p><strong>Industry:</strong> ${industryDisplay}</p>
           <p><strong>Template:</strong> ${data.template || 'None'}</p>
           <p><strong>Product Name:</strong> ${data.productName || 'Not specified'}</p>
         `;
@@ -1003,8 +1039,8 @@
     async function handleAccountUpdate(e) {
       e.preventDefault();
       const name = document.getElementById('account-name').value.trim();
-      const industry = document.getElementById('account-industry').value.trim();
       const productName = document.getElementById('account-product').value.trim();
+      const industry = userRole === 'master' ? document.getElementById('account-industry').value.trim() : null;
 
       if (!name || !productName) {
         showMessage('account-msg', 'Please enter your full name and product name.', 'error');
@@ -1013,9 +1049,12 @@
 
       try {
         showMessage('account-msg', 'Updating profile...', 'info');
+        const userDoc = await db.collection('users').doc(currentUser.uid).get();
+        const existingData = userDoc.exists ? userDoc.data() : {};
         await db.collection('users').doc(currentUser.uid).set({
           name: name,
-          industry: industry || null,
+          industry: industry || existingData.industry || null,
+          industryCode: existingData.industryCode || null,
           productName: productName
         }, { merge: true });
         await currentUser.updateProfile({ displayName: name });
@@ -1037,6 +1076,7 @@
         const userDoc = await db.collection('users').doc(currentUser.uid).get();
         userTemplates = userDoc.exists && userDoc.data().template ? [userDoc.data().template] : [];
         userProductName = userDoc.exists && userDoc.data().productName ? userDoc.data().productName : 'Product';
+        userIndustryCode = userDoc.exists ? userDoc.data().industryCode || null : null;
       }
 
       const checkboxes = document.getElementById('template-checkboxes');
@@ -1232,7 +1272,6 @@
             console.log('generated-code div is visible with classes:', generatedCodeDiv.className);
           } else {
             console.error('generated-code div not visible, classes:', generatedCodeDiv.className);
-            // Fallback: force visibility
             generatedCodeDiv.style.display = 'block';
           }
           showMessage('create-account-msg', 'Industry code generated successfully!', 'success');
@@ -1296,8 +1335,10 @@
         const userDoc = db.collection('users').doc(currentUser.uid).get().then(doc => {
           if (doc.exists) {
             document.getElementById('account-name').value = doc.data().name || '';
-            document.getElementById('account-industry').value = doc.data().industry || '';
             document.getElementById('account-product').value = doc.data().productName || '';
+            if (userRole === 'master') {
+              document.getElementById('account-industry').value = doc.data().industry || '';
+            }
           }
         });
       });
