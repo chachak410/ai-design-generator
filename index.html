@@ -845,11 +845,11 @@
 
       try {
         showMessage('setup-msg', 'Saving profile...', 'info');
-        await db.collection('users').doc(currentUser.uid).update({
+        await db.collection('users').doc(currentUser.uid).set({
           name: name,
           industry: industry || null,
           setupCompleted: true
-        });
+        }, { merge: true });
         await currentUser.updateProfile({ displayName: name });
         showMessage('setup-msg', 'Profile saved successfully!', 'success');
         setTimeout(() => showPage('template-page'), 1000);
@@ -884,10 +884,10 @@
 
       try {
         showMessage('account-msg', 'Updating profile...', 'info');
-        await db.collection('users').doc(currentUser.uid).update({
+        await db.collection('users').doc(currentUser.uid).set({
           name: name,
           industry: industry || null
-        });
+        }, { merge: true });
         await currentUser.updateProfile({ displayName: name });
         showMessage('account-msg', 'Profile updated successfully!', 'success');
         hideElement('account-form');
