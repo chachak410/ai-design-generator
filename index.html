@@ -182,11 +182,11 @@
       font-weight: 500;
       color: #1976d2;
       position: relative;
-      display: none !important;
+      display: none;
     }
     
     .code-display.show {
-      display: block !important;
+      display: block;
     }
     
     .code-display span {
@@ -646,7 +646,7 @@
           <button type="submit" class="btn">Generate Industry Code</button>
           <div id="create-account-msg" class="message" style="display: none;"></div>
         </form>
-        <div id="generated-code" class="code-display">
+        <div id="generated-code" class="code-display hidden">
           Industry Code: <span id="industry-code"></span>
           <button onclick="copyCode()">Copy</button>
         </div>
@@ -684,21 +684,29 @@
     // UI Helper Functions
     function showElement(id) {
       const el = document.getElementById(id);
-      if (el) {
-        el.classList.remove('hidden');
-        if (el.classList.contains('code-display')) {
-          el.classList.add('show');
-        }
+      if (!el) {
+        console.error(`Element with ID ${id} not found in DOM`);
+        return;
+      }
+      console.log(`Showing element: ${id}`);
+      el.classList.remove('hidden');
+      if (el.classList.contains('code-display')) {
+        el.classList.add('show');
+        console.log(`Added 'show' class to ${id}, classes: ${el.className}`);
       }
     }
 
     function hideElement(id) {
       const el = document.getElementById(id);
-      if (el) {
-        el.classList.add('hidden');
-        if (el.classList.contains('code-display')) {
-          el.classList.remove('show');
-        }
+      if (!el) {
+        console.error(`Element with ID ${id} not found in DOM`);
+        return;
+      }
+      console.log(`Hiding element: ${id}`);
+      el.classList.add('hidden');
+      if (el.classList.contains('code-display')) {
+        el.classList.remove('show');
+        console.log(`Removed 'show' class from ${id}, classes: ${el.className}`);
       }
     }
 
@@ -708,12 +716,18 @@
         el.textContent = message;
         el.className = `message ${type}`;
         el.style.display = 'block';
+        console.log(`Showing message on ${id}: ${message} (${type})`);
+      } else {
+        console.error(`Message element ${id} not found`);
       }
     }
 
     function hideMessage(id) {
       const el = document.getElementById(id);
-      if (el) el.style.display = 'none';
+      if (el) {
+        el.style.display = 'none';
+        console.log(`Hiding message on ${id}`);
+      }
     }
 
     function showLogin() {
@@ -743,8 +757,17 @@
       pages.forEach(id => hideElement(id));
       showElement(pageId);
       if (pageId === 'create-account-page') {
+        console.log('Resetting create-account-page');
         hideElement('generated-code');
-        document.getElementById('industry-code').textContent = '';
+        const codeSpan = document.getElementById('industry-code');
+        if (codeSpan) {
+          codeSpan.textContent = '';
+          console.log('Cleared industry-code span');
+        } else {
+          console.error('industry-code span not found');
+        }
+        document.getElementById('create-account-form').reset();
+        hideMessage('create-account-msg');
       }
       if (pageId === 'template-page') loadTemplates();
       if (pageId === 'records-page') loadRecords();
@@ -767,15 +790,19 @@
 
     // Copy Industry Code
     function copyCode() {
-      const code = document.getElementById('industry-code').textContent;
+      const codeSpan = document.getElementById('industry-code');
+      const code = codeSpan ? codeSpan.textContent : '';
       if (!code) {
         showMessage('create-account-msg', 'No code available to copy.', 'error');
+        console.error('No industry code to copy');
         return;
       }
       navigator.clipboard.writeText(code).then(() => {
         showMessage('create-account-msg', 'Industry code copied to clipboard!', 'success');
-      }).catch(() => {
+        console.log(`Copied industry code: ${code}`);
+      }).catch(err => {
         showMessage('create-account-msg', 'Failed to copy code. Please copy manually.', 'error');
+        console.error('Failed to copy code:', err);
       });
     }
 
@@ -1188,11 +1215,29 @@
         console.log('Industry code saved to Firestore:', industryCode);
 
         const codeSpan = document.getElementById('industry-code');
+        if (!codeSpan) {
+          console.error('industry-code span not found in DOM');
+          showMessage('create-account-msg', 'Error displaying code: UI element missing.', 'error');
+          return;
+        }
         codeSpan.textContent = industryCode;
-        showElement('generated-code');
-        console.log('Updated UI with industry code:', industryCode);
+        console.log('Set industry-code span to:', industryCode);
 
-        showMessage('create-account-msg', 'Industry code generated successfully!', 'success');
+        // Ensure UI updates after Firestore write
+        setTimeout(() => {
+          showElement('generated-code');
+          console.log('Showing generated-code div');
+          const generatedCodeDiv = document.getElementById('generated-code');
+          if (generatedCodeDiv.classList.contains('show')) {
+            console.log('generated-code div is visible with classes:', generatedCodeDiv.className);
+          } else {
+            console.error('generated-code div not visible, classes:', generatedCodeDiv.className);
+            // Fallback: force visibility
+            generatedCodeDiv.style.display = 'block';
+          }
+          showMessage('create-account-msg', 'Industry code generated successfully!', 'success');
+        }, 100);
+
         document.getElementById('create-account-form').reset();
       } catch (err) {
         showMessage('create-account-msg', 'Error generating code: ' + err.message, 'error');
@@ -1210,6 +1255,7 @@
 
     // Event Listeners
     document.addEventListener('DOMContentLoaded', function() {
+      console.log('DOM fully loaded');
       // Login form
       document.getElementById('login-form').addEventListener('submit', function(e) {
         e.preventDefault();
