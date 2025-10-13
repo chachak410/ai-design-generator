@@ -950,16 +950,27 @@
         });
 
         // Keep only the last three records
-        const userGenerations = await db.collection('generations')
-          .where('userId', '==', currentUser.uid)
-          .orderBy('createdAt', 'desc')
-          .get();
-        const toDelete = userGenerations.docs.slice(3);
-        toDelete.forEach(doc => doc.ref.delete());
+        try {
+          const userGenerations = await db.collection('generations')
+            .where('userId', '==', currentUser.uid)
+            .orderBy('createdAt', 'desc')
+            .get();
+          const toDelete = userGenerations.docs.slice(3);
+          toDelete.forEach(doc => doc.ref.delete());
+        } catch (queryErr) {
+          console.error('Error cleaning up old generations:', queryErr);
+          showMessage('template-status', 'Images generated, but failed to clean up old records. Please try again or contact support.', 'error');
+          return;
+        }
 
         showMessage('template-status', 'Images generated successfully!', 'success');
       } catch (err) {
-        showMessage('template-status', 'Error generating images: ' + err.message, 'error');
+        let errorMessage = 'Error generating images. Please try again.';
+        if (err.message.includes('requires an index')) {
+          errorMessage = 'Database configuration needed. Please contact the site administrator to set up the required index.';
+        }
+        showMessage('template-status', errorMessage, 'error');
+        console.error('Generation error:', err);
       } finally {
         document.getElementById('generate-images-btn').disabled = false;
       }
