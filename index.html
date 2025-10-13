@@ -171,7 +171,7 @@
       flex: 1;
     }
     
-    .code-display {
+    .code-display, .product-display, .prompt-display {
       background: #e3f2fd;
       border: 2px solid #bbdefb;
       padding: 15px;
@@ -185,7 +185,7 @@
       display: none;
     }
     
-    .code-display.show {
+    .code-display.show, .product-display.show, .prompt-display.show {
       display: block;
     }
     
@@ -429,17 +429,6 @@
       padding: 10px 20px;
       border-radius: 8px;
       font-size: 14px;
-    }
-    
-    .product-display, .prompt-display {
-      margin-bottom: 20px;
-      padding: 10px;
-      background: #e3f2fd;
-      border: 1px solid #bbdefb;
-      border-radius: 8px;
-      font-weight: 500;
-      color: #1976d2;
-      text-align: center;
     }
     
     @media (max-width: 768px) {
@@ -697,10 +686,9 @@
       }
       console.log(`Showing element: ${id}`);
       el.classList.remove('hidden');
-      if (el.classList.contains('code-display') || el.classList.contains('product-display') || el.classList.contains('prompt-display')) {
-        el.classList.add('show');
-        console.log(`Added 'show' class to ${id}, classes: ${el.className}`);
-      }
+      el.classList.add('show');
+      el.style.display = 'block'; // Force visibility
+      console.log(`Set ${id} to display: block, classes: ${el.className}`);
     }
 
     function hideElement(id) {
@@ -711,10 +699,9 @@
       }
       console.log(`Hiding element: ${id}`);
       el.classList.add('hidden');
-      if (el.classList.contains('code-display') || el.classList.contains('product-display') || el.classList.contains('prompt-display')) {
-        el.classList.remove('show');
-        console.log(`Removed 'show' class from ${id}, classes: ${el.className}`);
-      }
+      el.classList.remove('show');
+      el.style.display = 'none';
+      console.log(`Set ${id} to display: none, classes: ${el.className}`);
     }
 
     function showMessage(id, message, type = 'info') {
@@ -781,7 +768,10 @@
         document.getElementById('create-account-form').reset();
         hideMessage('create-account-msg');
       }
-      if (pageId === 'template-page') loadTemplates();
+      if (pageId === 'template-page') {
+        console.log('Loading templates for template-page');
+        loadTemplates();
+      }
       if (pageId === 'records-page') loadRecords();
       if (pageId === 'account-page') loadAccountInfo();
     }
@@ -1072,6 +1062,7 @@
 
     // Template Page Functions
     async function loadTemplates() {
+      console.log('loadTemplates called');
       if (userRole === 'master') {
         userTemplates = ['modern', 'classic', 'minimalist'];
       } else {
@@ -1080,20 +1071,33 @@
         userProductName = userDoc.exists && userDoc.data().productName ? userDoc.data().productName : 'Product';
         userIndustryCode = userDoc.exists ? userDoc.data().industryCode || null : null;
       }
+      console.log('userTemplates:', userTemplates, 'userProductName:', userProductName);
 
       const checkboxes = document.getElementById('template-checkboxes');
+      if (!checkboxes) {
+        console.error('template-checkboxes element not found');
+        return;
+      }
       checkboxes.innerHTML = userTemplates.map(template => `
         <label><input type="checkbox" value="${template}" ${template === userTemplates[0] ? 'checked' : ''}> ${template.charAt(0).toUpperCase() + template.slice(1)}</label>
       `).join('');
       
       const productDisplay = document.getElementById('product-display');
-      productDisplay.textContent = `Product: ${userProductName}`;
-      showElement('product-display');
+      if (productDisplay) {
+        productDisplay.textContent = `Product: ${userProductName}`;
+        showElement('product-display');
+      } else {
+        console.error('product-display element not found');
+      }
 
       // Update prompt display
       function updatePromptDisplay() {
-        const selectedTemplates = Array.from(document.querySelectorAll('#template-checkboxes input:checked')).map(input => input.value);
         const promptDisplay = document.getElementById('prompt-display');
+        if (!promptDisplay) {
+          console.error('prompt-display element not found');
+          return;
+        }
+        const selectedTemplates = Array.from(document.querySelectorAll('#template-checkboxes input:checked')).map(input => input.value);
         const promptText = selectedTemplates.length > 0 
           ? `Generate a design for ${userProductName} in ${selectedTemplates.join(', ')} style`
           : `Select at least one template to generate a design for ${userProductName}`;
@@ -1103,7 +1107,12 @@
       }
 
       // Initial prompt display
-      updatePromptDisplay();
+      try {
+        updatePromptDisplay();
+      } catch (err) {
+        console.error('Error in updatePromptDisplay:', err);
+        showMessage('template-status', 'Error loading prompt display', 'error');
+      }
 
       // Add event listeners to checkboxes to update prompt
       document.querySelectorAll('#template-checkboxes input').forEach(checkbox => {
