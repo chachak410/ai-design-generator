@@ -171,6 +171,42 @@
       flex: 1;
     }
     
+    .code-display {
+      background: #e3f2fd;
+      border: 2px solid #bbdefb;
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 15px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 500;
+      color: #1976d2;
+      position: relative;
+    }
+    
+    .code-display span {
+      font-family: monospace;
+      font-size: 20px;
+    }
+    
+    .code-display button {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    .code-display button:hover {
+      background: #5a6cd1;
+    }
+    
     .hidden {
       display: none !important;
     }
@@ -390,6 +426,16 @@
       font-size: 14px;
     }
     
+    .product-display {
+      margin-bottom: 20px;
+      padding: 10px;
+      background: #e3f2fd;
+      border: 1px solid #bbdefb;
+      border-radius: 8px;
+      font-weight: 500;
+      color: #1976d2;
+    }
+    
     @media (max-width: 768px) {
       .row {
         flex-direction: column;
@@ -542,6 +588,10 @@
             <label for="account-industry">Industry</label>
             <input id="account-industry" type="text" placeholder="Enter your industry (optional)">
           </div>
+          <div class="form-group">
+            <label for="account-product">Product Name</label>
+            <input id="account-product" type="text" required placeholder="Enter product name (e.g., lip gloss, phone)">
+          </div>
           <button type="submit" class="btn">Update Profile</button>
           <button type="button" id="cancel-edit" class="btn btn-secondary">Cancel</button>
           <div id="account-msg" class="message" style="display: none;"></div>
@@ -551,7 +601,9 @@
       
       <!-- Template Page -->
       <div id="template-page" class="controls">
-        <h2>Select Template</h2>
+        <h2>Generate Images</h2>
+        <div id="product-display" class="product-display" style="display: none;"></div>
+        <h3>Select Template</h3>
         <div class="template-checkboxes" id="template-checkboxes"></div>
         <button id="generate-images-btn" class="generate-btn">✨ Generate Images</button>
         <div id="template-status" class="message" style="display: none;"></div>
@@ -571,7 +623,7 @@
         <form id="create-account-form">
           <div class="form-group">
             <label for="industry-name">Industry Name</label>
-            <input id="industry-name" type="text" required placeholder="Enter industry name">
+            <input id="industry-name" type="text" required placeholder="Enter industry name (e.g., Class A)">
           </div>
           <div class="form-group">
             <label for="industry-template">Select Template</label>
@@ -582,10 +634,17 @@
               <option value="minimalist">Minimalist Design</option>
             </select>
           </div>
+          <div class="form-group">
+            <label for="industry-product">Product Name</label>
+            <input id="industry-product" type="text" required placeholder="Enter product name (e.g., lip gloss, phone)">
+          </div>
           <button type="submit" class="btn">Generate Industry Code</button>
           <div id="create-account-msg" class="message" style="display: none;"></div>
         </form>
-        <div id="generated-code" class="message" style="display: none;"></div>
+        <div id="generated-code" class="code-display" style="display: none;">
+          Industry Code: <span id="industry-code"></span>
+          <button onclick="copyCode()">Copy</button>
+        </div>
       </div>
     </div>
   </div>
@@ -615,6 +674,7 @@
     let userRole = null;
     let userTemplates = [];
     let generationCount = 0;
+    let userProductName = '';
 
     // UI Helper Functions
     function showElement(id) {
@@ -686,6 +746,16 @@
       showLogin();
     }
 
+    // Copy Industry Code
+    function copyCode() {
+      const code = document.getElementById('industry-code').textContent;
+      navigator.clipboard.writeText(code).then(() => {
+        showMessage('create-account-msg', 'Industry code copied to clipboard!', 'success');
+      }).catch(() => {
+        showMessage('create-account-msg', 'Failed to copy code. Please copy manually.', 'error');
+      });
+    }
+
     // Authentication Functions
     async function handleLogin(email, password) {
       console.log('Attempting login with email:', email);
@@ -744,6 +814,7 @@
         currentUser = null;
         userRole = null;
         userTemplates = [];
+        userProductName = '';
         showAuth();
       });
     }
@@ -813,18 +884,20 @@
         currentUser = result.user;
 
         const codeDoc = await db.collection('industryCodes').doc(window._industryCode).get();
-        const template = codeDoc.data().template;
+        const { template, productName } = codeDoc.data();
 
         await db.collection('users').doc(currentUser.uid).set({
           email: window._registerEmail,
           name: name,
           role: 'client',
           template: template,
+          productName: productName || 'Product',
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
         userRole = 'client';
         userTemplates = [template];
+        userProductName = productName || 'Product';
         showMessage('register-msg-step3', 'Account created successfully!', 'success');
         setTimeout(() => showMainApp(), 1000);
       } catch (err) {
@@ -845,9 +918,12 @@
 
       try {
         showMessage('setup-msg', 'Saving profile...', 'info');
+        const userDoc = await db.collection('users').doc(currentUser.uid).get();
+        const productName = userDoc.exists ? userDoc.data().productName || 'Product' : 'Product';
         await db.collection('users').doc(currentUser.uid).set({
           name: name,
           industry: industry || null,
+          productName: productName,
           setupCompleted: true
         }, { merge: true });
         await currentUser.updateProfile({ displayName: name });
@@ -863,11 +939,13 @@
       const userDoc = await db.collection('users').doc(currentUser.uid).get();
       if (userDoc.exists) {
         const data = userDoc.data();
+        userProductName = data.productName || 'Product';
         document.getElementById('account-info').innerHTML = `
           <p><strong>Name:</strong> ${data.name}</p>
           <p><strong>Email:</strong> ${currentUser.email}</p>
           <p><strong>Industry:</strong> ${data.industry || 'Not specified'}</p>
           <p><strong>Template:</strong> ${data.template || 'None'}</p>
+          <p><strong>Product Name:</strong> ${data.productName || 'Not specified'}</p>
         `;
       }
     }
@@ -876,9 +954,10 @@
       e.preventDefault();
       const name = document.getElementById('account-name').value.trim();
       const industry = document.getElementById('account-industry').value.trim();
+      const productName = document.getElementById('account-product').value.trim();
 
-      if (!name) {
-        showMessage('account-msg', 'Please enter your full name.', 'error');
+      if (!name || !productName) {
+        showMessage('account-msg', 'Please enter your full name and product name.', 'error');
         return;
       }
 
@@ -886,9 +965,11 @@
         showMessage('account-msg', 'Updating profile...', 'info');
         await db.collection('users').doc(currentUser.uid).set({
           name: name,
-          industry: industry || null
+          industry: industry || null,
+          productName: productName
         }, { merge: true });
         await currentUser.updateProfile({ displayName: name });
+        userProductName = productName;
         showMessage('account-msg', 'Profile updated successfully!', 'success');
         hideElement('account-form');
         showElement('edit-account-btn');
@@ -905,12 +986,17 @@
       } else {
         const userDoc = await db.collection('users').doc(currentUser.uid).get();
         userTemplates = userDoc.exists && userDoc.data().template ? [userDoc.data().template] : [];
+        userProductName = userDoc.exists && userDoc.data().productName ? userDoc.data().productName : 'Product';
       }
 
       const checkboxes = document.getElementById('template-checkboxes');
       checkboxes.innerHTML = userTemplates.map(template => `
         <label><input type="checkbox" value="${template}" ${template === userTemplates[0] ? 'checked' : ''}> ${template.charAt(0).toUpperCase() + template.slice(1)}</label>
       `).join('');
+      
+      const productDisplay = document.getElementById('product-display');
+      productDisplay.textContent = `Product: ${userProductName}`;
+      showElement('product-display');
     }
 
     async function generateImages() {
@@ -930,7 +1016,7 @@
         return;
       }
 
-      const prompt = `Generate a design based on ${selectedTemplates.join(', ')} style`;
+      const prompt = `Generate a design for ${userProductName} in ${selectedTemplates.join(', ')} style`;
       const [w, h] = [768, 1024]; // Default size for simplicity
       showMessage('template-status', 'Generating images...', 'info');
       document.getElementById('generate-images-btn').disabled = true;
@@ -945,6 +1031,7 @@
         await generationRef.set({
           userId: currentUser.uid,
           templates: selectedTemplates,
+          productName: userProductName,
           images: items.map(item => item.url),
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
@@ -1032,7 +1119,7 @@
             const card = document.createElement('div');
             card.className = 'card';
             card.innerHTML = `
-              <div class="badge">${data.templates.join(', ')}</div>
+              <div class="badge">${data.templates.join(', ')} (${data.productName || 'Product'})</div>
               <img src="${url}" alt="Generated image" loading="lazy"/>
               <button onclick="downloadImage('${url}', ${idx})" class="btn">Download</button>
             `;
@@ -1055,8 +1142,9 @@
 
       const industryName = document.getElementById('industry-name').value.trim();
       const template = document.getElementById('industry-template').value;
+      const productName = document.getElementById('industry-product').value.trim();
 
-      if (!industryName || !template) {
+      if (!industryName || !template || !productName) {
         showMessage('create-account-msg', 'Please fill all fields.', 'error');
         return;
       }
@@ -1067,11 +1155,12 @@
         await db.collection('industryCodes').doc(industryCode).set({
           industry: industryName,
           template: template,
+          productName: productName,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        showMessage('create-account-msg', 'Industry code generated successfully!', 'success');
-        document.getElementById('generated-code').innerHTML = `Industry Code: <strong>${industryCode}</strong>`;
+        document.getElementById('industry-code').textContent = industryCode;
         showElement('generated-code');
+        showMessage('create-account-msg', 'Industry code generated successfully!', 'success');
         document.getElementById('create-account-form').reset();
       } catch (err) {
         showMessage('create-account-msg', 'Error generating code: ' + err.message, 'error');
@@ -1129,6 +1218,7 @@
           if (doc.exists) {
             document.getElementById('account-name').value = doc.data().name || '';
             document.getElementById('account-industry').value = doc.data().industry || '';
+            document.getElementById('account-product').value = doc.data().productName || '';
           }
         });
       });
