@@ -688,7 +688,7 @@
       el.classList.remove('hidden');
       el.classList.add('show');
       el.style.display = 'block'; // Force visibility
-      console.log(`Set ${id} to display: block, classes: ${el.className}`);
+      console.log(`Set ${id} to display: block, classes: ${el.className}, computed display: ${window.getComputedStyle(el).display}`);
     }
 
     function hideElement(id) {
@@ -754,6 +754,7 @@
         pageId = 'template-page';
       }
       pages.forEach(id => hideElement(id));
+      console.log(`Navigating to page: ${pageId}`);
       showElement(pageId);
       if (pageId === 'create-account-page') {
         console.log('Resetting create-account-page');
@@ -1063,61 +1064,91 @@
     // Template Page Functions
     async function loadTemplates() {
       console.log('loadTemplates called');
-      if (userRole === 'master') {
-        userTemplates = ['modern', 'classic', 'minimalist'];
-      } else {
-        const userDoc = await db.collection('users').doc(currentUser.uid).get();
-        userTemplates = userDoc.exists && userDoc.data().template ? [userDoc.data().template] : [];
-        userProductName = userDoc.exists && userDoc.data().productName ? userDoc.data().productName : 'Product';
-        userIndustryCode = userDoc.exists ? userDoc.data().industryCode || null : null;
-      }
-      console.log('userTemplates:', userTemplates, 'userProductName:', userProductName);
-
-      const checkboxes = document.getElementById('template-checkboxes');
-      if (!checkboxes) {
-        console.error('template-checkboxes element not found');
+      if (!currentUser) {
+        console.error('No current user, cannot load templates');
+        showMessage('template-status', 'Please sign in to load templates.', 'error');
         return;
       }
-      checkboxes.innerHTML = userTemplates.map(template => `
-        <label><input type="checkbox" value="${template}" ${template === userTemplates[0] ? 'checked' : ''}> ${template.charAt(0).toUpperCase() + template.slice(1)}</label>
-      `).join('');
-      
-      const productDisplay = document.getElementById('product-display');
-      if (productDisplay) {
-        productDisplay.textContent = `Product: ${userProductName}`;
-        showElement('product-display');
-      } else {
-        console.error('product-display element not found');
-      }
+      try {
+        if (userRole === 'master') {
+          userTemplates = ['modern', 'classic', 'minimalist'];
+        } else {
+          const userDoc = await db.collection('users').doc(currentUser.uid).get();
+          if (!userDoc.exists) {
+            console.error('User document not found for UID:', currentUser.uid);
+            showMessage('template-status', 'User profile not found. Please set up your profile.', 'error');
+            return;
+          }
+          const data = userDoc.data();
+          userTemplates = data.template ? [data.template] : [];
+          userProductName = data.productName || 'Product';
+          userIndustryCode = data.industryCode || null;
+        }
+        console.log('userTemplates:', userTemplates, 'userProductName:', userProductName, 'userIndustryCode:', userIndustryCode);
 
-      // Update prompt display
-      function updatePromptDisplay() {
-        const promptDisplay = document.getElementById('prompt-display');
-        if (!promptDisplay) {
-          console.error('prompt-display element not found');
+        if (!userProductName) {
+          console.error('userProductName is empty or undefined');
+          showMessage('template-status', 'Product name not set. Please update your profile.', 'error');
           return;
         }
-        const selectedTemplates = Array.from(document.querySelectorAll('#template-checkboxes input:checked')).map(input => input.value);
-        const promptText = selectedTemplates.length > 0 
-          ? `Generate a design for ${userProductName} in ${selectedTemplates.join(', ')} style`
-          : `Select at least one template to generate a design for ${userProductName}`;
-        promptDisplay.textContent = promptText;
-        showElement('prompt-display');
-        console.log(`Updated prompt display: ${promptText}`);
-      }
 
-      // Initial prompt display
-      try {
-        updatePromptDisplay();
+        const checkboxes = document.getElementById('template-checkboxes');
+        if (!checkboxes) {
+          console.error('template-checkboxes element not found');
+          showMessage('template-status', 'Template selection UI not found.', 'error');
+          return;
+        }
+        checkboxes.innerHTML = userTemplates.map(template => `
+          <label><input type="checkbox" value="${template}" ${template === userTemplates[0] ? 'checked' : ''}> ${template.charAt(0).toUpperCase() + template.slice(1)}</label>
+        `).join('');
+        
+        const productDisplay = document.getElementById('product-display');
+        if (productDisplay) {
+          productDisplay.textContent = `Product: ${userProductName}`;
+          showElement('product-display');
+        } else {
+          console.error('product-display element not found');
+          showMessage('template-status', 'Product display UI not found.', 'error');
+        }
+
+        // Update prompt display
+        function updatePromptDisplay() {
+          const promptDisplay = document.getElementById('prompt-display');
+          if (!promptDisplay) {
+            console.error('prompt-display element not found');
+            showMessage('template-status', 'Prompt display UI not found.', 'error');
+            return;
+          }
+          const selectedTemplates = Array.from(document.querySelectorAll('#template-checkboxes input:checked')).map(input => input.value);
+          const promptText = selectedTemplates.length > 0 
+            ? `Generate a design for ${userProductName} in ${selectedTemplates.join(', ')} style`
+            : `Select at least one template to generate a design for ${userProductName}`;
+          promptDisplay.textContent = promptText;
+          showElement('prompt-display');
+          console.log(`Updated prompt display: ${promptText}, computed display: ${window.getComputedStyle(promptDisplay).display}`);
+          // Verify visibility
+          if (window.getComputedStyle(promptDisplay).display === 'none') {
+            console.error('prompt-display is still hidden after showElement');
+            promptDisplay.style.display = 'block'; // Force visibility
+          }
+        }
+
+        // Initial prompt display
+        try {
+          updatePromptDisplay();
+        } catch (err) {
+          console.error('Error in updatePromptDisplay:', err);
+          showMessage('template-status', 'Error loading prompt display: ' + err.message, 'error');
+        }
+
+        // Add event listeners to checkboxes to update prompt
+        document.querySelectorAll('#template-checkboxes input').forEach(checkbox => {
+          checkbox.addEventListener('change', updatePromptDisplay);
+        });
       } catch (err) {
-        console.error('Error in updatePromptDisplay:', err);
-        showMessage('template-status', 'Error loading prompt display', 'error');
+        console.error('Error in loadTemplates:', err);
+        showMessage('template-status', 'Error loading templates: ' + err.message, 'error');
       }
-
-      // Add event listeners to checkboxes to update prompt
-      document.querySelectorAll('#template-checkboxes input').forEach(checkbox => {
-        checkbox.addEventListener('change', updatePromptDisplay);
-      });
     }
 
     async function generateImages() {
@@ -1192,7 +1223,7 @@
         card.className = 'card';
         card.innerHTML = `
           <div class="badge">${item.provider}</div>
-          <img src="${item.url}" alt="Generated image ${idx + 1}" loading="lazy"/>
+          <img src="${item.url}" alt="Generated image ${idx + 1}"/>
           <div class="image-feedback">
             <button onclick="downloadImage('${item.url}', ${idx})">I like this</button>
             ${idx === 0 ? `<button onclick="downloadImage('${items[1].url}', 1)">I like that</button>` : ''}
@@ -1201,6 +1232,7 @@
         `;
         container.appendChild(card);
       });
+      console.log('Rendered images:', items.length);
     }
 
     function downloadImage(url, idx) {
@@ -1241,7 +1273,7 @@
             card.className = 'card';
             card.innerHTML = `
               <div class="badge">${data.templates.join(', ')} (${data.productName || 'Product'})</div>
-              <img src="${url}" alt="Generated image" loading="lazy"/>
+              <img src="${url}" alt="Generated image"/>
               <button onclick="downloadImage('${url}', ${idx})" class="btn">Download</button>
             `;
             recordsList.appendChild(card);
