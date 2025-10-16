@@ -1,6 +1,6 @@
 VISUALIZE YOUR IDEAS THROUGH AI DESIGN GENERATOR!
 
-Link:https://chachak410.github.io/ai-design-generator/
+Link: https://chachak410.github.io/ai-design-generator/
 
 AI Design Generator turns your ideas into design directions in seconds. Type your needs, and get suggested layouts, copy, and visual cues you can iterate on and download. It’s lightweight, runs in your browser, and can optionally use email for verification or password resets.
 
