@@ -4,11 +4,10 @@ AI Design Generator turns your ideas into design directions in seconds. Type you
 
 Master Account
 
-Master Account set up and maintain the experience: connect EmailJS, create email templates, create the templates and assign them to different users. 
-
 Account Email: langtechgroup5@gmail.com
-
 Password:qaz1234567890-
+
+Master Account set up and maintain the experience: connect EmailJS, create email templates, create the templates and assign them to different users. 
 
 User Account
 
