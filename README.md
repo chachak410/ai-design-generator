@@ -3,7 +3,8 @@ Use AI Design Generator to Visualize Your Ideas!
 AI Design Generator turns your ideas into design directions in seconds. Type your needs, and get suggested layouts, copy, and visual cues you can iterate on and download. It’s lightweight, runs in your browser, and can optionally use email for verification or password resets.
 
 Master Account
-Master Account set up and maintain the experience: connect EmailJS, align email templates, create the templates and assign them to different users. Master Account can update the help text and presets shown on the homepage and deploy changes via GitHub. Use the Admin panel (or config files) to manage keys and content safely.
+Master Account set up and maintain the experience: connect EmailJS, create email templates, create the templates and assign them to different users. 
+
 Account Email: langtechgroup5@gmail.com
 Password:qaz1234567890-
 
