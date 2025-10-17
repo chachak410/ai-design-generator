@@ -431,7 +431,7 @@
       font-size: 14px;
     }
   
-    /* 🔥 FIXED: RED BOX - BOTTOM RIGHT WARNING */
+    /* Product Warning */
     .product-warning {
       position: fixed;
       bottom: 20px;
@@ -686,7 +686,7 @@
     </div>
   </div>
 
-  <!-- 🔥 FIXED: NEW RED BOX WARNING (Only shows if TRULY empty) -->
+  <!-- Product Warning -->
   <div id="product-warning" class="product-warning">
     <strong>⚠️ Product name not set.</strong> <a href="#" onclick="showPage('account-page'); return false;">Update now</a>
   </div>
@@ -786,14 +786,14 @@
         hideElement('create-account-link');
       }
       showPage(currentUser && !currentUser.displayName ? 'setup-page' : 'template-page');
-      checkProductWarning(); // 🔥 CHECK PRODUCT NAME ON LOAD
+      checkProductWarning();
     }
     function showAuth() {
       document.getElementById('auth-container').style.display = 'block';
       document.getElementById('main-app').classList.remove('show');
       showLogin();
     }
-    // 🔥 FIXED: NEW PRODUCT WARNING CHECK
+    // Product Warning
     function checkProductWarning() {
       const warning = document.getElementById('product-warning');
       if (userProductName && userProductName.trim().length > 1) {
@@ -960,7 +960,7 @@
         }, { merge: true });
         await currentUser.updateProfile({ displayName: name });
         userProductName = productName;
-        checkProductWarning(); // 🔥 HIDE WARNING
+        checkProductWarning();
         showMessage('setup-msg', 'Saved!', 'success');
         setTimeout(() => showPage('template-page'), 1000);
       } catch (err) {
@@ -989,7 +989,7 @@
             <p><strong>Template:</strong> ${data.template || 'None'}</p>
             <p><strong>Product Name:</strong> ${userProductName}</p>
           `;
-          checkProductWarning(); // 🔥 CHECK AFTER LOADING
+          checkProductWarning();
         }
       } catch (err) {
         showMessage('account-msg', 'Error loading: ' + err.message, 'error');
@@ -1016,7 +1016,7 @@
         }, { merge: true });
         await currentUser.updateProfile({ displayName: name });
         userProductName = productName;
-        checkProductWarning(); // 🔥 HIDE WARNING
+        checkProductWarning();
         showMessage('account-msg', 'Updated!', 'success');
         hideElement('account-form');
         showElement('edit-account-btn');
@@ -1045,13 +1045,12 @@
           userProductName = data.productName || '';
           userIndustryCode = data.industryCode || null;
         }
-        // 🔥 FIXED: BETTER PRODUCT CHECK
         if (!userProductName || userProductName.trim().length < 2) {
           showMessage('template-status', 'Product name required. <a href="#" onclick="showPage(\'account-page\'); return false;">Update now</a>', 'error');
           checkProductWarning();
           return;
         }
-        checkProductWarning(); // 🔥 HIDE WARNING
+        checkProductWarning();
         const checkboxes = document.getElementById('template-checkboxes');
         checkboxes.innerHTML = userTemplates.map(template => `
           <label><input type="checkbox" value="${template}" checked> ${template.charAt(0).toUpperCase() + template.slice(1)}</label>
@@ -1086,12 +1085,16 @@
         showMessage('template-status', 'Limit reached.', 'error');
         return;
       }
-      const prompt = `Generate a design for ${userProductName} in ${selectedTemplates.join(', ')} style`;
-      showMessage('template-status', 'Generating...', 'info');
+      const prompt = `A beautiful product design for ${userProductName}, ${selectedTemplates.join(', ')} style, high quality, detailed, professional`;
+      showMessage('template-status', 'Generating with Pollen AI...', 'info');
       document.getElementById('generate-images-btn').disabled = true;
       try {
-        const urls = await Promise.all(pollinationsUrls(prompt, 2, 768, 1024, Date.now()));
-        const items = urls.map((url, idx) => ({ provider: 'Imagefx', url: url }));
+        // 🔥 FIXED: Use Pollen AI - generates 2 images per prompt
+        const urls = await Promise.all([
+          `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=768&height=1024&seed=${Date.now()}`,
+          `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt + ' (variation 2)') }?width=768&height=1024&seed=${Date.now() + 1}`
+        ]);
+        const items = urls.map(url => ({ provider: 'Pollen AI', url: url }));
         renderImages(items);
         generationCount++;
         const generationRef = db.collection('generations').doc();
@@ -1107,9 +1110,10 @@
           .orderBy('createdAt', 'desc')
           .get();
         userGenerations.docs.slice(3).forEach(doc => doc.ref.delete());
-        showMessage('template-status', 'Generated!', 'success');
+        showMessage('template-status', 'Images generated successfully!', 'success');
       } catch (err) {
-        showMessage('template-status', 'Generation failed. Try again.', 'error');
+        showMessage('template-status', 'Generation failed. Try again later.', 'error');
+        console.error('Generation error:', err);
       } finally {
         document.getElementById('generate-images-btn').disabled = false;
       }
@@ -1119,7 +1123,7 @@
       container.innerHTML = items.map((item, idx) => `
         <div class="card">
           <div class="badge">${item.provider}</div>
-          <img src="${item.url}" alt="Generated image ${idx + 1}"/>
+          <img src="${item.url}" alt="Generated image ${idx + 1}" onload="this.style.opacity=1" style="opacity:0.5; transition:opacity 0.5s"/>
           <div class="image-feedback">
             <button onclick="downloadImage('${item.url}', ${idx})">I like this</button>
             ${idx === 0 ? `<button onclick="downloadImage('${items[1].url}', 1)">I like that</button>` : ''}
@@ -1135,7 +1139,7 @@
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      showMessage('template-status', `Downloaded!`, 'success');
+      showMessage('template-status', `Image ${idx + 1} downloaded!`, 'success');
     }
     function handleBothBad() {
       generationCount++;
@@ -1162,7 +1166,7 @@
             card.className = 'card';
             card.innerHTML = `
               <div class="badge">${data.templates.join(', ')} (${data.productName})</div>
-              <img src="${url}" alt="Generated image"/>
+              <img src="${url}" alt="Generated image" onload="this.style.opacity=1" style="opacity:0.5; transition:opacity 0.5s"/>
               <button onclick="downloadImage('${url}', ${idx})" class="btn">Download</button>
             `;
             recordsList.appendChild(card);
@@ -1200,21 +1204,6 @@
       } catch (err) {
         showMessage('create-account-msg', 'Error: ' + err.message, 'error');
       }
-    }
-    // AI Generation Functions
-    function pollinationsUrls(prompt, count, width, height, seed) {
-      const basePrompt = encodeURIComponent(prompt);
-      const urls = [];
-      for (let i = 0; i < count; i++) {
-        urls.push(fetchImagefxUrl(prompt + (i === 0 ? '' : ' (variation)')));
-      }
-      return urls;
-    }
-    async function fetchImagefxUrl(prompt) {
-      const response = await fetch(`https://aitestkitchen.withgoogle.com/m2/user-content/gen_image?prompt=${encodeURIComponent(prompt)}`);
-      const html = await response.text();
-      const imgMatch = html.match(/<img[^>]+src="([^">]+)"[^>]*>/i);
-      return imgMatch ? imgMatch[1] : null;
     }
     // Event Listeners
     document.addEventListener('DOMContentLoaded', function() {
