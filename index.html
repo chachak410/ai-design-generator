@@ -335,7 +335,7 @@
     }
     
     .generate-btn:hover {
-      transform: translateY(-2px);
+      transform: translateY(-5px);
       box-shadow: 0 5px 15px rgba(17, 153, 142, 0.4);
     }
     
@@ -687,7 +687,7 @@
       console.log(`Showing element: ${id}`);
       el.classList.remove('hidden');
       el.classList.add('show');
-      el.style.display = 'block'; // Force visibility
+      el.style.display = 'block';
       console.log(`Set ${id} to display: block, classes: ${el.className}, computed display: ${window.getComputedStyle(el).display}`);
     }
 
@@ -777,7 +777,28 @@
       if (pageId === 'account-page') loadAccountInfo();
     }
 
-    function showMainApp() {
+    async function showMainApp() {
+      // Fetch user data before showing the main app
+      if (currentUser) {
+        try {
+          const userDoc = await db.collection('users').doc(currentUser.uid).get();
+          if (userDoc.exists) {
+            const data = userDoc.data();
+            userProductName = data.productName || '';
+            userIndustryCode = data.industryCode || null;
+            userTemplates = data.template ? [data.template] : userRole === 'master' ? ['modern', 'classic', 'minimalist'] : [];
+            console.log('User data loaded:', { userProductName, userIndustryCode, userTemplates });
+          } else {
+            console.log('User document not found, directing to setup');
+            userProductName = '';
+          }
+        } catch (err) {
+          console.error('Error fetching user data:', err);
+          showMessage('template-status', 'Error loading profile: ' + err.message, 'error');
+          return;
+        }
+      }
+
       document.getElementById('auth-container').style.display = 'none';
       document.getElementById('main-app').classList.add('show');
       if (userRole === 'master') {
@@ -785,7 +806,8 @@
       } else {
         hideElement('create-account-link');
       }
-      showPage(currentUser && !currentUser.displayName ? 'setup-page' : 'template-page');
+      // Show setup page if productName is missing, otherwise go to template-page
+      showPage(userProductName ? 'template-page' : 'setup-page');
     }
 
     function showAuth() {
@@ -823,7 +845,7 @@
         await checkUserRole();
         console.log('User role:', userRole);
         hideMessage('login-msg');
-        showMainApp();
+        await showMainApp();
       } catch (err) {
         let errorMessage = 'An error occurred during login. Please try again.';
         if (err.code === 'auth/invalid-login-credentials') {
@@ -1009,23 +1031,30 @@
 
     // Account Page Functions
     async function loadAccountInfo() {
-      const userDoc = await db.collection('users').doc(currentUser.uid).get();
-      if (userDoc.exists) {
-        const data = userDoc.data();
-        userProductName = data.productName || 'Product';
-        userIndustryCode = data.industryCode || null;
-        let industryDisplay = data.industry || 'Not specified';
-        if (userIndustryCode) {
-          const codeDoc = await db.collection('industryCodes').doc(userIndustryCode).get();
-          industryDisplay = codeDoc.exists ? codeDoc.data().industry : 'Unknown';
+      try {
+        const userDoc = await db.collection('users').doc(currentUser.uid).get();
+        if (userDoc.exists) {
+          const data = userDoc.data();
+          userProductName = data.productName || 'Product';
+          userIndustryCode = data.industryCode || null;
+          let industryDisplay = data.industry || 'Not specified';
+          if (userIndustryCode) {
+            const codeDoc = await db.collection('industryCodes').doc(userIndustryCode).get();
+            industryDisplay = codeDoc.exists ? codeDoc.data().industry : 'Unknown';
+          }
+          document.getElementById('account-info').innerHTML = `
+            <p><strong>Name:</strong> ${data.name}</p>
+            <p><strong>Email:</strong> ${currentUser.email}</p>
+            <p><strong>Industry:</strong> ${industryDisplay}</p>
+            <p><strong>Template:</strong> ${data.template || 'None'}</p>
+            <p><strong>Product Name:</strong> ${data.productName || 'Not specified'}</p>
+          `;
+        } else {
+          showMessage('account-msg', 'User profile not found. Please set up your profile.', 'error');
+          showPage('setup-page');
         }
-        document.getElementById('account-info').innerHTML = `
-          <p><strong>Name:</strong> ${data.name}</p>
-          <p><strong>Email:</strong> ${currentUser.email}</p>
-          <p><strong>Industry:</strong> ${industryDisplay}</p>
-          <p><strong>Template:</strong> ${data.template || 'None'}</p>
-          <p><strong>Product Name:</strong> ${data.productName || 'Not specified'}</p>
-        `;
+      } catch (err) {
+        showMessage('account-msg', 'Error loading account info: ' + err.message, 'error');
       }
     }
 
@@ -1070,25 +1099,24 @@
         return;
       }
       try {
-        if (userRole === 'master') {
-          userTemplates = ['modern', 'classic', 'minimalist'];
-        } else {
-          const userDoc = await db.collection('users').doc(currentUser.uid).get();
-          if (!userDoc.exists) {
-            console.error('User document not found for UID:', currentUser.uid);
-            showMessage('template-status', 'User profile not found. Please set up your profile.', 'error');
-            return;
-          }
-          const data = userDoc.data();
-          userTemplates = data.template ? [data.template] : [];
-          userProductName = data.productName || 'Product';
-          userIndustryCode = data.industryCode || null;
+        // Ensure user data is fresh
+        const userDoc = await db.collection('users').doc(currentUser.uid).get();
+        if (!userDoc.exists) {
+          console.error('User document not found for UID:', currentUser.uid);
+          showMessage('template-status', 'User profile not found. Please set up your profile.', 'error');
+          showPage('setup-page');
+          return;
         }
+        const data = userDoc.data();
+        userTemplates = data.template ? [data.template] : userRole === 'master' ? ['modern', 'classic', 'minimalist'] : [];
+        userProductName = data.productName || '';
+        userIndustryCode = data.industryCode || null;
         console.log('userTemplates:', userTemplates, 'userProductName:', userProductName, 'userIndustryCode:', userIndustryCode);
 
         if (!userProductName) {
-          console.error('userProductName is empty or undefined');
+          console.log('userProductName is empty, redirecting to setup page');
           showMessage('template-status', 'Product name not set. Please update your profile.', 'error');
+          showPage('setup-page');
           return;
         }
 
@@ -1126,14 +1154,12 @@
           promptDisplay.textContent = promptText;
           showElement('prompt-display');
           console.log(`Updated prompt display: ${promptText}, computed display: ${window.getComputedStyle(promptDisplay).display}`);
-          // Verify visibility
           if (window.getComputedStyle(promptDisplay).display === 'none') {
             console.error('prompt-display is still hidden after showElement');
-            promptDisplay.style.display = 'block'; // Force visibility
+            promptDisplay.style.display = 'block';
           }
         }
 
-        // Initial prompt display
         try {
           updatePromptDisplay();
         } catch (err) {
@@ -1141,7 +1167,6 @@
           showMessage('template-status', 'Error loading prompt display: ' + err.message, 'error');
         }
 
-        // Add event listeners to checkboxes to update prompt
         document.querySelectorAll('#template-checkboxes input').forEach(checkbox => {
           checkbox.addEventListener('change', updatePromptDisplay);
         });
@@ -1169,7 +1194,7 @@
       }
 
       const prompt = `Generate a design for ${userProductName} in ${selectedTemplates.join(', ')} style`;
-      const [w, h] = [768, 1024]; // Default size for simplicity
+      const [w, h] = [768, 1024];
       showMessage('template-status', 'Generating images...', 'info');
       document.getElementById('generate-images-btn').disabled = true;
 
@@ -1178,7 +1203,6 @@
         renderImages(items);
         generationCount++;
 
-        // Save to Firestore
         const generationRef = db.collection('generations').doc();
         await generationRef.set({
           userId: currentUser.uid,
@@ -1188,19 +1212,12 @@
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        // Keep only the last three records
-        try {
-          const userGenerations = await db.collection('generations')
-            .where('userId', '==', currentUser.uid)
-            .orderBy('createdAt', 'desc')
-            .get();
-          const toDelete = userGenerations.docs.slice(3);
-          toDelete.forEach(doc => doc.ref.delete());
-        } catch (queryErr) {
-          console.error('Error cleaning up old generations:', queryErr);
-          showMessage('template-status', 'Images generated, but failed to clean up old records. Please try again or contact support.', 'error');
-          return;
-        }
+        const userGenerations = await db.collection('generations')
+          .where('userId', '==', currentUser.uid)
+          .orderBy('createdAt', 'desc')
+          .get();
+        const toDelete = userGenerations.docs.slice(3);
+        toDelete.forEach(doc => doc.ref.delete());
 
         showMessage('template-status', 'Images generated successfully!', 'success');
       } catch (err) {
@@ -1326,7 +1343,6 @@
         codeSpan.textContent = industryCode;
         console.log('Set industry-code span to:', industryCode);
 
-        // Ensure UI updates after Firestore write
         setTimeout(() => {
           showElement('generated-code');
           console.log('Showing generated-code div');
@@ -1395,7 +1411,7 @@
       document.getElementById('edit-account-btn').addEventListener('click', function() {
         showElement('account-form');
         hideElement('edit-account-btn');
-        const userDoc = db.collection('users').doc(currentUser.uid).get().then(doc => {
+        db.collection('users').doc(currentUser.uid).get().then(doc => {
           if (doc.exists) {
             document.getElementById('account-name').value = doc.data().name || '';
             document.getElementById('account-product').value = doc.data().productName || '';
@@ -1422,13 +1438,11 @@
       document.getElementById('logout-btn').addEventListener('click', handleLogout);
 
       // Initialize
-      auth.onAuthStateChanged(user => {
+      auth.onAuthStateChanged(async user => {
         if (user) {
           currentUser = user;
-          checkUserRole().then(() => {
-            loadAccountInfo();
-            showMainApp();
-          });
+          await checkUserRole();
+          await showMainApp();
         } else {
           showAuth();
         }
