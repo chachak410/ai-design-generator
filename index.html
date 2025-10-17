@@ -14,8 +14,8 @@
       padding: 0;
       box-sizing: border-box;
     }
-    
-    body { 
+   
+    body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       min-height: 100vh;
@@ -23,7 +23,7 @@
       align-items: center;
       justify-content: center;
     }
-    
+   
     /* Authentication Styles */
     .auth-container {
       background: white;
@@ -34,40 +34,40 @@
       max-width: 450px;
       margin: 20px;
     }
-    
+   
     .auth-header {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
       padding: 40px 30px;
       text-align: center;
     }
-    
+   
     .auth-header h1 {
       font-size: 2.2em;
       margin-bottom: 10px;
       font-weight: 300;
     }
-    
+   
     .auth-header p {
       opacity: 0.9;
       font-size: 1.1em;
     }
-    
+   
     .auth-content {
       padding: 40px 30px;
     }
-    
+   
     .form-group {
       margin-bottom: 25px;
     }
-    
+   
     .form-group label {
       display: block;
       margin-bottom: 8px;
       font-weight: 500;
       color: #333;
     }
-    
+   
     .form-group input, .form-group select {
       width: 100%;
       padding: 15px;
@@ -76,13 +76,13 @@
       font-size: 16px;
       transition: border-color 0.3s, box-shadow 0.3s;
     }
-    
+   
     .form-group input:focus, .form-group select:focus {
       outline: none;
       border-color: #667eea;
       box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
-    
+   
     .btn {
       width: 100%;
       padding: 15px;
@@ -95,30 +95,30 @@
       cursor: pointer;
       transition: transform 0.2s, box-shadow 0.2s;
     }
-    
+   
     .btn:hover {
       transform: translateY(-2px);
       box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
     }
-    
+   
     .btn:disabled {
       opacity: 0.6;
       cursor: not-allowed;
       transform: none;
     }
-    
+   
     .btn-secondary {
       background: #6c757d;
       margin-top: 10px;
     }
-    
+   
     .btn-code {
       width: auto;
       padding: 10px 20px;
       margin-left: 10px;
       font-size: 14px;
     }
-    
+   
     .message {
       padding: 12px;
       border-radius: 8px;
@@ -126,51 +126,51 @@
       text-align: center;
       font-weight: 500;
     }
-    
+   
     .message.error {
       background: #ffebee;
       color: #c62828;
       border: 1px solid #ffcdd2;
     }
-    
+   
     .message.success {
       background: #e8f5e8;
       color: #2e7d32;
       border: 1px solid #c8e6c9;
     }
-    
+   
     .message.info {
       background: #e3f2fd;
       color: #1976d2;
       border: 1px solid #bbdefb;
     }
-    
+   
     .switch-link {
       text-align: center;
       margin-top: 25px;
       padding-top: 25px;
       border-top: 1px solid #e1e5e9;
     }
-    
+   
     .switch-link a {
       color: #667eea;
       text-decoration: none;
       font-weight: 500;
     }
-    
+   
     .switch-link a:hover {
       text-decoration: underline;
     }
-    
+   
     .code-input-group {
       display: flex;
       align-items: center;
     }
-    
+   
     .code-input-group input {
       flex: 1;
     }
-    
+   
     .code-display, .product-display, .prompt-display {
       background: #e3f2fd;
       border: 2px solid #bbdefb;
@@ -184,16 +184,16 @@
       position: relative;
       display: none;
     }
-    
+   
     .code-display.show, .product-display.show, .prompt-display.show {
       display: block;
     }
-    
+   
     .code-display span {
       font-family: monospace;
       font-size: 20px;
     }
-    
+   
     .code-display button {
       position: absolute;
       right: 10px;
@@ -207,15 +207,15 @@
       cursor: pointer;
       font-size: 14px;
     }
-    
+   
     .code-display button:hover {
       background: #5a6cd1;
     }
-    
+   
     .hidden {
       display: none !important;
     }
-    
+   
     /* Main App Styles */
     .main-app {
       display: none;
@@ -223,11 +223,11 @@
       width: 100%;
       background: #f8f9fa;
     }
-    
+   
     .main-app.show {
       display: block;
     }
-    
+   
     .app-header {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
@@ -237,23 +237,23 @@
       align-items: center;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
-    
+   
     .app-header h1 {
       font-size: 1.8em;
       font-weight: 300;
     }
-    
+   
     .nav-links a {
       color: white;
       margin-left: 20px;
       text-decoration: none;
       font-weight: 500;
     }
-    
+   
     .nav-links a:hover {
       text-decoration: underline;
     }
-    
+   
     .logout-btn {
       padding: 10px 20px;
       background: rgba(255,255,255,0.2);
@@ -263,17 +263,17 @@
       cursor: pointer;
       transition: background-color 0.2s;
     }
-    
+   
     .logout-btn:hover {
       background: rgba(255,255,255,0.3);
     }
-    
+   
     .app-content {
       max-width: 1200px;
       margin: 0 auto;
       padding: 30px 20px;
     }
-    
+   
     .controls {
       background: white;
       border-radius: 15px;
@@ -281,47 +281,47 @@
       box-shadow: 0 5px 20px rgba(0,0,0,0.1);
       margin-bottom: 30px;
     }
-    
-    .row { 
-      display: flex; 
-      gap: 20px; 
-      flex-wrap: wrap; 
-      margin-bottom: 25px; 
+   
+    .row {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 25px;
       align-items: end;
     }
-    
+   
     .row > * {
       flex: 1;
       min-width: 200px;
     }
-    
-    .controls textarea, .controls input, .controls select, .controls button { 
-      padding: 12px; 
-      font-size: 14px; 
+   
+    .controls textarea, .controls input, .controls select, .controls button {
+      padding: 12px;
+      font-size: 14px;
       border: 2px solid #e1e5e9;
       border-radius: 8px;
       transition: border-color 0.3s;
     }
-    
+   
     .controls textarea:focus, .controls input:focus, .controls select:focus {
       outline: none;
       border-color: #667eea;
     }
-    
-    .controls textarea { 
-      width: 100%; 
-      height: 120px; 
+   
+    .controls textarea {
+      width: 100%;
+      height: 120px;
       resize: vertical;
       font-family: inherit;
     }
-    
+   
     .controls label {
       display: block;
       margin-bottom: 8px;
       font-weight: 500;
       color: #333;
     }
-    
+   
     .generate-btn {
       background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
       color: white;
@@ -333,123 +333,123 @@
       cursor: pointer;
       transition: transform 0.2s, box-shadow 0.2s;
     }
-    
+   
     .generate-btn:hover {
       transform: translateY(-2px);
       box-shadow: 0 5px 15px rgba(17, 153, 142, 0.4);
     }
-    
+   
     .generate-btn:disabled {
       opacity: 0.6;
       cursor: not-allowed;
       transform: none;
     }
-    
-    .grid { 
-      display: grid; 
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
-      gap: 20px; 
+   
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
     }
-    
-    .card { 
+   
+    .card {
       background: white;
-      border-radius: 12px; 
-      padding: 15px; 
+      border-radius: 12px;
+      padding: 15px;
       box-shadow: 0 5px 20px rgba(0,0,0,0.1);
       transition: transform 0.2s, box-shadow 0.2s;
     }
-    
+   
     .card:hover {
       transform: translateY(-5px);
       box-shadow: 0 10px 30px rgba(0,0,0,0.15);
     }
-    
-    .card img { 
-      width: 100%; 
-      height: auto; 
-      display: block; 
-      border-radius: 8px; 
+   
+    .card img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 8px;
       margin-bottom: 10px;
     }
-    
-    .badge { 
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+   
+    .badge {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
-      padding: 5px 12px; 
-      border-radius: 20px; 
-      font-size: 12px; 
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
       font-weight: 500;
       display: inline-block;
       margin-bottom: 10px;
     }
-    
-    #status { 
-      margin: 15px 0; 
+   
+    #status {
+      margin: 15px 0;
       padding: 12px;
       border-radius: 8px;
       font-weight: 500;
     }
-    
+   
     .status-working {
       background: #e3f2fd;
       color: #1976d2;
       border: 1px solid #bbdefb;
     }
-    
+   
     .status-success {
       background: #e8f5e8;
       color: #2e7d32;
       border: 1px solid #c8e6c9;
     }
-    
+   
     .status-error {
       background: #ffebee;
       color: #c62828;
       border: 1px solid #ffcdd2;
     }
-    
+   
     .template-checkboxes label {
       display: flex;
       align-items: center;
       margin-bottom: 10px;
     }
-    
+   
     .template-checkboxes input[type="checkbox"] {
       margin-right: 10px;
     }
-    
+   
     .image-feedback {
       display: flex;
       gap: 10px;
       justify-content: center;
       margin-top: 10px;
     }
-    
+   
     .image-feedback button {
       padding: 10px 20px;
       border-radius: 8px;
       font-size: 14px;
     }
-    
+   
     @media (max-width: 768px) {
       .row {
         flex-direction: column;
       }
-      
+     
       .row > * {
         min-width: unset;
       }
-      
+     
       .app-header {
         flex-direction: column;
         gap: 15px;
         text-align: center;
       }
-      
+     
       .controls {
         padding: 20px;
       }
-      
+     
       .grid {
         grid-template-columns: 1fr;
       }
@@ -463,7 +463,7 @@
       <h1>🎨 AI Design Generator</h1>
       <p>Create stunning images with AI</p>
     </div>
-    
+   
     <div class="auth-content">
       <!-- Login Form -->
       <form id="login-form">
@@ -481,7 +481,7 @@
         <button type="submit" class="btn">Sign In</button>
         <div id="login-msg" class="message" style="display: none;"></div>
       </form>
-      
+     
       <!-- Registration Form -->
       <form id="register-form" class="hidden">
         <!-- Step 1: Email and Industry Code -->
@@ -499,7 +499,7 @@
           </div>
           <div id="register-msg-step1" class="message" style="display: none;"></div>
         </div>
-        
+       
         <!-- Step 2: Verification -->
         <div id="register-step2" class="hidden">
           <div class="form-group">
@@ -510,7 +510,7 @@
           <button type="button" id="back-to-step1" class="btn btn-secondary">Back</button>
           <div id="register-msg-step2" class="message" style="display: none;"></div>
         </div>
-        
+       
         <!-- Step 3: Complete Registration -->
         <div id="register-step3" class="hidden">
           <div class="form-group">
@@ -530,14 +530,13 @@
           <div id="register-msg-step3" class="message" style="display: none;"></div>
         </div>
       </form>
-      
+     
       <div class="switch-link">
         <span id="switch-to-register">Don't have an account? <a href="#" onclick="showRegister(); return false;">Sign up</a></span>
         <span id="switch-to-login" class="hidden">Already have an account? <a href="#" onclick="showLogin(); return false;">Sign in</a></span>
       </div>
     </div>
   </div>
-
   <!-- Main Application -->
   <div id="main-app" class="main-app">
     <div class="app-header">
@@ -551,7 +550,7 @@
         <button id="logout-btn" class="logout-btn">Logout</button>
       </div>
     </div>
-    
+   
     <div class="app-content">
       <!-- Setup Page -->
       <div id="setup-page" class="controls hidden">
@@ -573,7 +572,7 @@
           <div id="setup-msg" class="message" style="display: none;"></div>
         </form>
       </div>
-      
+     
       <!-- Account Page -->
       <div id="account-page" class="controls hidden">
         <h2>Your Account</h2>
@@ -597,7 +596,7 @@
         </form>
         <button id="edit-account-btn" class="btn">Edit Profile</button>
       </div>
-      
+     
       <!-- Template Page -->
       <div id="template-page" class="controls">
         <h2>Generate Images</h2>
@@ -609,14 +608,14 @@
         <div id="template-status" class="message" style="display: none;"></div>
         <div id="generated-images" class="grid"></div>
       </div>
-      
+     
       <!-- Past Records Page -->
       <div id="records-page" class="controls hidden">
         <h2>Past Generation Records</h2>
         <div id="records-list" class="grid"></div>
         <div id="records-msg" class="message" style="display: none;"></div>
       </div>
-      
+     
       <!-- Create Account Page (Master Only) -->
       <div id="create-account-page" class="controls hidden">
         <h2>Create Industry Account</h2>
@@ -648,13 +647,11 @@
       </div>
     </div>
   </div>
-
   <script>
     // EmailJS Configuration
     const EMAILJS_SERVICE_ID = 'service_sq0910p';
     const EMAILJS_TEMPLATE_ID = 'template_6cykjb4';
     emailjs.init('DjaueAhkuIzk5gj2x');
-
     // Firebase Configuration
     const firebaseConfig = {
       apiKey: "AIzaSyC0P-rmy6ZiKCBnivZQBahKWaPcqg4nDnU",
@@ -668,7 +665,6 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
-
     // Global state
     let currentUser = null;
     let userRole = null;
@@ -676,7 +672,6 @@
     let generationCount = 0;
     let userProductName = '';
     let userIndustryCode = null;
-
     // UI Helper Functions
     function showElement(id) {
       const el = document.getElementById(id);
@@ -690,7 +685,6 @@
       el.style.display = 'block'; // Force visibility
       console.log(`Set ${id} to display: block, classes: ${el.className}, computed display: ${window.getComputedStyle(el).display}`);
     }
-
     function hideElement(id) {
       const el = document.getElementById(id);
       if (!el) {
@@ -703,7 +697,6 @@
       el.style.display = 'none';
       console.log(`Set ${id} to display: none, classes: ${el.className}`);
     }
-
     function showMessage(id, message, type = 'info') {
       const el = document.getElementById(id);
       if (el) {
@@ -715,7 +708,6 @@
         console.error(`Message element ${id} not found`);
       }
     }
-
     function hideMessage(id) {
       const el = document.getElementById(id);
       if (el) {
@@ -723,7 +715,6 @@
         console.log(`Hiding message on ${id}`);
       }
     }
-
     function showLogin() {
       showElement('login-form');
       hideElement('register-form');
@@ -731,7 +722,6 @@
       hideElement('switch-to-login');
       hideMessage('login-msg');
     }
-
     function showRegister() {
       hideElement('login-form');
       showElement('register-form');
@@ -745,7 +735,6 @@
       hideMessage('register-msg-step2');
       hideMessage('register-msg-step3');
     }
-
     function showPage(pageId) {
       const pages = ['setup-page', 'account-page', 'template-page', 'records-page', 'create-account-page'];
       if (pageId === 'create-account-page' && userRole !== 'master') {
@@ -776,7 +765,6 @@
       if (pageId === 'records-page') loadRecords();
       if (pageId === 'account-page') loadAccountInfo();
     }
-
     function showMainApp() {
       document.getElementById('auth-container').style.display = 'none';
       document.getElementById('main-app').classList.add('show');
@@ -787,13 +775,11 @@
       }
       showPage(currentUser && !currentUser.displayName ? 'setup-page' : 'template-page');
     }
-
     function showAuth() {
       document.getElementById('auth-container').style.display = 'block';
       document.getElementById('main-app').classList.remove('show');
       showLogin();
     }
-
     // Copy Industry Code
     function copyCode() {
       const codeSpan = document.getElementById('industry-code');
@@ -811,7 +797,6 @@
         console.error('Failed to copy code:', err);
       });
     }
-
     // Authentication Functions
     async function handleLogin(email, password) {
       console.log('Attempting login with email:', email);
@@ -839,7 +824,6 @@
         console.error('Login error:', err);
       }
     }
-
     async function resetPassword() {
       const email = document.getElementById('login-email').value.trim();
       if (!email) {
@@ -855,7 +839,6 @@
         console.error('Password reset error:', err);
       }
     }
-
     async function checkUserRole() {
       if (currentUser.email === 'langtechgroup5@gmail.com') {
         userRole = 'master';
@@ -872,7 +855,6 @@
         showElement('account-industry-group');
       }
     }
-
     function handleLogout() {
       auth.signOut().then(() => {
         currentUser = null;
@@ -883,7 +865,6 @@
         showAuth();
       });
     }
-
     // Registration Functions
     async function sendVerificationCode() {
       const email = document.getElementById('register-email').value.trim();
@@ -892,17 +873,14 @@
         showMessage('register-msg-step1', 'Please enter your email and industry code.', 'error');
         return;
       }
-
       const codeDoc = await db.collection('industryCodes').doc(industryCode).get();
       if (!codeDoc.exists) {
         showMessage('register-msg-step1', 'Invalid industry code.', 'error');
         return;
       }
-
       window._registerCode = Math.floor(100000 + Math.random() * 900000).toString();
       window._registerEmail = email;
       window._industryCode = industryCode;
-
       try {
         showMessage('register-msg-step1', 'Sending verification code...', 'info');
         await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
@@ -916,7 +894,6 @@
         showMessage('register-msg-step1', 'Failed to send email: ' + (err.text || err.message), 'error');
       }
     }
-
     function verifyCode() {
       const code = document.getElementById('register-code').value.trim();
       if (code === window._registerCode) {
@@ -927,30 +904,24 @@
         showMessage('register-msg-step2', 'Incorrect verification code.', 'error');
       }
     }
-
     async function completeRegistration() {
       const password = document.getElementById('register-password').value;
       const password2 = document.getElementById('register-password2').value;
       const name = document.getElementById('register-name').value;
-
       if (password !== password2) {
         showMessage('register-msg-step3', 'Passwords do not match.', 'error');
         return;
       }
-
       if (password.length < 6) {
         showMessage('register-msg-step3', 'Password must be at least 6 characters.', 'error');
         return;
       }
-
       try {
         showMessage('register-msg-step3', 'Creating your account...', 'info');
         const result = await auth.createUserWithEmailAndPassword(window._registerEmail, password);
         currentUser = result.user;
-
         const codeDoc = await db.collection('industryCodes').doc(window._industryCode).get();
         const { industry, template, productName } = codeDoc.data();
-
         await db.collection('users').doc(currentUser.uid).set({
           email: window._registerEmail,
           name: name,
@@ -961,7 +932,6 @@
           productName: productName || 'Product',
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-
         userRole = 'client';
         userTemplates = [template];
         userProductName = productName || 'Product';
@@ -974,19 +944,16 @@
         showMessage('register-msg-step3', err.message, 'error');
       }
     }
-
     // Setup Page Functions
     async function handleSetup(e) {
       e.preventDefault();
       const name = document.getElementById('setup-name').value.trim();
       const productName = document.getElementById('setup-product').value.trim();
       const industry = userRole === 'master' ? document.getElementById('setup-industry').value.trim() : null;
-
       if (!name || !productName) {
         showMessage('setup-msg', 'Please enter your full name and product name.', 'error');
         return;
       }
-
       try {
         showMessage('setup-msg', 'Saving profile...', 'info');
         const userDoc = await db.collection('users').doc(currentUser.uid).get();
@@ -1006,40 +973,68 @@
         showMessage('setup-msg', 'Error saving profile: ' + err.message, 'error');
       }
     }
-
     // Account Page Functions
     async function loadAccountInfo() {
-      const userDoc = await db.collection('users').doc(currentUser.uid).get();
-      if (userDoc.exists) {
-        const data = userDoc.data();
-        userProductName = data.productName || 'Product';
-        userIndustryCode = data.industryCode || null;
-        let industryDisplay = data.industry || 'Not specified';
-        if (userIndustryCode) {
-          const codeDoc = await db.collection('industryCodes').doc(userIndustryCode).get();
-          industryDisplay = codeDoc.exists ? codeDoc.data().industry : 'Unknown';
+      try {
+        const userDoc = await db.collection('users').doc(currentUser.uid).get();
+        if (userDoc.exists) {
+          const data = userDoc.data();
+          userProductName = data.productName || 'Product';
+          userIndustryCode = data.industryCode || '000000'; // Fallback only if unset
+          let industryDisplay = data.industry || 'Not specified';
+          let industryCodeDisplay = userIndustryCode; // Prioritize stored industryCode
+
+          // Debug: Log fetched data to verify
+          console.log('User data fetched:', {
+            uid: currentUser.uid,
+            industryCode: data.industryCode,
+            industry: data.industry,
+            productName: data.productName,
+            template: data.template
+          });
+
+          // Fetch industry name from industryCodes if industryCode exists
+          if (userIndustryCode && userIndustryCode !== '000000') {
+            try {
+              const codeDoc = await db.collection('industryCodes').doc(userIndustryCode).get();
+              industryDisplay = codeDoc.exists ? codeDoc.data().industry : 'Unknown';
+              console.log('Industry lookup:', {
+                industryCode: userIndustryCode,
+                industryName: industryDisplay
+              });
+            } catch (err) {
+              console.error('Error fetching industryCodes doc:', err);
+              industryDisplay = 'Unknown (Code lookup failed)';
+            }
+          }
+
+          // Update UI with industry name and code
+          document.getElementById('account-info').innerHTML = `
+            <p><strong>Name:</strong> ${data.name || 'Not set'}</p>
+            <p><strong>Email:</strong> ${currentUser.email}</p>
+            <p><strong>Industry:</strong> ${industryDisplay} (Code: ${industryCodeDisplay})</p>
+            <p><strong>Template:</strong> ${data.template || 'None'}</p>
+            <p><strong>Product Name:</strong> ${userProductName}</p>
+          `;
+        } else {
+          console.warn('User document not found for UID:', currentUser.uid);
+          showMessage('account-msg', 'User profile not found. Please set up your profile.', 'error');
+          showPage('setup-page');
         }
-        document.getElementById('account-info').innerHTML = `
-          <p><strong>Name:</strong> ${data.name}</p>
-          <p><strong>Email:</strong> ${currentUser.email}</p>
-          <p><strong>Industry:</strong> ${industryDisplay}</p>
-          <p><strong>Template:</strong> ${data.template || 'None'}</p>
-          <p><strong>Product Name:</strong> ${data.productName || 'Not specified'}</p>
-        `;
+      } catch (err) {
+        console.error('Error in loadAccountInfo:', err);
+        showMessage('account-msg', 'Error loading account info: ' + err.message, 'error');
       }
     }
-
     async function handleAccountUpdate(e) {
       e.preventDefault();
       const name = document.getElementById('account-name').value.trim();
       const productName = document.getElementById('account-product').value.trim();
       const industry = userRole === 'master' ? document.getElementById('account-industry').value.trim() : null;
-
       if (!name || !productName) {
         showMessage('account-msg', 'Please enter your full name and product name.', 'error');
         return;
       }
-
       try {
         showMessage('account-msg', 'Updating profile...', 'info');
         const userDoc = await db.collection('users').doc(currentUser.uid).get();
@@ -1060,7 +1055,6 @@
         showMessage('account-msg', 'Error updating profile: ' + err.message, 'error');
       }
     }
-
     // Template Page Functions
     async function loadTemplates() {
       console.log('loadTemplates called');
@@ -1085,13 +1079,11 @@
           userIndustryCode = data.industryCode || null;
         }
         console.log('userTemplates:', userTemplates, 'userProductName:', userProductName, 'userIndustryCode:', userIndustryCode);
-
         if (!userProductName) {
           console.error('userProductName is empty or undefined');
           showMessage('template-status', 'Product name not set. Please update your profile.', 'error');
           return;
         }
-
         const checkboxes = document.getElementById('template-checkboxes');
         if (!checkboxes) {
           console.error('template-checkboxes element not found');
@@ -1101,7 +1093,7 @@
         checkboxes.innerHTML = userTemplates.map(template => `
           <label><input type="checkbox" value="${template}" ${template === userTemplates[0] ? 'checked' : ''}> ${template.charAt(0).toUpperCase() + template.slice(1)}</label>
         `).join('');
-        
+       
         const productDisplay = document.getElementById('product-display');
         if (productDisplay) {
           productDisplay.textContent = `Product: ${userProductName}`;
@@ -1110,7 +1102,6 @@
           console.error('product-display element not found');
           showMessage('template-status', 'Product display UI not found.', 'error');
         }
-
         // Update prompt display
         function updatePromptDisplay() {
           const promptDisplay = document.getElementById('prompt-display');
@@ -1120,7 +1111,7 @@
             return;
           }
           const selectedTemplates = Array.from(document.querySelectorAll('#template-checkboxes input:checked')).map(input => input.value);
-          const promptText = selectedTemplates.length > 0 
+          const promptText = selectedTemplates.length > 0
             ? `Generate a design for ${userProductName} in ${selectedTemplates.join(', ')} style`
             : `Select at least one template to generate a design for ${userProductName}`;
           promptDisplay.textContent = promptText;
@@ -1132,7 +1123,6 @@
             promptDisplay.style.display = 'block'; // Force visibility
           }
         }
-
         // Initial prompt display
         try {
           updatePromptDisplay();
@@ -1140,7 +1130,6 @@
           console.error('Error in updatePromptDisplay:', err);
           showMessage('template-status', 'Error loading prompt display: ' + err.message, 'error');
         }
-
         // Add event listeners to checkboxes to update prompt
         document.querySelectorAll('#template-checkboxes input').forEach(checkbox => {
           checkbox.addEventListener('change', updatePromptDisplay);
@@ -1150,34 +1139,33 @@
         showMessage('template-status', 'Error loading templates: ' + err.message, 'error');
       }
     }
-
     async function generateImages() {
       if (!currentUser) {
         showMessage('template-status', 'Please sign in first.', 'error');
         return;
       }
-
       const selectedTemplates = Array.from(document.querySelectorAll('#template-checkboxes input:checked')).map(input => input.value);
       if (selectedTemplates.length === 0) {
         showMessage('template-status', 'Please select at least one template.', 'error');
         return;
       }
-
       if (generationCount >= 20) {
         showMessage('template-status', 'Maximum regeneration limit reached.', 'error');
         return;
       }
-
       const prompt = `Generate a design for ${userProductName} in ${selectedTemplates.join(', ')} style`;
-      const [w, h] = [768, 1024]; // Default size for simplicity
-      showMessage('template-status', 'Generating images...', 'info');
+      const [w, h] = [768, 1024]; // Ignored by Imagefx, kept for compatibility
+      showMessage('template-status', 'Generating images with Imagefx...', 'info');
       document.getElementById('generate-images-btn').disabled = true;
-
       try {
-        const items = pollinationsUrls(prompt, 2, w, h, Date.now()).map(u => ({ provider: 'pollinations', url: u }));
+        // Await the async URL fetches
+        const urls = await Promise.all(pollinationsUrls(prompt, 2, w, h, Date.now()));
+        const items = urls.map((url, idx) => ({ provider: 'Imagefx', url: url }));
+        if (items.some(item => !item.url)) {
+          throw new Error('Failed to generate one or more images');
+        }
         renderImages(items);
         generationCount++;
-
         // Save to Firestore
         const generationRef = db.collection('generations').doc();
         await generationRef.set({
@@ -1187,25 +1175,19 @@
           images: items.map(item => item.url),
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-
         // Keep only the last three records
-        try {
-          const userGenerations = await db.collection('generations')
-            .where('userId', '==', currentUser.uid)
-            .orderBy('createdAt', 'desc')
-            .get();
-          const toDelete = userGenerations.docs.slice(3);
-          toDelete.forEach(doc => doc.ref.delete());
-        } catch (queryErr) {
-          console.error('Error cleaning up old generations:', queryErr);
-          showMessage('template-status', 'Images generated, but failed to clean up old records. Please try again or contact support.', 'error');
-          return;
-        }
-
-        showMessage('template-status', 'Images generated successfully!', 'success');
+        const userGenerations = await db.collection('generations')
+          .where('userId', '==', currentUser.uid)
+          .orderBy('createdAt', 'desc')
+          .get();
+        const toDelete = userGenerations.docs.slice(3);
+        toDelete.forEach(doc => doc.ref.delete());
+        showMessage('template-status', 'Images generated successfully with Imagefx!', 'success');
       } catch (err) {
         let errorMessage = 'Error generating images. Please try again.';
-        if (err.message.includes('requires an index')) {
+        if (err.message.includes('Imagefx failed') || err.message.includes('No image found')) {
+          errorMessage = 'Image generation service temporarily unavailable. Try a different prompt or later.';
+        } else if (err.message.includes('requires an index')) {
           errorMessage = 'Database configuration needed. Please contact the site administrator to set up the required index.';
         }
         showMessage('template-status', errorMessage, 'error');
@@ -1214,7 +1196,6 @@
         document.getElementById('generate-images-btn').disabled = false;
       }
     }
-
     function renderImages(items) {
       const container = document.getElementById('generated-images');
       container.innerHTML = '';
@@ -1234,7 +1215,6 @@
       });
       console.log('Rendered images:', items.length);
     }
-
     function downloadImage(url, idx) {
       const a = document.createElement('a');
       a.href = url;
@@ -1244,12 +1224,10 @@
       document.body.removeChild(a);
       showMessage('template-status', `Image ${idx + 1} downloaded!`, 'success');
     }
-
     function handleBothBad() {
       generationCount++;
       generateImages();
     }
-
     // Past Records Functions
     async function loadRecords() {
       const recordsList = document.getElementById('records-list');
@@ -1260,12 +1238,10 @@
           .orderBy('createdAt', 'desc')
           .limit(3)
           .get();
-
         if (generations.empty) {
           showMessage('records-msg', 'No generation records found.', 'info');
           return;
         }
-
         generations.forEach(doc => {
           const data = doc.data();
           data.images.forEach((url, idx) => {
@@ -1284,7 +1260,6 @@
         showMessage('records-msg', 'Error loading records: ' + err.message, 'error');
       }
     }
-
     // Create Account (Master) Functions
     async function handleCreateAccount(e) {
       e.preventDefault();
@@ -1293,22 +1268,18 @@
         console.log('Unauthorized access attempt to create-account-page');
         return;
       }
-
       const industryName = document.getElementById('industry-name').value.trim();
       const template = document.getElementById('industry-template').value;
       const productName = document.getElementById('industry-product').value.trim();
-
       if (!industryName || !template || !productName) {
         showMessage('create-account-msg', 'Please fill all fields.', 'error');
         console.log('Missing fields: industryName=', industryName, 'template=', template, 'productName=', productName);
         return;
       }
-
       try {
         showMessage('create-account-msg', 'Generating industry code...', 'info');
         const industryCode = Math.random().toString(36).substring(2, 10).toUpperCase();
         console.log('Generated industry code:', industryCode);
-
         await db.collection('industryCodes').doc(industryCode).set({
           industry: industryName,
           template: template,
@@ -1316,7 +1287,6 @@
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         console.log('Industry code saved to Firestore:', industryCode);
-
         const codeSpan = document.getElementById('industry-code');
         if (!codeSpan) {
           console.error('industry-code span not found in DOM');
@@ -1325,7 +1295,6 @@
         }
         codeSpan.textContent = industryCode;
         console.log('Set industry-code span to:', industryCode);
-
         // Ensure UI updates after Firestore write
         setTimeout(() => {
           showElement('generated-code');
@@ -1339,22 +1308,41 @@
           }
           showMessage('create-account-msg', 'Industry code generated successfully!', 'success');
         }, 100);
-
         document.getElementById('create-account-form').reset();
       } catch (err) {
         showMessage('create-account-msg', 'Error generating code: ' + err.message, 'error');
         console.error('Error in handleCreateAccount:', err);
       }
     }
-
     // AI Generation Functions
     function pollinationsUrls(prompt, count, width, height, seed) {
-      const quoted = encodeURIComponent(prompt);
-      const base = `https://image.pollinations.ai/prompt/${quoted}?width=${width}&height=${height}&n=1`;
-      const startSeed = Number.isInteger(seed) ? seed : Date.now();
-      return Array.from({length: count}, (_, i) => `${base}&seed=${startSeed + i}`);
+      const basePrompt = encodeURIComponent(prompt);
+      const imagefxBase = `https://aitestkitchen.withgoogle.com/m2/user-content/gen_image?prompt=${basePrompt}`;
+      const urls = [];
+      for (let i = 0; i < count; i++) {
+        const variedPrompt = prompt + (i === 0 ? '' : ' (variation)'); // Slight variation for diversity
+        urls.push(fetchImagefxUrl(variedPrompt));
+      }
+      return urls;
     }
-
+    async function fetchImagefxUrl(prompt) {
+      try {
+        const response = await fetch(`https://aitestkitchen.withgoogle.com/m2/user-content/gen_image?prompt=${encodeURIComponent(prompt)}`);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: Imagefx failed`);
+        }
+        const html = await response.text();
+        const imgMatch = html.match(/<img[^>]+src="([^">]+)"[^>]*>/i);
+        if (imgMatch) {
+          return imgMatch[1]; // Direct image URL
+        } else {
+          throw new Error('No image found in Imagefx response');
+        }
+      } catch (err) {
+        console.error('Imagefx fetch error:', err);
+        throw err;
+      }
+    }
     // Event Listeners
     document.addEventListener('DOMContentLoaded', function() {
       console.log('DOM fully loaded');
@@ -1365,10 +1353,8 @@
         const password = document.getElementById('login-password').value;
         handleLogin(email, password);
       });
-
       // Password reset
       document.getElementById('reset-password-link').addEventListener('click', resetPassword);
-
       // Registration events
       document.getElementById('send-code-btn').addEventListener('click', sendVerificationCode);
       document.getElementById('verify-code-btn').addEventListener('click', verifyCode);
@@ -1376,21 +1362,17 @@
         e.preventDefault();
         completeRegistration();
       });
-
       // Navigation buttons
       document.getElementById('back-to-step1').addEventListener('click', function() {
         hideElement('register-step2');
         showElement('register-step1');
       });
-
       document.getElementById('back-to-step2').addEventListener('click', function() {
         hideElement('register-step3');
         showElement('register-step2');
       });
-
       // Setup form
       document.getElementById('setup-form').addEventListener('submit', handleSetup);
-
       // Account form
       document.getElementById('edit-account-btn').addEventListener('click', function() {
         showElement('account-form');
@@ -1405,22 +1387,17 @@
           }
         });
       });
-
       document.getElementById('account-form').addEventListener('submit', handleAccountUpdate);
       document.getElementById('cancel-edit').addEventListener('click', function() {
         hideElement('account-form');
         showElement('edit-account-btn');
       });
-
       // Template generation
       document.getElementById('generate-images-btn').addEventListener('click', generateImages);
-
       // Create account (master)
       document.getElementById('create-account-form').addEventListener('submit', handleCreateAccount);
-
       // Logout
       document.getElementById('logout-btn').addEventListener('click', handleLogout);
-
       // Initialize
       auth.onAuthStateChanged(user => {
         if (user) {
