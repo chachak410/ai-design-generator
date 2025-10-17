@@ -9,7 +9,7 @@ IF YOU ARE THE ADMIN...
 Account Email: langtechgroup5@gmail.com
 Password:qaz1234567890-
 
-Master Account sets up and maintains the experience: connect EmailJS, create email templates, create templates for different industries and assign them to different users. 
+Master Account sets up and maintains the experience: connect EmailJS, create templates for different industries and assign them to different users. 
 
 IF YOU ARE THE USER...
 
