@@ -176,12 +176,11 @@
       border: 2px solid #bbdefb;
       padding: 15px;
       border-radius: 10px;
-      margin-top: 15px;
+      margin: 15px 0; /* Consistent margin to prevent overlap */
       text-align: center;
       font-size: 18px;
       font-weight: 500;
       color: #1976d2;
-      position: relative;
       display: none;
     }
    
@@ -332,6 +331,8 @@
       border-radius: 8px;
       cursor: pointer;
       transition: transform 0.2s, box-shadow 0.2s;
+      margin: 20px auto; /* Center and add spacing */
+      display: block; /* Ensure block-level for centering */
     }
    
     .generate-btn:hover {
@@ -343,6 +344,12 @@
       opacity: 0.6;
       cursor: not-allowed;
       transform: none;
+    }
+   
+    .button-container {
+      display: flex;
+      justify-content: center; /* Center the button horizontally */
+      margin: 20px 0; /* Add vertical spacing */
     }
    
     .grid {
@@ -452,6 +459,16 @@
      
       .grid {
         grid-template-columns: 1fr;
+      }
+     
+      .generate-btn {
+        width: 100%; /* Full-width button on small screens */
+        padding: 12px; /* Slightly smaller padding */
+      }
+     
+      .button-container {
+        flex-direction: column;
+        align-items: center;
       }
     }
   </style>
@@ -604,7 +621,9 @@
         <div id="prompt-display" class="prompt-display" style="display: none;"></div>
         <h3>Select Template</h3>
         <div class="template-checkboxes" id="template-checkboxes"></div>
-        <button id="generate-images-btn" class="generate-btn">✨ Generate Images</button>
+        <div class="button-container">
+          <button id="generate-images-btn" class="generate-btn">✨ Generate Images</button>
+        </div>
         <div id="template-status" class="message" style="display: none;"></div>
         <div id="generated-images" class="grid"></div>
       </div>
@@ -780,7 +799,6 @@
       document.getElementById('main-app').classList.remove('show');
       showLogin();
     }
-    // Copy Industry Code
     function copyCode() {
       const codeSpan = document.getElementById('industry-code');
       const code = codeSpan ? codeSpan.textContent : '';
