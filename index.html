@@ -176,7 +176,7 @@
       border: 2px solid #bbdefb;
       padding: 15px;
       border-radius: 10px;
-      margin-top: 15px;
+      margin: 15px 0;
       text-align: center;
       font-size: 18px;
       font-weight: 500;
@@ -332,6 +332,8 @@
       border-radius: 8px;
       cursor: pointer;
       transition: transform 0.2s, box-shadow 0.2s;
+      margin: 20px auto;
+      display: block;
     }
   
     .generate-btn:hover {
@@ -343,6 +345,12 @@
       opacity: 0.6;
       cursor: not-allowed;
       transform: none;
+    }
+  
+    .button-container {
+      display: flex;
+      justify-content: center;
+      margin: 20px 0;
     }
   
     .grid {
@@ -485,10 +493,16 @@
       }
     
       .product-warning {
-        bottom: 10px;
+        bottom: 80px; /* Move up to avoid overlap with mobile nav */
         right: 10px;
         left: 10px;
         max-width: none;
+        text-align: center;
+      }
+    
+      .button-container {
+        flex-direction: column;
+        align-items: center;
       }
     }
   </style>
@@ -642,7 +656,9 @@
         <div id="prompt-display" class="prompt-display" style="display: none;"></div>
         <h3>Select Template</h3>
         <div class="template-checkboxes" id="template-checkboxes"></div>
-        <button id="generate-images-btn" class="generate-btn">✨ Generate Images</button>
+        <div class="button-container">
+          <button id="generate-images-btn" class="generate-btn">✨ Generate Images</button>
+        </div>
         <div id="template-status" class="message" style="display: none;"></div>
         <div id="generated-images" class="grid"></div>
       </div>
@@ -719,27 +735,39 @@
     // UI Helper Functions
     function showElement(id) {
       const el = document.getElementById(id);
-      if (!el) return;
+      if (!el) {
+        console.error(`Element ${id} not found`);
+        return;
+      }
       el.classList.remove('hidden');
       el.style.display = 'block';
+      console.log(`Showing ${id}, display: ${el.style.display}`);
     }
     function hideElement(id) {
       const el = document.getElementById(id);
-      if (!el) return;
+      if (!el) {
+        console.error(`Element ${id} not found`);
+        return;
+      }
       el.classList.add('hidden');
       el.style.display = 'none';
+      console.log(`Hiding ${id}, display: ${el.style.display}`);
     }
     function showMessage(id, message, type = 'info') {
       const el = document.getElementById(id);
       if (el) {
-        el.textContent = message;
+        el.innerHTML = message; // Use innerHTML to support links
         el.className = `message ${type}`;
         el.style.display = 'block';
+        console.log(`Message on ${id}: ${message} (${type})`);
       }
     }
     function hideMessage(id) {
       const el = document.getElementById(id);
-      if (el) el.style.display = 'none';
+      if (el) {
+        el.style.display = 'none';
+        console.log(`Hiding message on ${id}`);
+      }
     }
     function showLogin() {
       showElement('login-form');
@@ -764,10 +792,12 @@
     function showPage(pageId) {
       const pages = ['setup-page', 'account-page', 'template-page', 'records-page', 'create-account-page'];
       if (pageId === 'create-account-page' && userRole !== 'master') {
+        showMessage('template-status', 'Access denied: Only master accounts can create industry codes.', 'error');
         pageId = 'template-page';
       }
       pages.forEach(id => hideElement(id));
       showElement(pageId);
+      console.log(`Navigated to ${pageId}`);
       if (pageId === 'create-account-page') {
         hideElement('generated-code');
         document.getElementById('create-account-form').reset();
@@ -776,6 +806,7 @@
       if (pageId === 'template-page') loadTemplates();
       if (pageId === 'records-page') loadRecords();
       if (pageId === 'account-page') loadAccountInfo();
+      checkProductWarning();
     }
     function showMainApp() {
       document.getElementById('auth-container').style.display = 'none';
@@ -785,21 +816,24 @@
       } else {
         hideElement('create-account-link');
       }
-      showPage(currentUser && !currentUser.displayName ? 'setup-page' : 'template-page');
       checkProductWarning();
+      showPage((currentUser && (!currentUser.displayName || !userProductName || userProductName.trim().length < 2)) ? 'setup-page' : 'template-page');
     }
     function showAuth() {
       document.getElementById('auth-container').style.display = 'block';
       document.getElementById('main-app').classList.remove('show');
+      hideElement('product-warning');
       showLogin();
     }
     // Product Warning
     function checkProductWarning() {
       const warning = document.getElementById('product-warning');
-      if (userProductName && userProductName.trim().length > 1) {
+      if (userProductName && userProductName.trim().length >= 2) {
         hideElement('product-warning');
+        console.log('Product warning hidden, userProductName:', userProductName);
       } else {
         showElement('product-warning');
+        console.log('Product warning shown, userProductName:', userProductName);
       }
     }
     // Copy Industry Code
@@ -807,6 +841,10 @@
       const code = document.getElementById('industry-code').textContent;
       navigator.clipboard.writeText(code).then(() => {
         showMessage('create-account-msg', 'Industry code copied!', 'success');
+        console.log(`Copied code: ${code}`);
+      }).catch(err => {
+        showMessage('create-account-msg', 'Failed to copy code.', 'error');
+        console.error('Copy error:', err);
       });
     }
     // Authentication Functions
@@ -816,14 +854,18 @@
         const result = await auth.signInWithEmailAndPassword(email, password);
         currentUser = result.user;
         await checkUserRole();
+        await loadAccountInfo(); // Load user data immediately
         hideMessage('login-msg');
         showMainApp();
       } catch (err) {
         let errorMessage = 'Login failed. Please try again.';
-        if (err.code === 'auth/invalid-login-credentials') {
+        if (err.code === 'auth/invalid-login-credentials' || err.code === 'auth/wrong-password') {
           errorMessage = 'Incorrect email or password.';
+        } else if (err.code === 'auth/user-not-found') {
+          errorMessage = 'No account found with this email.';
         }
         showMessage('login-msg', errorMessage, 'error');
+        console.error('Login error:', err);
       }
     }
     async function resetPassword() {
@@ -834,9 +876,10 @@
       }
       try {
         await auth.sendPasswordResetEmail(email);
-        showMessage('login-msg', 'Reset email sent!', 'success');
+        showMessage('login-msg', 'Reset email sent! Check your inbox.', 'success');
       } catch (err) {
         showMessage('login-msg', 'Error: ' + err.message, 'error');
+        console.error('Reset password error:', err);
       }
     }
     async function checkUserRole() {
@@ -854,6 +897,7 @@
         showElement('setup-industry-group');
         showElement('account-industry-group');
       }
+      console.log('User role:', userRole, 'Industry code:', userIndustryCode);
     }
     function handleLogout() {
       auth.signOut().then(() => {
@@ -863,6 +907,8 @@
         userProductName = '';
         userIndustryCode = null;
         showAuth();
+      }).catch(err => {
+        console.error('Logout error:', err);
       });
     }
     // Registration Functions
@@ -886,11 +932,12 @@
           email: email,
           code: window._registerCode
         });
-        showMessage('register-msg-step1', 'Code sent!', 'success');
+        showMessage('register-msg-step1', 'Verification code sent!', 'success');
         hideElement('register-step1');
         showElement('register-step2');
       } catch (err) {
-        showMessage('register-msg-step1', 'Email failed.', 'error');
+        showMessage('register-msg-step1', 'Failed to send email: ' + err.message, 'error');
+        console.error('Email send error:', err);
       }
     }
     function verifyCode() {
@@ -898,23 +945,30 @@
       if (code === window._registerCode) {
         hideElement('register-step2');
         showElement('register-step3');
+        hideMessage('register-msg-step2');
       } else {
-        showMessage('register-msg-step2', 'Wrong code.', 'error');
+        showMessage('register-msg-step2', 'Incorrect code.', 'error');
       }
     }
     async function completeRegistration() {
       const password = document.getElementById('register-password').value;
       const password2 = document.getElementById('register-password2').value;
-      const name = document.getElementById('register-name').value;
-      if (password !== password2 || password.length < 6) {
-        showMessage('register-msg-step3', 'Password error.', 'error');
+      const name = document.getElementById('register-name').value.trim();
+      if (password !== password2) {
+        showMessage('register-msg-step3', 'Passwords do not match.', 'error');
+        return;
+      }
+      if (password.length < 6) {
+        showMessage('register-msg-step3', 'Password must be at least 6 characters.', 'error');
         return;
       }
       try {
+        showMessage('register-msg-step3', 'Creating account...', 'info');
         const result = await auth.createUserWithEmailAndPassword(window._registerEmail, password);
         currentUser = result.user;
         const codeDoc = await db.collection('industryCodes').doc(window._industryCode).get();
         const { industry, template, productName } = codeDoc.data();
+        const finalProductName = productName || 'Default Product';
         await db.collection('users').doc(currentUser.uid).set({
           email: window._registerEmail,
           name: name,
@@ -922,19 +976,20 @@
           industryCode: window._industryCode,
           industry: industry,
           template: template,
-          productName: productName || 'Product',
+          productName: finalProductName,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         userRole = 'client';
         userTemplates = [template];
-        userProductName = productName || 'Product';
+        userProductName = finalProductName;
         userIndustryCode = window._industryCode;
         hideElement('setup-industry-group');
         hideElement('account-industry-group');
-        showMessage('register-msg-step3', 'Account created!', 'success');
+        showMessage('register-msg-step3', 'Account created successfully!', 'success');
         setTimeout(() => showMainApp(), 1000);
       } catch (err) {
-        showMessage('register-msg-step3', err.message, 'error');
+        showMessage('register-msg-step3', 'Error: ' + err.message, 'error');
+        console.error('Registration error:', err);
       }
     }
     // Setup Page Functions
@@ -943,12 +998,12 @@
       const name = document.getElementById('setup-name').value.trim();
       const productName = document.getElementById('setup-product').value.trim();
       const industry = userRole === 'master' ? document.getElementById('setup-industry').value.trim() : null;
-      if (!name || !productName) {
-        showMessage('setup-msg', 'Please enter name and product.', 'error');
+      if (!name || !productName || productName.length < 2) {
+        showMessage('setup-msg', 'Please enter a valid name and product name (2+ characters).', 'error');
         return;
       }
       try {
-        showMessage('setup-msg', 'Saving...', 'info');
+        showMessage('setup-msg', 'Saving profile...', 'info');
         const userDoc = await db.collection('users').doc(currentUser.uid).get();
         const existingData = userDoc.exists ? userDoc.data() : {};
         await db.collection('users').doc(currentUser.uid).set({
@@ -961,10 +1016,11 @@
         await currentUser.updateProfile({ displayName: name });
         userProductName = productName;
         checkProductWarning();
-        showMessage('setup-msg', 'Saved!', 'success');
+        showMessage('setup-msg', 'Profile saved!', 'success');
         setTimeout(() => showPage('template-page'), 1000);
       } catch (err) {
         showMessage('setup-msg', 'Error: ' + err.message, 'error');
+        console.error('Setup error:', err);
       }
     }
     // Account Page Functions
@@ -973,14 +1029,16 @@
         const userDoc = await db.collection('users').doc(currentUser.uid).get();
         if (userDoc.exists) {
           const data = userDoc.data();
-          userProductName = data.productName || '';
+          userProductName = data.productName || 'Default Product';
           userIndustryCode = data.industryCode || '000000';
           let industryDisplay = data.industry || 'Not specified';
           if (userIndustryCode && userIndustryCode !== '000000') {
             try {
               const codeDoc = await db.collection('industryCodes').doc(userIndustryCode).get();
               industryDisplay = codeDoc.exists ? codeDoc.data().industry : 'Unknown';
-            } catch (err) {}
+            } catch (err) {
+              console.error('Error fetching industry code:', err);
+            }
           }
           document.getElementById('account-info').innerHTML = `
             <p><strong>Name:</strong> ${data.name || 'Not set'}</p>
@@ -990,9 +1048,15 @@
             <p><strong>Product Name:</strong> ${userProductName}</p>
           `;
           checkProductWarning();
+          console.log('Account info loaded:', { userProductName, userIndustryCode });
+        } else {
+          userProductName = '';
+          showMessage('account-msg', 'Profile not found. Please set up your profile.', 'error');
+          showPage('setup-page');
         }
       } catch (err) {
-        showMessage('account-msg', 'Error loading: ' + err.message, 'error');
+        showMessage('account-msg', 'Error loading account: ' + err.message, 'error');
+        console.error('Load account error:', err);
       }
     }
     async function handleAccountUpdate(e) {
@@ -1000,12 +1064,12 @@
       const name = document.getElementById('account-name').value.trim();
       const productName = document.getElementById('account-product').value.trim();
       const industry = userRole === 'master' ? document.getElementById('account-industry').value.trim() : null;
-      if (!name || !productName) {
-        showMessage('account-msg', 'Please enter name and product.', 'error');
+      if (!name || !productName || productName.length < 2) {
+        showMessage('account-msg', 'Please enter a valid name and product name (2+ characters).', 'error');
         return;
       }
       try {
-        showMessage('account-msg', 'Updating...', 'info');
+        showMessage('account-msg', 'Updating profile...', 'info');
         const userDoc = await db.collection('users').doc(currentUser.uid).get();
         const existingData = userDoc.exists ? userDoc.data() : {};
         await db.collection('users').doc(currentUser.uid).set({
@@ -1017,12 +1081,13 @@
         await currentUser.updateProfile({ displayName: name });
         userProductName = productName;
         checkProductWarning();
-        showMessage('account-msg', 'Updated!', 'success');
+        showMessage('account-msg', 'Profile updated!', 'success');
         hideElement('account-form');
         showElement('edit-account-btn');
         loadAccountInfo();
       } catch (err) {
         showMessage('account-msg', 'Error: ' + err.message, 'error');
+        console.error('Update account error:', err);
       }
     }
     // Template Page Functions
@@ -1037,20 +1102,22 @@
         } else {
           const userDoc = await db.collection('users').doc(currentUser.uid).get();
           if (!userDoc.exists) {
-            showMessage('template-status', 'Profile not found.', 'error');
+            showMessage('template-status', 'Profile not found. Please set up your profile.', 'error');
+            showPage('setup-page');
             return;
           }
           const data = userDoc.data();
           userTemplates = data.template ? [data.template] : [];
-          userProductName = data.productName || '';
+          userProductName = data.productName || 'Default Product';
           userIndustryCode = data.industryCode || null;
         }
+        console.log('Templates loaded:', { userTemplates, userProductName });
         if (!userProductName || userProductName.trim().length < 2) {
           showMessage('template-status', 'Product name required. <a href="#" onclick="showPage(\'account-page\'); return false;">Update now</a>', 'error');
+          showPage('account-page');
           checkProductWarning();
           return;
         }
-        checkProductWarning();
         const checkboxes = document.getElementById('template-checkboxes');
         checkboxes.innerHTML = userTemplates.map(template => `
           <label><input type="checkbox" value="${template}" checked> ${template.charAt(0).toUpperCase() + template.slice(1)}</label>
@@ -1061,40 +1128,69 @@
         document.querySelectorAll('#template-checkboxes input').forEach(checkbox => {
           checkbox.addEventListener('change', updatePromptDisplay);
         });
+        checkProductWarning();
       } catch (err) {
-        showMessage('template-status', 'Error: ' + err.message, 'error');
+        showMessage('template-status', 'Error loading templates: ' + err.message, 'error');
+        console.error('Load templates error:', err);
       }
     }
     function updatePromptDisplay() {
       const selectedTemplates = Array.from(document.querySelectorAll('#template-checkboxes input:checked')).map(input => input.value);
       const promptDisplay = document.getElementById('prompt-display');
-      promptDisplay.textContent = `Generate a design for ${userProductName} in ${selectedTemplates.join(', ')} style`;
+      promptDisplay.textContent = selectedTemplates.length > 0
+        ? `Generate a design for ${userProductName} in ${selectedTemplates.join(', ')} style`
+        : 'Please select at least one template.';
       showElement('prompt-display');
+      console.log('Prompt updated:', promptDisplay.textContent);
+    }
+    async function fetchImageUrl(prompt, seed) {
+      try {
+        const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=768&height=1024&seed=${seed}`;
+        console.log('Fetching image for prompt:', prompt, 'URL:', url);
+        const response = await fetch(url, { method: 'GET', mode: 'cors' });
+        if (!response.ok) {
+          throw new Error(`Pollen AI returned ${response.status}: ${response.statusText}`);
+        }
+        const blob = await response.blob();
+        const imageUrl = URL.createObjectURL(blob);
+        console.log('Image fetched successfully:', imageUrl);
+        return imageUrl;
+      } catch (err) {
+        console.error('Image fetch error:', err.message);
+        throw err;
+      }
     }
     async function generateImages() {
-      if (!currentUser || !userProductName || userProductName.trim().length < 2) {
-        showMessage('template-status', 'Product name required!', 'error');
+      if (!currentUser) {
+        showMessage('template-status', 'Please sign in.', 'error');
+        return;
+      }
+      if (!userProductName || userProductName.trim().length < 2) {
+        showMessage('template-status', 'Product name required. <a href="#" onclick="showPage(\'account-page\'); return false;">Update now</a>', 'error');
+        showPage('account-page');
         return;
       }
       const selectedTemplates = Array.from(document.querySelectorAll('#template-checkboxes input:checked')).map(input => input.value);
       if (selectedTemplates.length === 0) {
-        showMessage('template-status', 'Select a template.', 'error');
+        showMessage('template-status', 'Please select at least one template.', 'error');
         return;
       }
       if (generationCount >= 20) {
-        showMessage('template-status', 'Limit reached.', 'error');
+        showMessage('template-status', 'Maximum generation limit reached.', 'error');
         return;
       }
       const prompt = `A beautiful product design for ${userProductName}, ${selectedTemplates.join(', ')} style, high quality, detailed, professional`;
-      showMessage('template-status', 'Generating with Pollen AI...', 'info');
+      showMessage('template-status', 'Generating images with Pollen AI...', 'info');
       document.getElementById('generate-images-btn').disabled = true;
       try {
-        // 🔥 FIXED: Use Pollen AI - generates 2 images per prompt
         const urls = await Promise.all([
-          `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=768&height=1024&seed=${Date.now()}`,
-          `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt + ' (variation 2)') }?width=768&height=1024&seed=${Date.now() + 1}`
+          fetchImageUrl(prompt, Date.now()),
+          fetchImageUrl(prompt + ' (variation 2)', Date.now() + 1)
         ]);
-        const items = urls.map(url => ({ provider: 'Pollen AI', url: url }));
+        const items = urls.map(url => ({ provider: 'Pollen AI', url }));
+        if (items.some(item => !item.url)) {
+          throw new Error('One or more images failed to generate.');
+        }
         renderImages(items);
         generationCount++;
         const generationRef = db.collection('generations').doc();
@@ -1112,8 +1208,18 @@
         userGenerations.docs.slice(3).forEach(doc => doc.ref.delete());
         showMessage('template-status', 'Images generated successfully!', 'success');
       } catch (err) {
-        showMessage('template-status', 'Generation failed. Try again later.', 'error');
-        console.error('Generation error:', err);
+        let errorMessage = 'Error generating images. Please try again.';
+        if (err.message.includes('Pollen AI returned')) {
+          errorMessage = 'Image generation service unavailable. Try again later.';
+        } else if (err.message.includes('Failed to fetch')) {
+          errorMessage = 'Network error: Unable to reach Pollen AI. Check your connection.';
+        } else if (err.message.includes('Permission denied')) {
+          errorMessage = 'Firestore permission error: Check your Firebase rules.';
+        } else if (err.message.includes('requires an index')) {
+          errorMessage = 'Database configuration needed. Set up the required Firestore index.';
+        }
+        showMessage('template-status', errorMessage, 'error');
+        console.error('Generation error:', err.message, 'Stack:', err.stack);
       } finally {
         document.getElementById('generate-images-btn').disabled = false;
       }
@@ -1126,11 +1232,12 @@
           <img src="${item.url}" alt="Generated image ${idx + 1}" onload="this.style.opacity=1" style="opacity:0.5; transition:opacity 0.5s"/>
           <div class="image-feedback">
             <button onclick="downloadImage('${item.url}', ${idx})">I like this</button>
-            ${idx === 0 ? `<button onclick="downloadImage('${items[1].url}', 1)">I like that</button>` : ''}
+            ${idx === 0 && items[1] ? `<button onclick="downloadImage('${items[1].url}', 1)">I like that</button>` : ''}
             ${idx === 0 ? `<button onclick="handleBothBad()">Both bad</button>` : ''}
           </div>
         </div>
       `).join('');
+      console.log('Rendered images:', items);
     }
     function downloadImage(url, idx) {
       const a = document.createElement('a');
@@ -1156,7 +1263,7 @@
           .limit(3)
           .get();
         if (generations.empty) {
-          showMessage('records-msg', 'No records.', 'info');
+          showMessage('records-msg', 'No generation records found.', 'info');
           return;
         }
         generations.forEach(doc => {
@@ -1174,22 +1281,26 @@
         });
         hideMessage('records-msg');
       } catch (err) {
-        showMessage('records-msg', 'Error: ' + err.message, 'error');
+        showMessage('records-msg', 'Error loading records: ' + err.message, 'error');
+        console.error('Load records error:', err);
       }
     }
     // Create Account (Master) Functions
     async function handleCreateAccount(e) {
       e.preventDefault();
-      if (userRole !== 'master') return;
+      if (userRole !== 'master') {
+        showMessage('create-account-msg', 'Unauthorized access.', 'error');
+        return;
+      }
       const industryName = document.getElementById('industry-name').value.trim();
       const template = document.getElementById('industry-template').value;
       const productName = document.getElementById('industry-product').value.trim();
-      if (!industryName || !template || !productName) {
-        showMessage('create-account-msg', 'Fill all fields.', 'error');
+      if (!industryName || !template || !productName || productName.length < 2) {
+        showMessage('create-account-msg', 'Please fill all fields with valid data.', 'error');
         return;
       }
       try {
-        showMessage('create-account-msg', 'Generating...', 'info');
+        showMessage('create-account-msg', 'Generating industry code...', 'info');
         const industryCode = Math.random().toString(36).substring(2, 10).toUpperCase();
         await db.collection('industryCodes').doc(industryCode).set({
           industry: industryName,
@@ -1199,10 +1310,11 @@
         });
         document.getElementById('industry-code').textContent = industryCode;
         showElement('generated-code');
-        showMessage('create-account-msg', 'Code generated!', 'success');
+        showMessage('create-account-msg', 'Industry code generated!', 'success');
         document.getElementById('create-account-form').reset();
       } catch (err) {
         showMessage('create-account-msg', 'Error: ' + err.message, 'error');
+        console.error('Create account error:', err);
       }
     }
     // Event Listeners
@@ -1261,8 +1373,9 @@
         if (user) {
           currentUser = user;
           checkUserRole().then(() => {
-            loadAccountInfo();
-            showMainApp();
+            loadAccountInfo().then(() => {
+              showMainApp();
+            });
           });
         } else {
           showAuth();
