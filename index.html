@@ -920,8 +920,8 @@
         return;
       }
       const codeDoc = await db.collection('industryCodes').doc(industryCode).get();
-      if (!codeDoc.exists) {
-        showMessage('register-msg-step1', 'Invalid industry code.', 'error');
+      if (!codeDoc.exists || codeDoc.data().used) {
+        showMessage('register-msg-step1', 'Invalid or already used industry code.', 'error');
         return;
       }
       window._registerCode = Math.floor(100000 + Math.random() * 900000).toString();
@@ -978,6 +978,10 @@
           template: template,
           productName: finalProductName,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        await db.collection('industryCodes').doc(window._industryCode).update({
+          used: true,
+          usedBy: currentUser.uid
         });
         userRole = 'client';
         userTemplates = [template];
@@ -1306,7 +1310,8 @@
           industry: industryName,
           template: template,
           productName: productName,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          used: false
         });
         document.getElementById('industry-code').textContent = industryCode;
         showElement('generated-code');
