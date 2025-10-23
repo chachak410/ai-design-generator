@@ -373,14 +373,6 @@
       color: #c62828;
       border: 1px solid #ffcdd2;
     }
-    .template-checkboxes label {
-      display: flex;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-    .template-checkboxes input[type="checkbox"] {
-      margin-right: 10px;
-    }
     .image-feedback {
       display: flex;
       gap: 10px;
@@ -587,10 +579,8 @@
       <div id="template-page" class="controls">
         <h2>Generate Images</h2>
         <div id="product-display" class="product-display" style="display: none;"></div>
-        <div id="spec-selections" class="form-group"></div>
+        <div id="spec-selections" class="row"></div>
         <div id="prompt-display" class="prompt-display" style="display: none;"></div>
-        <h3>Select Template</h3>
-        <div class="template-checkboxes" id="template-checkboxes"></div>
         <div class="button-container">
           <button id="generate-images-btn" class="generate-btn">✨ Generate Images</button>
         </div>
@@ -632,7 +622,6 @@
                   <option value="colorScheme">Color Scheme</option>
                   <option value="style">Style</option>
                   <option value="tone">Tone</option>
-                  <option value="dimensions">Dimensions</option>
                   <option value="other">Other</option>
                 </select>
               </div>
@@ -689,7 +678,6 @@
     // Global state
     let currentUser = null;
     let userRole = null;
-    let userTemplates = [];
     let userSpecs = null;
     let selectedSpecs = {};
     let generationCount = 0;
@@ -774,7 +762,6 @@
                 <option value="colorScheme">Color Scheme</option>
                 <option value="style">Style</option>
                 <option value="tone">Tone</option>
-                <option value="dimensions">Dimensions</option>
                 <option value="other">Other</option>
               </select>
             </div>
@@ -890,7 +877,6 @@
             <option value="colorScheme">Color Scheme</option>
             <option value="style">Style</option>
             <option value="tone">Tone</option>
-            <option value="dimensions">Dimensions</option>
             <option value="other">Other</option>
           </select>
         </div>
@@ -965,7 +951,6 @@
       auth.signOut().then(() => {
         currentUser = null;
         userRole = null;
-        userTemplates = [];
         userSpecs = null;
         selectedSpecs = {};
         userProductName = '';
@@ -1062,7 +1047,6 @@
           usedBy: currentUser.uid
         });
         userRole = 'client';
-        userTemplates = [style];
         userSpecs = specifications || {};
         selectedSpecs = Object.keys(userSpecs).reduce((acc, key) => {
           acc[key] = userSpecs[key][0] || '';
@@ -1131,7 +1115,7 @@
             <p><strong>Name:</strong> ${data.name || 'Not set'}</p>
             <p><strong>Email:</strong> ${currentUser.email}</p>
             <p><strong>Industry:</strong> ${industryDisplay} (Code: ${userIndustryCode})</p>
-            <p><strong>Template:</strong> ${data.template || 'None'}</p>
+            <p><strong>Style:</strong> ${data.template || 'None'}</p>
             <p><strong>Product Name:</strong> ${userProductName}</p>
           `;
           checkProductWarning();
@@ -1185,7 +1169,6 @@
       }
       try {
         if (userRole === 'master') {
-          userTemplates = ['modern', 'classic', 'minimalist'];
           userSpecs = null;
           selectedSpecs = {};
         } else {
@@ -1196,7 +1179,6 @@
             return;
           }
           const data = userDoc.data();
-          userTemplates = data.template ? [data.template] : [];
           userSpecs = data.specifications || {};
           selectedSpecs = Object.keys(userSpecs).reduce((acc, key) => {
             acc[key] = userSpecs[key][0] || '';
@@ -1205,17 +1187,13 @@
           userProductName = data.productName || 'Default Product';
           userIndustryCode = data.industryCode || null;
         }
-        console.log('Templates loaded:', { userTemplates, userProductName, userSpecs, selectedSpecs });
+        console.log('Templates loaded:', { userProductName, userSpecs, selectedSpecs });
         if (!userProductName || userProductName.trim().length < 2) {
           showMessage('template-status', 'Product name required. <a href="#" onclick="showPage(\'account-page\'); return false;">Update now</a>', 'error');
           showPage('account-page');
           checkProductWarning();
           return;
         }
-        const checkboxes = document.getElementById('template-checkboxes');
-        checkboxes.innerHTML = userTemplates.map(template => `
-          <label><input type="checkbox" value="${template}" checked> ${template.charAt(0).toUpperCase() + template.slice(1)}</label>
-        `).join('');
         document.getElementById('product-display').textContent = `Product: ${userProductName}`;
         showElement('product-display');
         const specSelections = document.getElementById('spec-selections');
@@ -1239,34 +1217,42 @@
           hideElement('spec-selections');
         }
         updatePromptDisplay();
-        document.querySelectorAll('#template-checkboxes input').forEach(checkbox => {
-          checkbox.addEventListener('change', updatePromptDisplay);
-        });
         checkProductWarning();
       } catch (err) {
-        showMessage('template-status', 'Error loading templates: ' + err.message, 'error');
+        showMessage('template-status', 'Error loading specifications: ' + err.message, 'error');
         console.error('Load templates error:', err);
       }
     }
     function updatePromptDisplay() {
-      const selectedTemplates = Array.from(document.querySelectorAll('#template-checkboxes input:checked')).map(input => input.value);
-      let extra = '';
-      if (userSpecs) {
-        extra = Object.entries(selectedSpecs)
-          .map(([key, value]) => `${key}: ${value}`)
-          .join(', ');
-        if (extra) extra = ', ' + extra;
-      }
+      const style = selectedSpecs.style || 'default';
+      let extra = Object.entries(selectedSpecs)
+        .filter(([key]) => key !== 'style')
+        .map(([key, value]) => `${key}: ${value}`)
+        .join(', ');
+      if (extra) extra = ', ' + extra;
       const promptDisplay = document.getElementById('prompt-display');
-      promptDisplay.textContent = selectedTemplates.length > 0
-        ? `Generate a design for ${userProductName} in ${selectedTemplates.join(', ')} style${extra}`
-        : 'Please select at least one template.';
+      promptDisplay.textContent = `Generate a design for ${userProductName} in ${style} style${extra}`;
       showElement('prompt-display');
       console.log('Prompt updated:', promptDisplay.textContent);
     }
-    async function fetchImageUrl(prompt, seed) {
+    async function fetchImageUrl(prompt, seed, size) {
       try {
-        const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=768&height=1024&seed=${seed}`;
+        let width = 1080, height = 1080;
+        if (size) {
+          if (size === '1:1') {
+            width = 1080;
+            height = 1080;
+          } else if (size === '16:9') {
+            width = 1920;
+            height = 1080;
+          } else if (size === '9:16') {
+            width = 1080;
+            height = 1920;
+          } else if (size.includes('x')) {
+            [width, height] = size.split('x').map(Number);
+          }
+        }
+        const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${width}&height=${height}&seed=${seed}`;
         console.log('Fetching image for prompt:', prompt, 'URL:', url);
         const response = await fetch(url, { method: 'GET', mode: 'cors' });
         if (!response.ok) {
@@ -1291,29 +1277,28 @@
         showPage('account-page');
         return;
       }
-      const selectedTemplates = Array.from(document.querySelectorAll('#template-checkboxes input:checked')).map(input => input.value);
-      if (selectedTemplates.length === 0) {
-        showMessage('template-status', 'Please select at least one template.', 'error');
+      if (!selectedSpecs.style) {
+        showMessage('template-status', 'Please select a style.', 'error');
         return;
       }
       if (generationCount >= 20) {
         showMessage('template-status', 'Maximum generation limit reached.', 'error');
         return;
       }
-      let extra = '';
-      if (userSpecs) {
-        extra = Object.entries(selectedSpecs)
-          .map(([key, value]) => `${key}: ${value}`)
-          .join(', ');
-        if (extra) extra = ', ' + extra;
-      }
-      const prompt = `A beautiful product design for ${userProductName}, ${selectedTemplates.join(', ')} style${extra}, high quality, detailed, professional`;
+      const style = selectedSpecs.style;
+      let extra = Object.entries(selectedSpecs)
+        .filter(([key]) => key !== 'style')
+        .map(([key, value]) => `${key}: ${value}`)
+        .join(', ');
+      if (extra) extra = ', ' + extra;
+      const prompt = `A beautiful product design for ${userProductName}, ${style} style${extra}, high quality, detailed, professional`;
       showMessage('template-status', 'Generating images with Pollen AI...', 'info');
       document.getElementById('generate-images-btn').disabled = true;
       try {
+        const size = selectedSpecs.size || '1:1';
         const urls = await Promise.all([
-          fetchImageUrl(prompt, Date.now()),
-          fetchImageUrl(prompt + ' (variation 2)', Date.now() + 1)
+          fetchImageUrl(prompt, Date.now(), size),
+          fetchImageUrl(prompt + ' (variation 2)', Date.now() + 1, size)
         ]);
         const items = urls.map(url => ({ provider: 'Pollen AI', url }));
         if (items.some(item => !item.url)) {
@@ -1324,7 +1309,7 @@
         const generationRef = db.collection('generations').doc();
         await generationRef.set({
           userId: currentUser.uid,
-          templates: selectedTemplates,
+          templates: [style],
           productName: userProductName,
           specifications: selectedSpecs,
           images: items.map(item => item.url),
@@ -1481,7 +1466,6 @@
                 <option value="colorScheme">Color Scheme</option>
                 <option value="style">Style</option>
                 <option value="tone">Tone</option>
-                <option value="dimensions">Dimensions</option>
                 <option value="other">Other</option>
               </select>
             </div>
