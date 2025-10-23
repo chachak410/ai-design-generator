@@ -675,17 +675,51 @@
         <h2>Create Industry Account</h2>
         <form id="create-account-form">
           <div class="form-group">
+            <label for="industry-category">Industry Category</label>
+            <select id="industry-category" required>
+              <option value="">Select category</option>
+              <option value="advertising">Advertising</option>
+              <option value="entertainment">Entertainment</option>
+              <option value="ecommerce">E-commerce</option>
+              <option value="healthcare">Healthcare</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group hidden" id="custom-category-group">
+            <label for="custom-category">Custom Category</label>
+            <input id="custom-category" type="text" placeholder="Enter custom category">
+          </div>
+          <div class="form-group">
             <label for="industry-name">Industry Name</label>
             <input id="industry-name" type="text" required placeholder="Enter industry name (e.g., Class A)">
           </div>
           <div class="form-group">
-            <label for="industry-template">Select Template</label>
-            <select id="industry-template" required>
-              <option value="">Select a template</option>
-              <option value="modern">Modern Design</option>
-              <option value="classic">Classic Design</option>
-              <option value="minimalist">Minimalist Design</option>
+            <label for="specs-style">Style</label>
+            <input id="specs-style" type="text" required placeholder="e.g., modern, vibrant">
+          </div>
+          <div class="form-group">
+            <label for="specs-color-scheme">Color Scheme</label>
+            <input id="specs-color-scheme" type="text" placeholder="e.g., blue and green">
+          </div>
+          <div class="form-group">
+            <label for="specs-tone">Tone</label>
+            <select id="specs-tone">
+              <option value="">Select tone</option>
+              <option value="professional">Professional</option>
+              <option value="casual">Casual</option>
+              <option value="energetic">Energetic</option>
+              <option value="calming">Calming</option>
+              <option value="serious">Serious</option>
+              <option value="funny">Funny</option>
             </select>
+          </div>
+          <div class="form-group">
+            <label for="specs-dimensions">Dimensions</label>
+            <input id="specs-dimensions" type="text" placeholder="e.g., 1024x768">
+          </div>
+          <div class="form-group">
+            <label for="specs-additional">Additional Specifications</label>
+            <textarea id="specs-additional" placeholder="Any other details for the design prompt"></textarea>
           </div>
           <div class="form-group">
             <label for="industry-product">Product Name</label>
@@ -729,6 +763,7 @@
     let currentUser = null;
     let userRole = null;
     let userTemplates = [];
+    let userSpecs = null;
     let generationCount = 0;
     let userProductName = '';
     let userIndustryCode = null;
@@ -904,6 +939,7 @@
         currentUser = null;
         userRole = null;
         userTemplates = [];
+        userSpecs = null;
         userProductName = '';
         userIndustryCode = null;
         showAuth();
@@ -981,15 +1017,17 @@
         const result = await auth.createUserWithEmailAndPassword(window._registerEmail, password);
         currentUser = result.user;
         const codeDoc = await db.collection('industryCodes').doc(window._industryCode).get();
-        const { industry, template, productName } = codeDoc.data();
+        const { industryCategory, industry, specs, productName } = codeDoc.data();
         const finalProductName = productName || 'Default Product';
         await db.collection('users').doc(currentUser.uid).set({
           email: window._registerEmail,
           name: name,
           role: 'client',
           industryCode: window._industryCode,
+          industryCategory: industryCategory,
           industry: industry,
-          template: template,
+          template: specs.style,
+          specs: specs,
           productName: finalProductName,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
@@ -998,7 +1036,8 @@
           usedBy: currentUser.uid
         });
         userRole = 'client';
-        userTemplates = [template];
+        userTemplates = [specs.style];
+        userSpecs = specs;
         userProductName = finalProductName;
         userIndustryCode = window._industryCode;
         hideElement('setup-industry-group');
@@ -1050,10 +1089,12 @@
           userProductName = data.productName || 'Default Product';
           userIndustryCode = data.industryCode || '000000';
           let industryDisplay = data.industry || 'Not specified';
+          let categoryDisplay = data.industryCategory || 'Not specified';
           if (userIndustryCode && userIndustryCode !== '000000') {
             try {
               const codeDoc = await db.collection('industryCodes').doc(userIndustryCode).get();
               industryDisplay = codeDoc.exists ? codeDoc.data().industry : 'Unknown';
+              categoryDisplay = codeDoc.exists ? codeDoc.data().industryCategory : 'Unknown';
             } catch (err) {
               console.error('Error fetching industry code:', err);
             }
@@ -1061,6 +1102,7 @@
           document.getElementById('account-info').innerHTML = `
             <p><strong>Name:</strong> ${data.name || 'Not set'}</p>
             <p><strong>Email:</strong> ${currentUser.email}</p>
+            <p><strong>Industry Category:</strong> ${categoryDisplay}</p>
             <p><strong>Industry:</strong> ${industryDisplay} (Code: ${userIndustryCode})</p>
             <p><strong>Template:</strong> ${data.template || 'None'}</p>
             <p><strong>Product Name:</strong> ${userProductName}</p>
@@ -1117,6 +1159,7 @@
       try {
         if (userRole === 'master') {
           userTemplates = ['modern', 'classic', 'minimalist'];
+          userSpecs = null;
         } else {
           const userDoc = await db.collection('users').doc(currentUser.uid).get();
           if (!userDoc.exists) {
@@ -1126,6 +1169,7 @@
           }
           const data = userDoc.data();
           userTemplates = data.template ? [data.template] : [];
+          userSpecs = data.specs || null;
           userProductName = data.productName || 'Default Product';
           userIndustryCode = data.industryCode || null;
         }
@@ -1154,9 +1198,16 @@
     }
     function updatePromptDisplay() {
       const selectedTemplates = Array.from(document.querySelectorAll('#template-checkboxes input:checked')).map(input => input.value);
+      let extra = '';
+      if (userSpecs) {
+        if (userSpecs.colorScheme) extra += `, color scheme: ${userSpecs.colorScheme}`;
+        if (userSpecs.tone) extra += `, tone: ${userSpecs.tone}`;
+        if (userSpecs.dimensions) extra += `, dimensions: ${userSpecs.dimensions}`;
+        if (userSpecs.additional) extra += `, ${userSpecs.additional}`;
+      }
       const promptDisplay = document.getElementById('prompt-display');
       promptDisplay.textContent = selectedTemplates.length > 0
-        ? `Generate a design for ${userProductName} in ${selectedTemplates.join(', ')} style`
+        ? `Generate a design for ${userProductName} in ${selectedTemplates.join(', ')} style${extra}`
         : 'Please select at least one template.';
       showElement('prompt-display');
       console.log('Prompt updated:', promptDisplay.textContent);
@@ -1197,7 +1248,14 @@
         showMessage('template-status', 'Maximum generation limit reached.', 'error');
         return;
       }
-      const prompt = `A beautiful product design for ${userProductName}, ${selectedTemplates.join(', ')} style, high quality, detailed, professional`;
+      let extra = '';
+      if (userSpecs) {
+        if (userSpecs.colorScheme) extra += `, color scheme: ${userSpecs.colorScheme}`;
+        if (userSpecs.tone) extra += `, tone: ${userSpecs.tone}`;
+        if (userSpecs.dimensions) extra += `, dimensions: ${userSpecs.dimensions}`;
+        if (userSpecs.additional) extra += `, ${userSpecs.additional}`;
+      }
+      const prompt = `A beautiful product design for ${userProductName}, ${selectedTemplates.join(', ')} style${extra}, high quality, detailed, professional`;
       showMessage('template-status', 'Generating images with Pollen AI...', 'info');
       document.getElementById('generate-images-btn').disabled = true;
       try {
@@ -1310,19 +1368,37 @@
         showMessage('create-account-msg', 'Unauthorized access.', 'error');
         return;
       }
+      const industryCategory = document.getElementById('industry-category').value;
+      const customCategory = document.getElementById('custom-category').value.trim();
+      if (industryCategory === 'other' && !customCategory) {
+        showMessage('create-account-msg', 'Please enter a custom category.', 'error');
+        return;
+      }
+      const effectiveCategory = industryCategory === 'other' ? customCategory : industryCategory;
       const industryName = document.getElementById('industry-name').value.trim();
-      const template = document.getElementById('industry-template').value;
+      const style = document.getElementById('specs-style').value.trim();
+      const colorScheme = document.getElementById('specs-color-scheme').value.trim();
+      const tone = document.getElementById('specs-tone').value;
+      const dimensions = document.getElementById('specs-dimensions').value.trim();
+      const additional = document.getElementById('specs-additional').value.trim();
       const productName = document.getElementById('industry-product').value.trim();
-      if (!industryName || !template || !productName || productName.length < 2) {
-        showMessage('create-account-msg', 'Please fill all fields with valid data.', 'error');
+      if (!effectiveCategory || !industryName || !style || !productName || productName.length < 2) {
+        showMessage('create-account-msg', 'Please fill all required fields with valid data.', 'error');
         return;
       }
       try {
         showMessage('create-account-msg', 'Generating industry code...', 'info');
         const industryCode = Math.random().toString(36).substring(2, 10).toUpperCase();
         await db.collection('industryCodes').doc(industryCode).set({
+          industryCategory: effectiveCategory,
           industry: industryName,
-          template: template,
+          specs: {
+            style: style,
+            colorScheme: colorScheme,
+            tone: tone,
+            dimensions: dimensions,
+            additional: additional
+          },
           productName: productName,
           createdAt: firebase.firestore.FieldValue.serverTimestamp(),
           used: false
@@ -1385,6 +1461,14 @@
       document.getElementById('generate-images-btn').addEventListener('click', generateImages);
       // Create account (master)
       document.getElementById('create-account-form').addEventListener('submit', handleCreateAccount);
+      // Industry category change listener
+      document.getElementById('industry-category').addEventListener('change', function() {
+        if (this.value === 'other') {
+          showElement('custom-category-group');
+        } else {
+          hideElement('custom-category-group');
+        }
+      });
       // Logout
       document.getElementById('logout-btn').addEventListener('click', handleLogout);
       // Initialize
