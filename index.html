@@ -14,7 +14,6 @@
       padding: 0;
       box-sizing: border-box;
     }
-  
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -23,7 +22,6 @@
       align-items: center;
       justify-content: center;
     }
-  
     /* Authentication Styles */
     .auth-container {
       background: white;
@@ -34,40 +32,33 @@
       max-width: 450px;
       margin: 20px;
     }
-  
     .auth-header {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
       padding: 40px 30px;
       text-align: center;
     }
-  
     .auth-header h1 {
       font-size: 2.2em;
       margin-bottom: 10px;
       font-weight: 300;
     }
-  
     .auth-header p {
       opacity: 0.9;
       font-size: 1.1em;
     }
-  
     .auth-content {
       padding: 40px 30px;
     }
-  
     .form-group {
       margin-bottom: 25px;
     }
-  
     .form-group label {
       display: block;
       margin-bottom: 8px;
       font-weight: 500;
       color: #333;
     }
-  
     .form-group input, .form-group select {
       width: 100%;
       padding: 15px;
@@ -76,13 +67,11 @@
       font-size: 16px;
       transition: border-color 0.3s, box-shadow 0.3s;
     }
-  
     .form-group input:focus, .form-group select:focus {
       outline: none;
       border-color: #667eea;
       box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
-  
     .btn {
       width: 100%;
       padding: 15px;
@@ -95,37 +84,25 @@
       cursor: pointer;
       transition: transform 0.2s, box-shadow 0.2s;
     }
-  
     .btn:hover {
       transform: translateY(-2px);
       box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
     }
-  
     .btn:disabled {
       opacity: 0.6;
       cursor: not-allowed;
       transform: none;
     }
-  
     .btn-secondary {
       background: #6c757d;
       margin-top: 10px;
     }
-  
-    .btn-code {
+    .btn-code, .btn-add-spec, .btn-add-value {
       width: auto;
       padding: 10px 20px;
       margin-left: 10px;
       font-size: 14px;
     }
-  
-    .btn-add-spec {
-      width: auto;
-      padding: 10px 20px;
-      font-size: 14px;
-      margin-top: 10px;
-    }
-  
     .message {
       padding: 12px;
       border-radius: 8px;
@@ -133,52 +110,43 @@
       text-align: center;
       font-weight: 500;
     }
-  
     .message.error {
       background: #ffebee;
       color: #c62828;
       border: 1px solid #ffcdd2;
     }
-  
     .message.success {
       background: #e8f5e8;
       color: #2e7d32;
       border: 1px solid #c8e6c9;
     }
-  
     .message.info {
       background: #e3f2fd;
       color: #1976d2;
       border: 1px solid #bbdefb;
     }
-  
     .switch-link {
       text-align: center;
       margin-top: 25px;
       padding-top: 25px;
       border-top: 1px solid #e1e5e9;
     }
-  
     .switch-link a {
       color: #667eea;
       text-decoration: none;
       font-weight: 500;
     }
-  
     .switch-link a:hover {
       text-decoration: underline;
     }
-  
     .code-input-group {
       display: flex;
       align-items: center;
     }
-  
     .code-input-group input {
       flex: 1;
     }
-  
-    .code-display, .product-display, .prompt-display, .specs-display {
+    .code-display, .product-display, .prompt-display {
       background: #e3f2fd;
       border: 2px solid #bbdefb;
       padding: 15px;
@@ -191,16 +159,13 @@
       position: relative;
       display: none;
     }
-  
-    .code-display.show, .product-display.show, .prompt-display.show, .specs-display.show {
+    .code-display.show, .product-display.show, .prompt-display.show {
       display: block;
     }
-  
     .code-display span {
       font-family: monospace;
       font-size: 20px;
     }
-  
     .code-display button {
       position: absolute;
       right: 10px;
@@ -214,15 +179,12 @@
       cursor: pointer;
       font-size: 14px;
     }
-  
     .code-display button:hover {
       background: #5a6cd1;
     }
-  
     .hidden {
       display: none !important;
     }
-  
     .spec-group {
       border: 1px solid #e1e5e9;
       border-radius: 10px;
@@ -230,11 +192,16 @@
       margin-bottom: 15px;
       background: #f8f9fa;
     }
-  
     .spec-group .form-group {
       margin-bottom: 15px;
     }
-  
+    .value-group {
+      margin-left: 20px;
+      margin-bottom: 10px;
+    }
+    .value-group input {
+      margin-bottom: 5px;
+    }
     /* Main App Styles */
     .main-app {
       display: none;
@@ -242,11 +209,9 @@
       width: 100%;
       background: #f8f9fa;
     }
-  
     .main-app.show {
       display: block;
     }
-  
     .app-header {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
@@ -256,23 +221,19 @@
       align-items: center;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
-  
     .app-header h1 {
       font-size: 1.8em;
       font-weight: 300;
     }
-  
     .nav-links a {
       color: white;
       margin-left: 20px;
       text-decoration: none;
       font-weight: 500;
     }
-  
     .nav-links a:hover {
       text-decoration: underline;
     }
-  
     .logout-btn {
       padding: 10px 20px;
       background: rgba(255,255,255,0.2);
@@ -282,17 +243,14 @@
       cursor: pointer;
       transition: background-color 0.2s;
     }
-  
     .logout-btn:hover {
       background: rgba(255,255,255,0.3);
     }
-  
     .app-content {
       max-width: 1200px;
       margin: 0 auto;
       padding: 30px 20px;
     }
-  
     .controls {
       background: white;
       border-radius: 15px;
@@ -300,7 +258,6 @@
       box-shadow: 0 5px 20px rgba(0,0,0,0.1);
       margin-bottom: 30px;
     }
-  
     .row {
       display: flex;
       gap: 20px;
@@ -308,12 +265,10 @@
       margin-bottom: 25px;
       align-items: end;
     }
-  
     .row > * {
       flex: 1;
       min-width: 200px;
     }
-  
     .controls textarea, .controls input, .controls select {
       padding: 12px;
       font-size: 14px;
@@ -321,26 +276,22 @@
       border-radius: 8px;
       transition: border-color 0.3s;
     }
-  
     .controls textarea:focus, .controls input:focus, .controls select:focus {
       outline: none;
       border-color: #667eea;
     }
-  
     .controls textarea {
       width: 100%;
       height: 120px;
       resize: vertical;
       font-family: inherit;
     }
-  
     .controls label {
       display: block;
       margin-bottom: 8px;
       font-weight: 500;
       color: #333;
     }
-  
     .generate-btn {
       background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
       color: white;
@@ -354,30 +305,25 @@
       margin: 20px auto;
       display: block;
     }
-  
     .generate-btn:hover {
       transform: translateY(-2px);
       box-shadow: 0 5px 15px rgba(17, 153, 142, 0.4);
     }
-  
     .generate-btn:disabled {
       opacity: 0.6;
       cursor: not-allowed;
       transform: none;
     }
-  
     .button-container {
       display: flex;
       justify-content: center;
       margin: 20px 0;
     }
-  
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 20px;
     }
-  
     .card {
       background: white;
       border-radius: 12px;
@@ -385,12 +331,10 @@
       box-shadow: 0 5px 20px rgba(0,0,0,0.1);
       transition: transform 0.2s, box-shadow 0.2s;
     }
-  
     .card:hover {
       transform: translateY(-5px);
       box-shadow: 0 10px 30px rgba(0,0,0,0.15);
     }
-  
     .card img {
       width: 100%;
       height: auto;
@@ -398,7 +342,6 @@
       border-radius: 8px;
       margin-bottom: 10px;
     }
-  
     .badge {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
@@ -409,55 +352,46 @@
       display: inline-block;
       margin-bottom: 10px;
     }
-  
     #status {
       margin: 15px 0;
       padding: 12px;
       border-radius: 8px;
       font-weight: 500;
     }
-  
     .status-working {
       background: #e3f2fd;
       color: #1976d2;
       border: 1px solid #bbdefb;
     }
-  
     .status-success {
       background: #e8f5e8;
       color: #2e7d32;
       border: 1px solid #c8e6c9;
     }
-  
     .status-error {
       background: #ffebee;
       color: #c62828;
       border: 1px solid #ffcdd2;
     }
-  
     .template-checkboxes label {
       display: flex;
       align-items: center;
       margin-bottom: 10px;
     }
-  
     .template-checkboxes input[type="checkbox"] {
       margin-right: 10px;
     }
-  
     .image-feedback {
       display: flex;
       gap: 10px;
       justify-content: center;
       margin-top: 10px;
     }
-  
     .image-feedback button {
       padding: 10px 20px;
       border-radius: 8px;
       font-size: 14px;
     }
-  
     /* Product Warning */
     .product-warning {
       position: fixed;
@@ -473,44 +407,35 @@
       animation: pulse 2s infinite;
       max-width: 300px;
     }
-  
     .product-warning.show {
       display: block;
     }
-  
     .product-warning a {
       color: #fef3c7;
       text-decoration: underline;
     }
-  
     @keyframes pulse {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.8; }
     }
-  
     @media (max-width: 768px) {
       .row {
         flex-direction: column;
       }
-    
       .row > * {
         min-width: unset;
       }
-    
       .app-header {
         flex-direction: column;
         gap: 15px;
         text-align: center;
       }
-    
       .controls {
         padding: 20px;
       }
-    
       .grid {
         grid-template-columns: 1fr;
       }
-    
       .product-warning {
         bottom: 80px;
         right: 10px;
@@ -518,7 +443,6 @@
         max-width: none;
         text-align: center;
       }
-    
       .button-container {
         flex-direction: column;
         align-items: center;
@@ -533,7 +457,6 @@
       <h1>🎨 AI Design Generator</h1>
       <p>Create stunning images with AI</p>
     </div>
-  
     <div class="auth-content">
       <!-- Login Form -->
       <form id="login-form">
@@ -551,7 +474,6 @@
         <button type="submit" class="btn">Sign In</button>
         <div id="login-msg" class="message" style="display: none;"></div>
       </form>
-    
       <!-- Registration Form -->
       <form id="register-form" class="hidden">
         <!-- Step 1: Email and Industry Code -->
@@ -569,7 +491,6 @@
           </div>
           <div id="register-msg-step1" class="message" style="display: none;"></div>
         </div>
-      
         <!-- Step 2: Verification -->
         <div id="register-step2" class="hidden">
           <div class="form-group">
@@ -580,7 +501,6 @@
           <button type="button" id="back-to-step1" class="btn btn-secondary">Back</button>
           <div id="register-msg-step2" class="message" style="display: none;"></div>
         </div>
-      
         <!-- Step 3: Complete Registration -->
         <div id="register-step3" class="hidden">
           <div class="form-group">
@@ -600,14 +520,12 @@
           <div id="register-msg-step3" class="message" style="display: none;"></div>
         </div>
       </form>
-    
       <div class="switch-link">
         <span id="switch-to-register">Don't have an account? <a href="#" onclick="showRegister(); return false;">Sign up</a></span>
         <span id="switch-to-login" class="hidden">Already have an account? <a href="#" onclick="showLogin(); return false;">Sign in</a></span>
       </div>
     </div>
   </div>
-  
   <!-- Main Application -->
   <div id="main-app" class="main-app">
     <div class="app-header">
@@ -621,7 +539,6 @@
         <button id="logout-btn" class="logout-btn">Logout</button>
       </div>
     </div>
-  
     <div class="app-content">
       <!-- Setup Page -->
       <div id="setup-page" class="controls hidden">
@@ -643,7 +560,6 @@
           <div id="setup-msg" class="message" style="display: none;"></div>
         </form>
       </div>
-    
       <!-- Account Page -->
       <div id="account-page" class="controls hidden">
         <h2>Your Account</h2>
@@ -667,15 +583,11 @@
         </form>
         <button id="edit-account-btn" class="btn">Edit Profile</button>
       </div>
-    
       <!-- Template Page -->
       <div id="template-page" class="controls">
         <h2>Generate Images</h2>
         <div id="product-display" class="product-display" style="display: none;"></div>
-        <div id="template-specs" class="form-group specs-display" style="display: none;">
-          <label for="template-specs-select">Template Specifications</label>
-          <select id="template-specs-select" disabled></select>
-        </div>
+        <div id="spec-selections" class="form-group"></div>
         <div id="prompt-display" class="prompt-display" style="display: none;"></div>
         <h3>Select Template</h3>
         <div class="template-checkboxes" id="template-checkboxes"></div>
@@ -685,14 +597,12 @@
         <div id="template-status" class="message" style="display: none;"></div>
         <div id="generated-images" class="grid"></div>
       </div>
-    
       <!-- Past Records Page -->
       <div id="records-page" class="controls hidden">
         <h2>Past Generation Records</h2>
         <div id="records-list" class="grid"></div>
         <div id="records-msg" class="message" style="display: none;"></div>
       </div>
-    
       <!-- Create Account Page (Master Only) -->
       <div id="create-account-page" class="controls hidden">
         <h2>Create Industry Account</h2>
@@ -730,10 +640,13 @@
                 <label for="spec-1-custom-name">Custom Specification Name</label>
                 <input id="spec-1-custom-name" type="text" placeholder="Enter specification name (e.g., Font)">
               </div>
-              <div class="form-group">
-                <label for="spec-1-value">Value</label>
-                <input id="spec-1-value" type="text" placeholder="Enter value (e.g., Red and Gold)">
+              <div class="value-group" id="spec-1-values">
+                <div class="form-group">
+                  <label for="spec-1-value-1">Value 1</label>
+                  <input id="spec-1-value-1" type="text" required placeholder="Enter value (e.g., 1:1)">
+                </div>
               </div>
+              <button type="button" class="btn btn-add-value" onclick="addValue(1)">Add Value</button>
             </div>
           </div>
           <button type="button" id="add-spec-btn" class="btn btn-add-spec">Add Another Specification</button>
@@ -751,12 +664,10 @@
       </div>
     </div>
   </div>
-
   <!-- Product Warning -->
   <div id="product-warning" class="product-warning">
     <strong>⚠️ Product name not set.</strong> <a href="#" onclick="showPage('account-page'); return false;">Update now</a>
   </div>
-
   <script>
     // EmailJS Configuration
     const EMAILJS_SERVICE_ID = 'service_sq0910p';
@@ -780,6 +691,7 @@
     let userRole = null;
     let userTemplates = [];
     let userSpecs = null;
+    let selectedSpecs = {};
     let generationCount = 0;
     let userProductName = '';
     let userIndustryCode = null;
@@ -870,10 +782,13 @@
               <label for="spec-1-custom-name">Custom Specification Name</label>
               <input id="spec-1-custom-name" type="text" placeholder="Enter specification name (e.g., Font)">
             </div>
-            <div class="form-group">
-              <label for="spec-1-value">Value</label>
-              <input id="spec-1-value" type="text" placeholder="Enter value (e.g., Red and Gold)">
+            <div class="value-group" id="spec-1-values">
+              <div class="form-group">
+                <label for="spec-1-value-1">Value 1</label>
+                <input id="spec-1-value-1" type="text" required placeholder="Enter value (e.g., 1:1)">
+              </div>
             </div>
+            <button type="button" class="btn btn-add-value" onclick="addValue(1)">Add Value</button>
           </div>
         `;
         hideMessage('create-account-msg');
@@ -939,6 +854,22 @@
         });
       }
     }
+    function addValue(specId) {
+      const valuesContainer = document.getElementById(`spec-${specId}-values`);
+      const valueCount = valuesContainer.querySelectorAll('.form-group').length;
+      if (valueCount >= 5) {
+        showMessage('create-account-msg', `Maximum 5 values allowed for specification ${specId}.`, 'error');
+        return;
+      }
+      const valueId = valueCount + 1;
+      const valueGroup = document.createElement('div');
+      valueGroup.className = 'form-group';
+      valueGroup.innerHTML = `
+        <label for="spec-${specId}-value-${valueId}">Value ${valueId}</label>
+        <input id="spec-${specId}-value-${valueId}" type="text" required placeholder="Enter value (e.g., 1:1)">
+      `;
+      valuesContainer.appendChild(valueGroup);
+    }
     function addSpecification() {
       const container = document.getElementById('spec-container');
       const specCount = container.querySelectorAll('.spec-group').length;
@@ -967,10 +898,13 @@
           <label for="spec-${specId}-custom-name">Custom Specification Name</label>
           <input id="spec-${specId}-custom-name" type="text" placeholder="Enter specification name (e.g., Font)">
         </div>
-        <div class="form-group">
-          <label for="spec-${specId}-value">Value</label>
-          <input id="spec-${specId}-value" type="text" placeholder="Enter value (e.g., Red and Gold)">
+        <div class="value-group" id="spec-${specId}-values">
+          <div class="form-group">
+            <label for="spec-${specId}-value-1">Value 1</label>
+            <input id="spec-${specId}-value-1" type="text" required placeholder="Enter value (e.g., 1:1)">
+          </div>
         </div>
+        <button type="button" class="btn btn-add-value" onclick="addValue(${specId})">Add Value</button>
       `;
       container.appendChild(specGroup);
       setupSpecListeners(specId);
@@ -1033,6 +967,7 @@
         userRole = null;
         userTemplates = [];
         userSpecs = null;
+        selectedSpecs = {};
         userProductName = '';
         userIndustryCode = null;
         showAuth();
@@ -1110,7 +1045,7 @@
         const codeDoc = await db.collection('industryCodes').doc(window._industryCode).get();
         const { industryName, specifications, productName } = codeDoc.data();
         const finalProductName = productName || 'Default Product';
-        const style = specifications && specifications.style ? specifications.style : 'default';
+        const style = specifications && specifications.style && specifications.style.length > 0 ? specifications.style[0] : 'default';
         await db.collection('users').doc(currentUser.uid).set({
           email: window._registerEmail,
           name: name,
@@ -1129,6 +1064,10 @@
         userRole = 'client';
         userTemplates = [style];
         userSpecs = specifications || {};
+        selectedSpecs = Object.keys(userSpecs).reduce((acc, key) => {
+          acc[key] = userSpecs[key][0] || '';
+          return acc;
+        }, {});
         userProductName = finalProductName;
         userIndustryCode = window._industryCode;
         hideElement('setup-industry-group');
@@ -1248,6 +1187,7 @@
         if (userRole === 'master') {
           userTemplates = ['modern', 'classic', 'minimalist'];
           userSpecs = null;
+          selectedSpecs = {};
         } else {
           const userDoc = await db.collection('users').doc(currentUser.uid).get();
           if (!userDoc.exists) {
@@ -1258,10 +1198,14 @@
           const data = userDoc.data();
           userTemplates = data.template ? [data.template] : [];
           userSpecs = data.specifications || {};
+          selectedSpecs = Object.keys(userSpecs).reduce((acc, key) => {
+            acc[key] = userSpecs[key][0] || '';
+            return acc;
+          }, {});
           userProductName = data.productName || 'Default Product';
           userIndustryCode = data.industryCode || null;
         }
-        console.log('Templates loaded:', { userTemplates, userProductName, userSpecs });
+        console.log('Templates loaded:', { userTemplates, userProductName, userSpecs, selectedSpecs });
         if (!userProductName || userProductName.trim().length < 2) {
           showMessage('template-status', 'Product name required. <a href="#" onclick="showPage(\'account-page\'); return false;">Update now</a>', 'error');
           showPage('account-page');
@@ -1274,14 +1218,25 @@
         `).join('');
         document.getElementById('product-display').textContent = `Product: ${userProductName}`;
         showElement('product-display');
-        const specsSelect = document.getElementById('template-specs-select');
-        specsSelect.innerHTML = Object.entries(userSpecs).map(([key, value]) => `
-          <option value="${key}">${key.charAt(0).toUpperCase() + key.slice(1)}: ${value}</option>
+        const specSelections = document.getElementById('spec-selections');
+        specSelections.innerHTML = Object.entries(userSpecs).map(([key, values]) => `
+          <div class="form-group">
+            <label for="spec-select-${key}">${key.charAt(0).toUpperCase() + key.slice(1)}</label>
+            <select id="spec-select-${key}" data-spec-key="${key}">
+              ${values.map(value => `<option value="${value}">${value}</option>`).join('')}
+            </select>
+          </div>
         `).join('');
+        document.querySelectorAll('#spec-selections select').forEach(select => {
+          select.addEventListener('change', function() {
+            selectedSpecs[this.dataset.specKey] = this.value;
+            updatePromptDisplay();
+          });
+        });
         if (Object.keys(userSpecs).length > 0) {
-          showElement('template-specs');
+          showElement('spec-selections');
         } else {
-          hideElement('template-specs');
+          hideElement('spec-selections');
         }
         updatePromptDisplay();
         document.querySelectorAll('#template-checkboxes input').forEach(checkbox => {
@@ -1297,7 +1252,7 @@
       const selectedTemplates = Array.from(document.querySelectorAll('#template-checkboxes input:checked')).map(input => input.value);
       let extra = '';
       if (userSpecs) {
-        extra = Object.entries(userSpecs)
+        extra = Object.entries(selectedSpecs)
           .map(([key, value]) => `${key}: ${value}`)
           .join(', ');
         if (extra) extra = ', ' + extra;
@@ -1347,7 +1302,7 @@
       }
       let extra = '';
       if (userSpecs) {
-        extra = Object.entries(userSpecs)
+        extra = Object.entries(selectedSpecs)
           .map(([key, value]) => `${key}: ${value}`)
           .join(', ');
         if (extra) extra = ', ' + extra;
@@ -1371,6 +1326,7 @@
           userId: currentUser.uid,
           templates: selectedTemplates,
           productName: userProductName,
+          specifications: selectedSpecs,
           images: items.map(item => item.url),
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
@@ -1441,11 +1397,12 @@
         }
         generations.forEach(doc => {
           const data = doc.data();
+          const specsText = data.specifications ? Object.entries(data.specifications).map(([key, value]) => `${key}: ${value}`).join(', ') : '';
           data.images.forEach((url, idx) => {
             const card = document.createElement('div');
             card.className = 'card';
             card.innerHTML = `
-              <div class="badge">${data.templates.join(', ')} (${data.productName})</div>
+              <div class="badge">${data.templates.join(', ')} (${data.productName}${specsText ? ', ' + specsText : ''})</div>
               <img src="${url}" alt="Generated image" onload="this.style.opacity=1" style="opacity:0.5; transition:opacity 0.5s"/>
               <button onclick="downloadImage('${url}', ${idx})" class="btn">Download</button>
             `;
@@ -1481,21 +1438,23 @@
         const type = document.getElementById(`spec-${specId}-type`).value;
         if (!type || type === '') continue;
         const customName = document.getElementById(`spec-${specId}-custom-name`)?.value.trim();
-        const value = document.getElementById(`spec-${specId}-value`).value.trim();
         if (type === 'other' && !customName) {
           showMessage('create-account-msg', `Please enter a custom specification name for specification ${specId}.`, 'error');
           return;
         }
-        if (!value) {
-          showMessage('create-account-msg', `Please enter a value for specification ${specId}.`, 'error');
+        const values = Array.from(document.querySelectorAll(`#spec-${specId}-values .form-group input`))
+          .map(input => input.value.trim())
+          .filter(value => value);
+        if (values.length === 0) {
+          showMessage('create-account-msg', `Please enter at least one value for specification ${specId}.`, 'error');
           return;
         }
         const key = type === 'other' ? customName.toLowerCase().replace(/\s+/g, '') : type;
-        specifications[key] = value;
+        specifications[key] = values;
         if (key === 'style') hasStyle = true;
       }
-      if (!effectiveIndustryName || !productName || productName.length < 2 || !specifications.style) {
-        showMessage('create-account-msg', 'Please fill all required fields, including a Style specification.', 'error');
+      if (!effectiveIndustryName || !productName || productName.length < 2 || !hasStyle) {
+        showMessage('create-account-msg', 'Please fill all required fields, including a Style specification with at least one value.', 'error');
         return;
       }
       try {
@@ -1530,10 +1489,13 @@
               <label for="spec-1-custom-name">Custom Specification Name</label>
               <input id="spec-1-custom-name" type="text" placeholder="Enter specification name (e.g., Font)">
             </div>
-            <div class="form-group">
-              <label for="spec-1-value">Value</label>
-              <input id="spec-1-value" type="text" placeholder="Enter value (e.g., Red and Gold)">
+            <div class="value-group" id="spec-1-values">
+              <div class="form-group">
+                <label for="spec-1-value-1">Value 1</label>
+                <input id="spec-1-value-1" type="text" required placeholder="Enter value (e.g., 1:1)">
+              </div>
             </div>
+            <button type="button" class="btn btn-add-value" onclick="addValue(1)">Add Value</button>
           </div>
         `;
         setupSpecListeners(1);
