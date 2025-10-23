@@ -919,15 +919,29 @@
         showMessage('register-msg-step1', 'Please enter email and code.', 'error');
         return;
       }
-      const codeDoc = await db.collection('industryCodes').doc(industryCode).get();
-      if (!codeDoc.exists || codeDoc.data().used) {
-        showMessage('register-msg-step1', 'Invalid or already used industry code.', 'error');
-        return;
-      }
-      window._registerCode = Math.floor(100000 + Math.random() * 900000).toString();
-      window._registerEmail = email;
-      window._industryCode = industryCode;
       try {
+        // Check if the industry code exists and is unused
+        const codeDoc = await db.collection('industryCodes').doc(industryCode).get();
+        if (!codeDoc.exists) {
+          showMessage('register-msg-step1', 'Invalid industry code.', 'error');
+          return;
+        }
+        if (codeDoc.data().used) {
+          showMessage('register-msg-step1', 'This industry code has already been used to create an account.', 'error');
+          return;
+        }
+        // Check if any user is already associated with this industry code
+        const userQuery = await db.collection('users')
+          .where('industryCode', '==', industryCode)
+          .limit(1)
+          .get();
+        if (!userQuery.empty) {
+          showMessage('register-msg-step1', 'This industry code is already linked to an existing account.', 'error');
+          return;
+        }
+        window._registerCode = Math.floor(100000 + Math.random() * 900000).toString();
+        window._registerEmail = email;
+        window._industryCode = industryCode;
         await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
           email: email,
           code: window._registerCode
