@@ -708,8 +708,8 @@ System: message" style="display: none;"></div>
     const db = firebase.firestore();
 
     // API Keys
-    const STABILITY_API_KEY = 'sk-Qi11R8ZUXdYihglsmf4yi8QlWd3OHodftJwLJP3MYF8phpFo';
-    const HUGGINGFACE_API_KEY = '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';
+    const STABILITY_API_KEY = 'sk-RwqmAp2Q9nr3RgoLh8g04tgrprjlGhrDMYD8JGv1IxF9WnLQ';
+    const HUGGINGFACE_API_KEY = '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';
 
     // Global state
     let currentUser = null;
@@ -1217,13 +1217,21 @@ System: message" style="display: none;"></div>
 
 // Image Generation Functions
 function sanitizePrompt(prompt) {
-  // 增强清理：移除更多潜在 JSON 破坏字符，但保留核心含义
-  return prompt
-    .replace(/[\n\r\t"']/g, ' ')  // 原有：移除换行、制表符、引号
-    .replace(/[{}[\]]/g, ' ')     // 新增：移除 JSON 结构字符
-    .replace(/[%()]/g, ' ')       // 新增：移除可能导致编码问题的字符
+  if (!prompt || typeof prompt !== 'string') {
+    console.error('Invalid prompt:', prompt);
+    return '';
+  }
+  // 更严格的清理：移除所有可能破坏 JSON 的字符
+  const sanitized = prompt
+    .replace(/[\n\r\t"']/g, ' ')  // 移除换行、制表符、引号
+    .replace(/[{}[\]]/g, ' ')     // 移除 JSON 结构字符
+    .replace(/[%()<>]/g, ' ')     // 移除其他潜在问题字符
+    .replace(/[^\x20-\x7E]/g, ' ') // 移除非 ASCII 字符
+    .replace(/\s+/g, ' ')         // 合并多余空格
     .trim()
-    .substring(0, 1000);          // 限制长度，避免过长 prompt
+    .substring(0, 1000);          // 限制长度
+  console.log('Sanitized Prompt:', sanitized); // 调试：打印清理后的 prompt
+  return sanitized;
 }
 
 async function generateWithPollinations(prompt, seed, width = 768, height = 1024, retries = 3) {
@@ -1257,7 +1265,7 @@ async function generateWithStability(prompt, seed, width = 1024, height = 1024, 
     const payload = {
       text_prompts: [
         {
-          text: sanitizedPrompt,  // 确保是纯字符串
+          text: sanitizedPrompt,
           weight: 1
         }
       ],
@@ -1268,12 +1276,12 @@ async function generateWithStability(prompt, seed, width = 1024, height = 1024, 
       seed: seed
     };
     
-    const jsonString = JSON.stringify(payload);  // 调试：打印实际 JSON
+    const jsonString = JSON.stringify(payload);
     console.log('Stability AI Payload (raw JSON):', jsonString);
     
     const url = 'https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image';
     const headers = {
-      'Content-Type': 'application/json',  // 明确指定
+      'Content-Type': 'application/json',
       'Accept': 'application/json',
       'Authorization': `Bearer ${STABILITY_API_KEY}`
     };
@@ -1281,13 +1289,12 @@ async function generateWithStability(prompt, seed, width = 1024, height = 1024, 
     const response = await fetch(url, {
       method: 'POST',
       headers: headers,
-      body: jsonString  // 使用字符串化后的 body
+      body: jsonString
     });
     
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Stability AI Raw Response:', errorText);  // 新增：打印原始错误
-      
+      console.error('Stability AI Raw Response:', errorText);
       if ((response.status === 429 || response.status === 503) && retries > 0) {
         console.warn(`Retrying Stability AI request (${retries} attempts left)`);
         await new Promise(resolve => setTimeout(resolve, 2000));
@@ -1316,7 +1323,7 @@ async function generateWithHuggingFace(prompt, seed, width = 1024, height = 1024
     if (!sanitizedPrompt) throw new Error('Prompt is empty or invalid');
     
     const payload = {
-      inputs: sanitizedPrompt,  // 确保是纯字符串
+      inputs: sanitizedPrompt,
       parameters: {
         width: width,
         height: height,
@@ -1327,16 +1334,15 @@ async function generateWithHuggingFace(prompt, seed, width = 1024, height = 1024
       }
     };
     
-    const jsonString = JSON.stringify(payload);  // 调试：打印实际 JSON
+    const jsonString = JSON.stringify(payload);
     console.log('Hugging Face Payload (raw JSON):', jsonString);
     
     const url = 'https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-dev';
     const headers = {
-      'Content-Type': 'application/json',  // 明确指定
+      'Content-Type': 'application/json',
       'Authorization': `Bearer ${HUGGINGFACE_API_KEY}`
     };
     
-    // 新增：检查模型是否加载（避免 503 错误）
     const modelCheck = await fetch(url, { method: 'HEAD', headers });
     if (!modelCheck.ok) {
       console.warn('Hugging Face model may not be loaded. Status:', modelCheck.status);
@@ -1348,13 +1354,12 @@ async function generateWithHuggingFace(prompt, seed, width = 1024, height = 1024
     const response = await fetch(url, {
       method: 'POST',
       headers: headers,
-      body: jsonString  // 使用字符串化后的 body
+      body: jsonString
     });
     
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Hugging Face Raw Response:', errorText);  // 新增：打印原始错误
-      
+      console.error('Hugging Face Raw Response:', errorText);
       if ((response.status === 429 || response.status === 503) && retries > 0) {
         console.warn(`Retrying Hugging Face request (${retries} attempts left): ${errorText}`);
         await new Promise(resolve => setTimeout(resolve, 5000));
