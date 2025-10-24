@@ -25,6 +25,7 @@
 
     /* === AUTHENTICATION === */
     .auth-container {
+      display: block; /* Ensure visible by default */
       background: white;
       border-radius: 20px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.2);
@@ -49,7 +50,7 @@
       font-size: 1.1em;
     }
     .auth-content {
-      padding: 40px 30px;
+      padding: 40px 5px;
     }
     .form-group {
       margin-bottom: 25px;
@@ -503,7 +504,8 @@
           <button type="submit" class="btn">Create Account</button>
           <button type="button" id="back-to-step2" class="btn btn-secondary">Back</button>
           <div id="register-msg-step3" class="message" style="display: none;"></div>
-        </form>
+        </div>
+      </form>
       <div class="switch-link">
         <span id="switch-to-register">Don't have an account? <a href="#" onclick="showRegister(); return false;">Sign up</a></span>
         <span id="switch-to-login" class="hidden">Already have an account? <a href="#" onclick="showLogin(); return false;">Sign in</a></span>
@@ -668,7 +670,9 @@
           <button type="button" id="add-spec-btn" class="btn btn-add-spec">Add Specification</button>
           <button type="submit" class="btn">Generate Industry Code</button>
           <button type="button" id="reset-specs" class="btn btn-secondary">Reset</button>
-          <div id="create-account-msg" class="message" style="display: none;"></div>
+          <div id="create-account-msg" class “
+
+System: message" style="display: none;"></div>
         </form>
         <div id="generated-code" class="code-display hidden">
           Industry Code: <span id="industry-code"></span>
@@ -718,24 +722,57 @@
     let userIndustryCode = null;
 
     // UI Helpers
-    function showElement(id) { const el = document.getElementById(id); if (el) { el.classList.remove('hidden'); el.style.display = 'block'; } }
-    function hideElement(id) { const el = document.getElementById(id); if (el) { el.classList.add('hidden'); el.style.display = 'none'; } }
+    function showElement(id) { 
+      const el = document.getElementById(id); 
+      if (el) { 
+        el.classList.remove('hidden'); 
+        el.style.display = 'block'; 
+      } else {
+        console.error(`Element with ID ${id} not found`);
+      }
+    }
+    function hideElement(id) { 
+      const el = document.getElementById(id); 
+      if (el) { 
+        el.classList.add('hidden'); 
+        el.style.display = 'none'; 
+      } else {
+        console.error(`Element with ID ${id} not found`);
+      }
+    }
     function showMessage(id, message, type = 'info') {
       const el = document.getElementById(id);
-      if (el) { el.innerHTML = message; el.className = `message ${type}`; el.style.display = 'block'; }
+      if (el) { 
+        el.innerHTML = message; 
+        el.className = `message ${type}`; 
+        el.style.display = 'block'; 
+      } else {
+        console.error(`Message element with ID ${id} not found`);
+      }
     }
-    function hideMessage(id) { const el = document.getElementById(id); if (el) el.style.display = 'none'; }
+    function hideMessage(id) { 
+      const el = document.getElementById(id); 
+      if (el) el.style.display = 'none'; 
+    }
     function showLogin() {
-      showElement('login-form'); hideElement('register-form');
-      showElement('switch-to-register'); hideElement('switch-to-login');
+      showElement('login-form'); 
+      hideElement('register-form');
+      showElement('switch-to-register'); 
+      hideElement('switch-to-login');
       hideMessage('login-msg');
     }
     function showRegister() {
-      hideElement('login-form'); showElement('register-form');
-      hideElement('switch-to-register'); showElement('switch-to-login');
-      showElement('register-step1'); hideElement('register-step2'); hideElement('register-step3');
-      document.getElementById('register-form').reset();
-      hideMessage('register-msg-step1'); hideMessage('register-msg-step2'); hideMessage('register-msg-step3');
+      hideElement('login-form'); 
+      showElement('register-form');
+      hideElement('switch-to-register'); 
+      showElement('switch-to-login');
+      showElement('register-step1'); 
+      hideElement('register-step2'); 
+      hideElement('register-step3');
+      document.getElementById('register-form')?.reset();
+      hideMessage('register-msg-step1'); 
+      hideMessage('register-msg-step2'); 
+      hideMessage('register-msg-step3');
     }
     function showPage(pageId) {
       const pages = ['setup-page', 'account-page', 'template-page', 'records-page', 'create-account-page'];
@@ -747,7 +784,7 @@
       showElement(pageId);
       if (pageId === 'create-account-page') {
         hideElement('generated-code');
-        document.getElementById('create-account-form').reset();
+        document.getElementById('create-account-form')?.reset();
         document.getElementById('spec-container').innerHTML = `
           <div class="spec-group" data-spec-id="1">
             <div class="form-group">
@@ -784,38 +821,57 @@
       checkProductWarning();
     }
     function showMainApp() {
-      document.getElementById('auth-container').style.display = 'none';
-      document.getElementById('main-app').classList.add('show');
-      if (userRole === 'master') showElement('create-account-link');
-      else hideElement('create-account-link');
-      checkProductWarning();
-      showPage((currentUser && (!currentUser.displayName || !userProductName || userProductName.trim().length < 2)) ? 'setup-page' : 'template-page');
+      const authContainer = document.getElementById('auth-container');
+      const mainApp = document.getElementById('main-app');
+      if (authContainer && mainApp) {
+        authContainer.style.display = 'none';
+        mainApp.classList.add('show');
+        if (userRole === 'master') showElement('create-account-link');
+        else hideElement('create-account-link');
+        checkProductWarning();
+        showPage((currentUser && (!currentUser.displayName || !userProductName || userProductName.trim().length < 2)) ? 'setup-page' : 'template-page');
+      } else {
+        console.error('DOM elements not found:', { authContainer, mainApp });
+        showMessage('login-msg', 'Page error. Please refresh.', 'error');
+        showAuth();
+      }
     }
     function showAuth() {
-      document.getElementById('auth-container').style.display = 'block';
-      document.getElementById('main-app').classList.remove('show');
-      hideElement('product-warning');
-      showLogin();
+      const authContainer = document.getElementById('auth-container');
+      const mainApp = document.getElementById('main-app');
+      if (authContainer && mainApp) {
+        authContainer.style.display = 'block';
+        mainApp.classList.remove('show');
+        hideElement('product-warning');
+        showLogin();
+      } else {
+        console.error('DOM elements not found:', { authContainer, mainApp });
+        showMessage('login-msg', 'Page error. Please refresh.', 'error');
+      }
     }
 
     // Product Warning
     function checkProductWarning() {
       const warning = document.getElementById('product-warning');
-      if (userProductName && userProductName.trim().length >= 2) {
-        hideElement('product-warning');
-      } else {
-        showElement('product-warning');
+      if (warning) {
+        if (userProductName && userProductName.trim().length >= 2) {
+          hideElement('product-warning');
+        } else {
+          showElement('product-warning');
+        }
       }
     }
 
     // Copy Industry Code
     function copyCode() {
-      const code = document.getElementById('industry-code').textContent;
-      navigator.clipboard.writeText(code).then(() => {
-        showMessage('create-account-msg', 'Industry code copied!', 'success');
-      }).catch(() => {
-        showMessage('create-account-msg', 'Failed to copy code.', 'error');
-      });
+      const code = document.getElementById('industry-code')?.textContent;
+      if (code) {
+        navigator.clipboard.writeText(code).then(() => {
+          showMessage('create-account-msg', 'Industry code copied!', 'success');
+        }).catch(() => {
+          showMessage('create-account-msg', 'Failed to copy code.', 'error');
+        });
+      }
     }
 
     // Specification Management
@@ -826,16 +882,17 @@
           const customGroup = document.getElementById(`spec-${specId}-custom-group`);
           if (this.value === 'other') {
             showElement(`spec-${specId}-custom-group`);
-            document.getElementById(`spec-${specId}-custom-name`).setAttribute('required', 'true');
+            document.getElementById(`spec-${specId}-custom-name`)?.setAttribute('required', 'true');
           } else {
             hideElement(`spec-${specId}-custom-group`);
-            document.getElementById(`spec-${specId}-custom-name`).removeAttribute('required');
+            document.getElementById(`spec-${specId}-custom-name`)?.removeAttribute('required');
           }
         });
       }
     }
     function addValue(specId) {
       const valuesContainer = document.getElementById(`spec-${specId}-values`);
+      if (!valuesContainer) return;
       const valueCount = valuesContainer.querySelectorAll('.form-group').length;
       if (valueCount >= 5) {
         showMessage('create-account-msg', `Maximum 5 values allowed for specification ${specId}.`, 'error');
@@ -852,6 +909,7 @@
     }
     function addSpecification() {
       const container = document.getElementById('spec-container');
+      if (!container) return;
       const specCount = container.querySelectorAll('.spec-group').length;
       if (specCount >= 5) {
         showMessage('create-account-msg', 'Maximum 5 specifications allowed.', 'error');
@@ -911,7 +969,7 @@
       }
     }
     async function resetPassword() {
-      const email = document.getElementById('login-email').value.trim();
+      const email = document.getElementById('login-email')?.value.trim();
       if (!email) {
         showMessage('login-msg', 'Please enter your email.', 'error');
         return;
@@ -949,13 +1007,16 @@
         userProductName = '';
         userIndustryCode = null;
         showAuth();
+      }).catch(err => {
+        console.error('Logout error:', err);
+        showMessage('template-status', 'Logout failed. Please try again.', 'error');
       });
     }
 
     // Registration
     async function sendVerificationCode() {
-      const email = document.getElementById('register-email').value.trim();
-      const industryCode = document.getElementById('register-industry-code').value.trim();
+      const email = document.getElementById('register-email')?.value.trim();
+      const industryCode = document.getElementById('register-industry-code')?.value.trim();
       if (!email || !industryCode) {
         showMessage('register-msg-step1', 'Please enter email and code.', 'error');
         return;
@@ -993,7 +1054,7 @@
       }
     }
     function verifyCode() {
-      const code = document.getElementById('register-code').value.trim();
+      const code = document.getElementById('register-code')?.value.trim();
       if (code === window._registerCode) {
         hideElement('register-step2');
         showElement('register-step3');
@@ -1003,9 +1064,9 @@
       }
     }
     async function completeRegistration() {
-      const password = document.getElementById('register-password').value;
-      const password2 = document.getElementById('register-password2').value;
-      const name = document.getElementById('register-name').value.trim();
+      const password = document.getElementById('register-password')?.value;
+      const password2 = document.getElementById('register-password2')?.value;
+      const name = document.getElementById('register-name')?.value.trim();
       if (password !== password2) {
         showMessage('register-msg-step3', 'Passwords do not match.', 'error');
         return;
@@ -1058,9 +1119,9 @@
     // Setup Page
     async function handleSetup(e) {
       e.preventDefault();
-      const name = document.getElementById('setup-name').value.trim();
-      const productName = document.getElementById('setup-product').value.trim();
-      const industry = userRole === 'master' ? document.getElementById('setup-industry').value.trim() : null;
+      const name = document.getElementById('setup-name')?.value.trim();
+      const productName = document.getElementById('setup-product')?.value.trim();
+      const industry = userRole === 'master' ? document.getElementById('setup-industry')?.value.trim() : null;
       if (!name || !productName || productName.length < 2) {
         showMessage('setup-msg', 'Please enter a valid name and product name (2+ characters).', 'error');
         return;
@@ -1103,13 +1164,16 @@
               console.error('Error fetching industry code:', err);
             }
           }
-          document.getElementById('account-info').innerHTML = `
-            <p><strong>Name:</strong> ${data.name || 'Not set'}</p>
-            <p><strong>Email:</strong> ${currentUser.email}</p>
-            <p><strong>Industry:</strong> ${industryDisplay} (Code: ${userIndustryCode})</p>
-            <p><strong>Template:</strong> ${data.template || 'None'}</p>
-            <p><strong>Product Name:</strong> ${userProductName}</p>
-          `;
+          const accountInfo = document.getElementById('account-info');
+          if (accountInfo) {
+            accountInfo.innerHTML = `
+              <p><strong>Name:</strong> ${data.name || 'Not set'}</p>
+              <p><strong>Email:</strong> ${currentUser.email}</p>
+              <p><strong>Industry:</strong> ${industryDisplay} (Code: ${userIndustryCode})</p>
+              <p><strong>Template:</strong> ${data.template || 'None'}</p>
+              <p><strong>Product Name:</strong> ${userProductName}</p>
+            `;
+          }
           checkProductWarning();
         } else {
           userProductName = '';
@@ -1122,9 +1186,9 @@
     }
     async function handleAccountUpdate(e) {
       e.preventDefault();
-      const name = document.getElementById('account-name').value.trim();
-      const productName = document.getElementById('account-product').value.trim();
-      const industry = userRole === 'master' ? document.getElementById('account-industry').value.trim() : null;
+      const name = document.getElementById('account-name')?.value.trim();
+      const productName = document.getElementById('account-product')?.value.trim();
+      const industry = userRole === 'master' ? document.getElementById('account-industry')?.value.trim() : null;
       if (!name || !productName || productName.length < 2) {
         showMessage('account-msg', 'Please enter a valid name and product name (2+ characters).', 'error');
         return;
@@ -1294,7 +1358,11 @@
         showMessage('template-status', 'Maximum generation limit reached.', 'error');
         return;
       }
-      const llmSelect = document.getElementById('llm-select').value;
+      const llmSelect = document.getElementById('llm-select')?.value;
+      if (!llmSelect) {
+        showMessage('template-status', 'Please select an AI model.', 'error');
+        return;
+      }
       let extra = '';
       if (userSpecs) {
         extra = Object.entries(selectedSpecs)
@@ -1304,7 +1372,8 @@
       }
       const basePrompt = `A beautiful product design for ${userProductName}, ${selectedTemplates.join(', ')} style${extra}, high quality, detailed, professional`;
       showMessage('template-status', `Generating images with ${llmSelect}...`, 'info');
-      document.getElementById('generate-images-btn').disabled = true;
+      const generateBtn = document.getElementById('generate-images-btn');
+      if (generateBtn) generateBtn.disabled = true;
 
       const generators = {
         pollinations: generateWithPollinations,
@@ -1384,38 +1453,38 @@
       } catch (err) {
         showMessage('template-status', 'Error saving generation: ' + err.message, 'error');
       } finally {
-        document.getElementById('generate-images-btn').disabled = false;
+        if (generateBtn) generateBtn.disabled = false;
       }
     }
 
-    // NEW renderImages FUNCTION
     function renderImages(items) {
       const container = document.getElementById('generated-images');
       const pairDiv = document.getElementById('image-pair');
       const feedbackDiv = document.getElementById('feedback-buttons');
+      if (container && pairDiv && feedbackDiv) {
+        pairDiv.innerHTML = '';
+        feedbackDiv.innerHTML = '';
+        container.classList.remove('hidden');
 
-      pairDiv.innerHTML = '';
-      feedbackDiv.innerHTML = '';
-      container.classList.remove('hidden');
+        items.forEach((item, idx) => {
+          const imgContainer = document.createElement('div');
+          const img = document.createElement('img');
+          img.src = item.url;
+          img.alt = `Generated image ${idx + 1} from ${item.provider}`;
+          img.onload = () => img.classList.add('loaded');
+          imgContainer.appendChild(img);
+          const providerLabel = document.createElement('div');
+          providerLabel.textContent = item.provider;
+          imgContainer.appendChild(providerLabel);
+          pairDiv.appendChild(imgContainer);
+        });
 
-      items.forEach((item, idx) => {
-        const imgContainer = document.createElement('div');
-        const img = document.createElement('img');
-        img.src = item.url;
-        img.alt = `Generated image ${idx + 1} from ${item.provider}`;
-        img.onload = () => img.classList.add('loaded');
-        imgContainer.appendChild(img);
-        const providerLabel = document.createElement('div');
-        providerLabel.textContent = item.provider;
-        imgContainer.appendChild(providerLabel);
-        pairDiv.appendChild(imgContainer);
-      });
-
-      feedbackDiv.innerHTML = `
-        <button class="btn-like-this" onclick="downloadImage('${items[0].url}', 0)">I like this (${items[0].provider})</button>
-        <button class="btn-like-that" onclick="downloadImage('${items[1].url}', 1)">I like that (${items[1].provider})</button>
-        <button class="btn-both-bad" onclick="handleBothBad()">Both bad</button>
-      `;
+        feedbackDiv.innerHTML = `
+          <button class="btn-like-this" onclick="downloadImage('${items[0].url}', 0)">I like this (${items[0].provider})</button>
+          <button class="btn-like-that" onclick="downloadImage('${items[1].url}', 1)">I like that (${items[1].provider})</button>
+          <button class="btn-both-bad" onclick="handleBothBad()">Both bad</button>
+        `;
+      }
     }
 
     function downloadImage(url, idx) {
@@ -1467,20 +1536,27 @@
           return;
         }
         const checkboxes = document.getElementById('template-checkboxes');
-        checkboxes.innerHTML = userTemplates.map(template => `
-          <label><input type="checkbox" value="${template}" checked> ${template.charAt(0).toUpperCase() + template.slice(1)}</label>
-        `).join('');
-        document.getElementById('product-display').textContent = `Product: ${userProductName}`;
-        showElement('product-display');
+        if (checkboxes) {
+          checkboxes.innerHTML = userTemplates.map(template => `
+            <label><input type="checkbox" value="${template}" checked> ${template.charAt(0).toUpperCase() + template.slice(1)}</label>
+          `).join('');
+        }
+        const productDisplay = document.getElementById('product-display');
+        if (productDisplay) {
+          productDisplay.textContent = `Product: ${userProductName}`;
+          showElement('product-display');
+        }
         const specSelections = document.getElementById('spec-selections');
-        specSelections.innerHTML = Object.entries(userSpecs).map(([key, values]) => `
-          <div class="form-group">
-            <label for="spec-select-${key}">${key.charAt(0).toUpperCase() + key.slice(1)}</label>
-            <select id="spec-select-${key}" data-spec-key="${key}">
-              ${values.map(value => `<option value="${value}">${value}</option>`).join('')}
-            </select>
-          </div>
-        `).join('');
+        if (specSelections) {
+          specSelections.innerHTML = Object.entries(userSpecs).map(([key, values]) => `
+            <div class="form-group">
+              <label for="spec-select-${key}">${key.charAt(0).toUpperCase() + key.slice(1)}</label>
+              <select id="spec-select-${key}" data-spec-key="${key}">
+                ${values.map(value => `<option value="${value}">${value}</option>`).join('')}
+              </select>
+            </div>
+          `).join('');
+        }
         document.querySelectorAll('#spec-selections select').forEach(select => {
           select.addEventListener('change', function() {
             selectedSpecs[this.dataset.specKey] = this.value;
@@ -1511,15 +1587,18 @@
         if (extra) extra = ', ' + extra;
       }
       const promptDisplay = document.getElementById('prompt-display');
-      promptDisplay.textContent = selectedTemplates.length > 0
-        ? `Generate a design for ${userProductName} in ${selectedTemplates.join(', ')} style${extra}`
-        : 'Please select at least one template.';
-      showElement('prompt-display');
+      if (promptDisplay) {
+        promptDisplay.textContent = selectedTemplates.length > 0
+          ? `Generate a design for ${userProductName} in ${selectedTemplates.join(', ')} style${extra}`
+          : 'Please select at least one template.';
+        showElement('prompt-display');
+      }
     }
 
     // Past Records
     async function loadRecords() {
       const recordsList = document.getElementById('records-list');
+      if (!recordsList) return;
       recordsList.innerHTML = '';
       try {
         const generations = await db.collection('generations')
@@ -1558,20 +1637,20 @@
         showMessage('create-account-msg', 'Unauthorized access.', 'error');
         return;
       }
-      const industryName = document.getElementById('industry-name').value;
-      const customIndustryName = document.getElementById('custom-industry-name').value.trim();
+      const industryName = document.getElementById('industry-name')?.value;
+      const customIndustryName = document.getElementById('custom-industry-name')?.value.trim();
       if (industryName === 'other' && !customIndustryName) {
         showMessage('create-account-msg', 'Please enter a custom industry name.', 'error');
         return;
       }
       const effectiveIndustryName = industryName === 'other' ? customIndustryName : industryName;
-      const productName = document.getElementById('industry-product').value.trim();
+      const productName = document.getElementById('industry-product')?.value.trim();
       const specGroups = document.querySelectorAll('#spec-container .spec-group');
       const specifications = {};
       let hasStyle = false;
       for (const group of specGroups) {
         const specId = group.dataset.specId;
-        const type = document.getElementById(`spec-${specId}-type`).value;
+        const type = document.getElementById(`spec-${specId}-type`)?.value;
         if (!type || type === '') continue;
         const customName = document.getElementById(`spec-${specId}-custom-name`)?.value.trim();
         if (type === 'other' && !customName) {
@@ -1603,38 +1682,41 @@
           createdAt: firebase.firestore.FieldValue.serverTimestamp(),
           used: false
         });
-        document.getElementById('industry-code').textContent = industryCode;
-        showElement('generated-code');
-        showMessage('create-account-msg', 'Industry code generated!', 'success');
-        document.getElementById('create-account-form').reset();
-        document.getElementById('spec-container').innerHTML = `
-          <div class="spec-group" data-spec-id="1">
-            <div class="form-group">
-              <label for="spec-1-type">Specification 1*</label>
-              <select id="spec-1-type" required>
-                <option value="">Select specification</option>
-                <option value="size">Size</option>
-                <option value="colorScheme">Color Scheme</option>
-                <option value="style">Style</option>
-                <option value="tone">Tone</option>
-                <option value="dimensions">Dimensions</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-            <div class="form-group hidden" id="spec-1-custom-group">
-              <label for="spec-1-custom-name">Custom Specification Name</label>
-              <input id="spec-1-custom-name" type="text" placeholder="Enter specification name (e.g., Font)">
-            </div>
-            <div class="value-group" id="spec-1-values">
+        const industryCodeElement = document.getElementById('industry-code');
+        if (industryCodeElement) {
+          industryCodeElement.textContent = industryCode;
+          showElement('generated-code');
+          showMessage('create-account-msg', 'Industry code generated!', 'success');
+          document.getElementById('create-account-form')?.reset();
+          document.getElementById('spec-container').innerHTML = `
+            <div class="spec-group" data-spec-id="1">
               <div class="form-group">
-                <label for="spec-1-value-1">Value 1</label>
-                <input id="spec-1-value-1" type="text" required placeholder="Enter value (e.g., 1:1)">
+                <label for="spec-1-type">Specification 1*</label>
+                <select id="spec-1-type" required>
+                  <option value="">Select specification</option>
+                  <option value="size">Size</option>
+                  <option value="colorScheme">Color Scheme</option>
+                  <option value="style">Style</option>
+                  <option value="tone">Tone</option>
+                  <option value="dimensions">Dimensions</option>
+                  <option value="other">Other</option>
+                </select>
               </div>
+              <div class="form-group hidden" id="spec-1-custom-group">
+                <label for="spec-1-custom-name">Custom Specification Name</label>
+                <input id="spec-1-custom-name" type="text" placeholder="Enter specification name (e.g., Font)">
+              </div>
+              <div class="value-group" id="spec-1-values">
+                <div class="form-group">
+                  <label for="spec-1-value-1">Value 1</label>
+                  <input id="spec-1-value-1" type="text" required placeholder="Enter value (e.g., 1:1)">
+                </div>
+              </div>
+              <button type="button" class="btn btn-add-value" onclick="addValue(1)">Add Value</button>
             </div>
-            <button type="button" class="btn btn-add-value" onclick="addValue(1)">Add Value</button>
-          </div>
-        `;
-        setupSpecListeners(1);
+          `;
+          setupSpecListeners(1);
+        }
       } catch (err) {
         showMessage('create-account-msg', 'Error: ' + err.message, 'error');
       }
