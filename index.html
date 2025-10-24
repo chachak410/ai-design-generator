@@ -587,7 +587,6 @@
           <div class="form-group">
             <h3>Select AI Model</h3>
             <select id="llm-select" required>
-              <option value="pollinations">Pollinations AI</option>
               <option value="stability">Stability AI (SDXL)</option>
               <option value="huggingface">Hugging Face (FLUX.1-dev)</option>
             </select>
@@ -703,6 +702,10 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
+
+    // API Keys
+    const STABILITY_API_KEY = 'sk-Qi11R8ZUXdYihglsmf4yi8QlWd3OHodftJwLJP3MYF8phpFo';
+    const HUGGINGFACE_API_KEY = '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';
 
     // Global state
     let currentUser = null;
@@ -1153,36 +1156,15 @@
       return prompt.replace(/[\n\r\t"']/g, ' ').trim();
     }
 
-    async function generateWithPollinations(prompt, seed, width = 768, height = 1024, retries = 3) {
+    async function generateWithStability(prompt, seed, width = 1024, height = 1024, retries = 3) {
       try {
         const sanitizedPrompt = sanitizePrompt(prompt);
         if (!sanitizedPrompt) throw new Error('Prompt is empty or invalid');
-        const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(sanitizedPrompt)}?width=${width}&height=${height}&seed=${seed}`;
-        console.log('Pollinations AI URL:', url);
-        const response = await fetch(url, { method: 'GET', mode: 'cors' });
-        if (!response.ok) {
-          if (response.status === 502 && retries > 0) {
-            console.warn(`Retrying Pollinations AI request (${retries} attempts left)`);
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            return generateWithPollinations(prompt, seed, width, height, retries - 1);
-          }
-          throw new Error(`Pollinations AI returned ${response.status}`);
-        }
-        const blob = await response.blob();
-        return { provider: 'Pollinations AI', url: URL.createObjectURL(blob) };
-      } catch (err) {
-        console.error('Pollinations AI error:', err);
-        return null;
-      }
-    }
-
-    async function generateWithStability(prompt, seed, width = 1024, height = 1024) {
-      try {
-        const sanitizedPrompt = sanitizePrompt(prompt);
-        if (!sanitizedPrompt) throw new Error('Prompt is empty or invalid');
-        const url = '/api/stability'; // Proxy endpoint
+        const url = 'https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image';
         const headers = {
-          "Content-Type": "application/json"
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${STABILITY_API_KEY}`,
+          'Accept': 'application/json'
         };
         const payload = {
           text_prompts: [{ text: sanitizedPrompt }],
@@ -1205,6 +1187,11 @@
           body: JSON.stringify(payload)
         });
         if (!response.ok) {
+          if (response.status === 502 && retries > 0) {
+            console.warn(`Retrying Stability AI request (${retries} attempts left)`);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            return generateWithStability(prompt, seed, width, height, retries - 1);
+          }
           const errorText = await response.text();
           throw new Error(`Stability AI error: ${response.status} - ${errorText}`);
         }
@@ -1220,13 +1207,14 @@
       }
     }
 
-    async function generateWithHuggingFace(prompt, seed, width = 512, height = 512) {
+    async function generateWithHuggingFace(prompt, seed, width = 512, height = 512, retries = 3) {
       try {
         const sanitizedPrompt = sanitizePrompt(prompt);
         if (!sanitizedPrompt) throw new Error('Prompt is empty or invalid');
-        const url = '/api/huggingface'; // Proxy endpoint
+        const url = 'https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-dev';
         const headers = {
-          "Content-Type": "application/json"
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${HUGGINGFACE_API_KEY}`
         };
         const payload = {
           inputs: sanitizedPrompt,
@@ -1255,6 +1243,11 @@
           body: JSON.stringify(payload)
         });
         if (!response.ok) {
+          if (response.status === 503 && retries > 0) {
+            console.warn(`Retrying Hugging Face request (${retries} attempts left)`);
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            return generateWithHuggingFace(prompt, seed, width, height, retries - 1);
+          }
           const errorText = await response.text();
           throw new Error(`Hugging Face error: ${response.status} - ${errorText}`);
         }
@@ -1299,22 +1292,20 @@
       document.getElementById('generate-images-btn').disabled = true;
 
       const generators = {
-        pollinations: generateWithPollinations,
         stability: generateWithStability,
         huggingface: generateWithHuggingFace
       };
       const dimensions = {
-        pollinations: { width: 768, height: 1024 },
         stability: { width: 1024, height: 1024 },
         huggingface: { width: 512, height: 512 }
       };
-      const llms = ['pollinations', 'stability', 'huggingface'];
+      const llms = ['stability', 'huggingface'];
       const selectedIndex = llms.indexOf(llmSelect);
       const orderedLLMs = [llmSelect, ...llms.filter(llm => llm !== llmSelect)];
 
       let images = [];
       let attempts = 0;
-      const maxAttempts = 6;
+      const maxAttempts = 4;
       const seed = Date.now();
 
       while (images.length < 2 && attempts < maxAttempts && generationCount < 20) {
