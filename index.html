@@ -666,6 +666,7 @@
             <label for="industry-product">Product Name*</label>
             <input id="industry-product" type="text" required placeholder="Enter product name (e.g., lip gloss, phone)">
           </div>
+          <button type="button" id="add-spec-btn" class="btn btn-add-spec">Add Specification</button>
           <button type="submit" class="btn">Generate Industry Code</button>
           <button type="button" id="reset-specs" class="btn btn-secondary">Reset</button>
           <div id="create-account-msg" class="message" style="display: none;"></div>
@@ -702,10 +703,6 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
-
-    // API Keys (Note: In production, these should be securely managed, e.g., via environment variables or server-side)
-    const STABILITY_API_KEY = 'your_stability_api_key_here'; // Replace with actual key or fetch securely
-    const HF_API_KEY = 'your_huggingface_api_key_here'; // Replace with actual key or fetch securely
 
     // Global state
     let currentUser = null;
@@ -1152,11 +1149,25 @@
     }
 
     // Image Generation Functions
-    async function generateWithPollinations(prompt, seed, width = 768, height = 1024) {
+    function sanitizePrompt(prompt) {
+      return prompt.replace(/[\n\r\t"']/g, ' ').trim();
+    }
+
+    async function generateWithPollinations(prompt, seed, width = 768, height = 1024, retries = 3) {
       try {
-        const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${width}&height=${height}&seed=${seed}`;
+        const sanitizedPrompt = sanitizePrompt(prompt);
+        if (!sanitizedPrompt) throw new Error('Prompt is empty or invalid');
+        const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(sanitizedPrompt)}?width=${width}&height=${height}&seed=${seed}`;
+        console.log('Pollinations AI URL:', url);
         const response = await fetch(url, { method: 'GET', mode: 'cors' });
-        if (!response.ok) throw new Error(`Pollinations AI returned ${response.status}`);
+        if (!response.ok) {
+          if (response.status === 502 && retries > 0) {
+            console.warn(`Retrying Pollinations AI request (${retries} attempts left)`);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            return generateWithPollinations(prompt, seed, width, height, retries - 1);
+          }
+          throw new Error(`Pollinations AI returned ${response.status}`);
+        }
         const blob = await response.blob();
         return { provider: 'Pollinations AI', url: URL.createObjectURL(blob) };
       } catch (err) {
@@ -1167,25 +1178,36 @@
 
     async function generateWithStability(prompt, seed, width = 1024, height = 1024) {
       try {
-        const url = `https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image`;
+        const sanitizedPrompt = sanitizePrompt(prompt);
+        if (!sanitizedPrompt) throw new Error('Prompt is empty or invalid');
+        const url = '/api/stability'; // Proxy endpoint
         const headers = {
-          "Authorization": `Bearer ${STABILITY_API_KEY}`,
           "Content-Type": "application/json"
         };
         const payload = {
-          text_prompts: [{ text: prompt }],
+          text_prompts: [{ text: sanitizedPrompt }],
           cfg_scale: 7,
           width: width,
           height: height,
           samples: 1,
           seed: seed
         };
+        if (![512, 768, 1024].includes(width) || ![512, 768, 1024].includes(height)) {
+          throw new Error('Invalid width or height for Stability AI');
+        }
+        if (payload.cfg_scale < 0 || payload.cfg_scale > 35) {
+          throw new Error('Invalid cfg_scale for Stability AI');
+        }
+        console.log('Stability AI Payload:', payload);
         const response = await fetch(url, {
           method: 'POST',
           headers: headers,
           body: JSON.stringify(payload)
         });
-        if (!response.ok) throw new Error(`Stability AI error: ${response.status} - ${await response.text()}`);
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Stability AI error: ${response.status} - ${errorText}`);
+        }
         const data = await response.json();
         const images = data.artifacts.map(item => ({
           provider: 'Stability AI',
@@ -1200,13 +1222,14 @@
 
     async function generateWithHuggingFace(prompt, seed, width = 512, height = 512) {
       try {
-        const url = `https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-dev`;
+        const sanitizedPrompt = sanitizePrompt(prompt);
+        if (!sanitizedPrompt) throw new Error('Prompt is empty or invalid');
+        const url = '/api/huggingface'; // Proxy endpoint
         const headers = {
-          "Authorization": `Bearer ${HF_API_KEY}`,
           "Content-Type": "application/json"
         };
         const payload = {
-          inputs: prompt,
+          inputs: sanitizedPrompt,
           parameters: {
             negative_prompt: "low quality, blurry, distorted",
             guidance_scale: 7.5,
@@ -1216,12 +1239,25 @@
             seed: seed
           }
         };
+        if (![512, 1024].includes(width) || ![512, 1024].includes(height)) {
+          throw new Error('Invalid width or height for Hugging Face');
+        }
+        if (payload.parameters.guidance_scale < 1 || payload.parameters.guidance_scale > 20) {
+          throw new Error('Invalid guidance_scale for Hugging Face');
+        }
+        if (payload.parameters.num_inference_steps < 1 || payload.parameters.num_inference_steps > 100) {
+          throw new Error('Invalid num_inference_steps for Hugging Face');
+        }
+        console.log('Hugging Face Payload:', payload);
         const response = await fetch(url, {
           method: 'POST',
           headers: headers,
           body: JSON.stringify(payload)
         });
-        if (!response.ok) throw new Error(`Hugging Face error: ${response.status} - ${await response.text()}`);
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Hugging Face error: ${response.status} - ${errorText}`);
+        }
         const blob = await response.blob();
         return { provider: 'Hugging Face', url: URL.createObjectURL(blob) };
       } catch (err) {
@@ -1278,7 +1314,7 @@
 
       let images = [];
       let attempts = 0;
-      const maxAttempts = 6; // Try up to 6 times to get 2 images
+      const maxAttempts = 6;
       const seed = Date.now();
 
       while (images.length < 2 && attempts < maxAttempts && generationCount < 20) {
@@ -1290,6 +1326,8 @@
           if (image) {
             images.push(image);
             generationCount++;
+          } else {
+            console.warn(`No image generated by ${llm}, trying next provider`);
           }
         } catch (err) {
           console.error(`Error with ${llm}:`, err);
@@ -1298,7 +1336,6 @@
       }
 
       if (images.length === 1 && attempts < maxAttempts && generationCount < 20) {
-        // Try one more time for the second image with the next available LLM
         const nextLLM = orderedLLMs[attempts % orderedLLMs.length];
         const prompt = `${basePrompt} (variation 2)`;
         const { width, height } = dimensions[nextLLM];
@@ -1332,7 +1369,8 @@
           userGenerations.docs.slice(3).forEach(doc => doc.ref.delete());
           showMessage('template-status', 'Images generated successfully!', 'success');
         } else {
-          showMessage('template-status', 'Failed to generate two images. Please try again.', 'error');
+          const failedProviders = orderedLLMs.slice(0, attempts).join(', ');
+          showMessage('template-status', `Failed to generate images with ${failedProviders}. Please try again or select a different model.`, 'error');
         }
       } catch (err) {
         showMessage('template-status', 'Error saving generation: ' + err.message, 'error');
@@ -1645,7 +1683,12 @@
           document.getElementById('custom-industry-name').removeAttribute('required');
         }
       });
-      document.getElementById('add-spec-btn').addEventListener('click', addSpecification);
+      const addSpecBtn = document.getElementById('add-spec-btn');
+      if (addSpecBtn) {
+        addSpecBtn.addEventListener('click', addSpecification);
+      } else {
+        console.warn('Element with ID "add-spec-btn" not found.');
+      }
       setupSpecListeners(1);
       document.getElementById('logout-btn').addEventListener('click', handleLogout);
       auth.onAuthStateChanged(user => {
