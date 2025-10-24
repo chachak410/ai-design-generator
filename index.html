@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html langua="en">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>AI Design Generator</title>
@@ -349,6 +349,12 @@
     .image-pair img.loaded {
       opacity: 1;
     }
+    .image-pair div {
+      text-align: center;
+      font-weight: 500;
+      color: #333;
+      margin-top: 10px;
+    }
     .feedback-buttons {
       display: flex;
       gap: 12px;
@@ -569,10 +575,25 @@
       <div id="template-page" class="controls">
         <h2>Generate Images</h2>
         <div id="product-display" class="product-display" style="display: none;"></div>
-        <div id="spec-selections" class="form-group"></div>
+        <div class="row">
+          <div class="form-group">
+            <h3>Select Template</h3>
+            <div class="template-checkboxes" id="template-checkboxes"></div>
+          </div>
+          <div class="form-group">
+            <h3>Select Specifications</h3>
+            <div id="spec-selections"></div>
+          </div>
+          <div class="form-group">
+            <h3>Select AI Model</h3>
+            <select id="llm-select" required>
+              <option value="pollinations">Pollinations AI</option>
+              <option value="stability">Stability AI (SDXL)</option>
+              <option value="huggingface">Hugging Face (FLUX.1-dev)</option>
+            </select>
+          </div>
+        </div>
         <div id="prompt-display" class="prompt-display" style="display: none;"></div>
-        <h3>Select Template</h3>
-        <div class="template-checkboxes" id="template-checkboxes"></div>
 
         <!-- FIXED BUTTON -->
         <div class="button-container">
@@ -641,7 +662,6 @@
               <button type="button" class="btn btn-add-value" onclick="addValue(1)">Add Value</button>
             </div>
           </div>
-          <button type="button" id="add-spec-btn" class="btn btn-add-spec">Add Another Specification</button>
           <div class="form-group">
             <label for="industry-product">Product Name*</label>
             <input id="industry-product" type="text" required placeholder="Enter product name (e.g., lip gloss, phone)">
@@ -682,6 +702,10 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
+
+    // API Keys (Note: In production, these should be securely managed, e.g., via environment variables or server-side)
+    const STABILITY_API_KEY = 'your_stability_api_key_here'; // Replace with actual key or fetch securely
+    const HF_API_KEY = 'your_huggingface_api_key_here'; // Replace with actual key or fetch securely
 
     // Global state
     let currentUser = null;
@@ -1127,6 +1151,240 @@
       }
     }
 
+    // Image Generation Functions
+    async function generateWithPollinations(prompt, seed, width = 768, height = 1024) {
+      try {
+        const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${width}&height=${height}&seed=${seed}`;
+        const response = await fetch(url, { method: 'GET', mode: 'cors' });
+        if (!response.ok) throw new Error(`Pollinations AI returned ${response.status}`);
+        const blob = await response.blob();
+        return { provider: 'Pollinations AI', url: URL.createObjectURL(blob) };
+      } catch (err) {
+        console.error('Pollinations AI error:', err);
+        return null;
+      }
+    }
+
+    async function generateWithStability(prompt, seed, width = 1024, height = 1024) {
+      try {
+        const url = `https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image`;
+        const headers = {
+          "Authorization": `Bearer ${STABILITY_API_KEY}`,
+          "Content-Type": "application/json"
+        };
+        const payload = {
+          text_prompts: [{ text: prompt }],
+          cfg_scale: 7,
+          width: width,
+          height: height,
+          samples: 1,
+          seed: seed
+        };
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) throw new Error(`Stability AI error: ${response.status} - ${await response.text()}`);
+        const data = await response.json();
+        const images = data.artifacts.map(item => ({
+          provider: 'Stability AI',
+          url: `data:image/png;base64,${item.base64}`
+        }));
+        return images[0];
+      } catch (err) {
+        console.error('Stability AI error:', err);
+        return null;
+      }
+    }
+
+    async function generateWithHuggingFace(prompt, seed, width = 512, height = 512) {
+      try {
+        const url = `https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-dev`;
+        const headers = {
+          "Authorization": `Bearer ${HF_API_KEY}`,
+          "Content-Type": "application/json"
+        };
+        const payload = {
+          inputs: prompt,
+          parameters: {
+            negative_prompt: "low quality, blurry, distorted",
+            guidance_scale: 7.5,
+            num_inference_steps: 50,
+            width: width,
+            height: height,
+            seed: seed
+          }
+        };
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) throw new Error(`Hugging Face error: ${response.status} - ${await response.text()}`);
+        const blob = await response.blob();
+        return { provider: 'Hugging Face', url: URL.createObjectURL(blob) };
+      } catch (err) {
+        console.error('Hugging Face error:', err);
+        return null;
+      }
+    }
+
+    // Image Generation
+    async function generateImages() {
+      if (!currentUser) {
+        showMessage('template-status', 'Please sign in.', 'error');
+        return;
+      }
+      if (!userProductName || userProductName.trim().length < 2) {
+        showMessage('template-status', 'Product name required. <a href="#" onclick="showPage(\'account-page\'); return false;">Update now</a>', 'error');
+        showPage('account-page');
+        return;
+      }
+      const selectedTemplates = Array.from(document.querySelectorAll('#template-checkboxes input:checked')).map(input => input.value);
+      if (selectedTemplates.length === 0) {
+        showMessage('template-status', 'Please select at least one template.', 'error');
+        return;
+      }
+      if (generationCount >= 20) {
+        showMessage('template-status', 'Maximum generation limit reached.', 'error');
+        return;
+      }
+      const llmSelect = document.getElementById('llm-select').value;
+      let extra = '';
+      if (userSpecs) {
+        extra = Object.entries(selectedSpecs)
+          .map(([key, value]) => `${key}: ${value}`)
+          .join(', ');
+        if (extra) extra = ', ' + extra;
+      }
+      const basePrompt = `A beautiful product design for ${userProductName}, ${selectedTemplates.join(', ')} style${extra}, high quality, detailed, professional`;
+      showMessage('template-status', `Generating images with ${llmSelect}...`, 'info');
+      document.getElementById('generate-images-btn').disabled = true;
+
+      const generators = {
+        pollinations: generateWithPollinations,
+        stability: generateWithStability,
+        huggingface: generateWithHuggingFace
+      };
+      const dimensions = {
+        pollinations: { width: 768, height: 1024 },
+        stability: { width: 1024, height: 1024 },
+        huggingface: { width: 512, height: 512 }
+      };
+      const llms = ['pollinations', 'stability', 'huggingface'];
+      const selectedIndex = llms.indexOf(llmSelect);
+      const orderedLLMs = [llmSelect, ...llms.filter(llm => llm !== llmSelect)];
+
+      let images = [];
+      let attempts = 0;
+      const maxAttempts = 6; // Try up to 6 times to get 2 images
+      const seed = Date.now();
+
+      while (images.length < 2 && attempts < maxAttempts && generationCount < 20) {
+        const llm = orderedLLMs[attempts % orderedLLMs.length];
+        const prompt = images.length === 0 ? basePrompt : `${basePrompt} (variation ${images.length + 1})`;
+        const { width, height } = dimensions[llm];
+        try {
+          const image = await generators[llm](prompt, seed + attempts, width, height);
+          if (image) {
+            images.push(image);
+            generationCount++;
+          }
+        } catch (err) {
+          console.error(`Error with ${llm}:`, err);
+        }
+        attempts++;
+      }
+
+      if (images.length === 1 && attempts < maxAttempts && generationCount < 20) {
+        // Try one more time for the second image with the next available LLM
+        const nextLLM = orderedLLMs[attempts % orderedLLMs.length];
+        const prompt = `${basePrompt} (variation 2)`;
+        const { width, height } = dimensions[nextLLM];
+        try {
+          const image = await generators[nextLLM](prompt, seed + attempts, width, height);
+          if (image) {
+            images.push(image);
+            generationCount++;
+          }
+        } catch (err) {
+          console.error(`Error with ${nextLLM}:`, err);
+        }
+      }
+
+      try {
+        if (images.length === 2) {
+          renderImages(images);
+          const generationRef = db.collection('generations').doc();
+          await generationRef.set({
+            userId: currentUser.uid,
+            templates: selectedTemplates,
+            productName: userProductName,
+            specifications: selectedSpecs,
+            images: images.map(item => ({ provider: item.provider, url: item.url })),
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          const userGenerations = await db.collection('generations')
+            .where('userId', '==', currentUser.uid)
+            .orderBy('createdAt', 'desc')
+            .get();
+          userGenerations.docs.slice(3).forEach(doc => doc.ref.delete());
+          showMessage('template-status', 'Images generated successfully!', 'success');
+        } else {
+          showMessage('template-status', 'Failed to generate two images. Please try again.', 'error');
+        }
+      } catch (err) {
+        showMessage('template-status', 'Error saving generation: ' + err.message, 'error');
+      } finally {
+        document.getElementById('generate-images-btn').disabled = false;
+      }
+    }
+
+    // NEW renderImages FUNCTION
+    function renderImages(items) {
+      const container = document.getElementById('generated-images');
+      const pairDiv = document.getElementById('image-pair');
+      const feedbackDiv = document.getElementById('feedback-buttons');
+
+      pairDiv.innerHTML = '';
+      feedbackDiv.innerHTML = '';
+      container.classList.remove('hidden');
+
+      items.forEach((item, idx) => {
+        const imgContainer = document.createElement('div');
+        const img = document.createElement('img');
+        img.src = item.url;
+        img.alt = `Generated image ${idx + 1} from ${item.provider}`;
+        img.onload = () => img.classList.add('loaded');
+        imgContainer.appendChild(img);
+        const providerLabel = document.createElement('div');
+        providerLabel.textContent = item.provider;
+        imgContainer.appendChild(providerLabel);
+        pairDiv.appendChild(imgContainer);
+      });
+
+      feedbackDiv.innerHTML = `
+        <button class="btn-like-this" onclick="downloadImage('${items[0].url}', 0)">I like this (${items[0].provider})</button>
+        <button class="btn-like-that" onclick="downloadImage('${items[1].url}', 1)">I like that (${items[1].provider})</button>
+        <button class="btn-both-bad" onclick="handleBothBad()">Both bad</button>
+      `;
+    }
+
+    function downloadImage(url, idx) {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `generated-image-${idx + 1}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showMessage('template-status', `Image ${idx + 1} downloaded!`, 'success');
+    }
+    function handleBothBad() {
+      generationCount++;
+      generateImages();
+    }
+
     // Template Page
     async function loadTemplates() {
       if (!currentUser) {
@@ -1212,117 +1470,6 @@
       showElement('prompt-display');
     }
 
-    // Image Generation
-    async function fetchImageUrl(prompt, seed) {
-      try {
-        const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=768&height=1024&seed=${seed}`;
-        const response = await fetch(url, { method: 'GET', mode: 'cors' });
-        if (!response.ok) throw new Error(`Pollen AI returned ${response.status}`);
-        const blob = await response.blob();
-        return URL.createObjectURL(blob);
-      } catch (err) {
-        throw err;
-      }
-    }
-
-    async function generateImages() {
-      if (!currentUser) {
-        showMessage('template-status', 'Please sign in.', 'error');
-        return;
-      }
-      if (!userProductName || userProductName.trim().length < 2) {
-        showMessage('template-status', 'Product name required. <a href="#" onclick="showPage(\'account-page\'); return false;">Update now</a>', 'error');
-        showPage('account-page');
-        return;
-      }
-      const selectedTemplates = Array.from(document.querySelectorAll('#template-checkboxes input:checked')).map(input => input.value);
-      if (selectedTemplates.length === 0) {
-        showMessage('template-status', 'Please select at least one template.', 'error');
-        return;
-      }
-      if (generationCount >= 20) {
-        showMessage('template-status', 'Maximum generation limit reached.', 'error');
-        return;
-      }
-      let extra = '';
-      if (userSpecs) {
-        extra = Object.entries(selectedSpecs)
-          .map(([key, value]) => `${key}: ${value}`)
-          .join(', ');
-        if (extra) extra = ', ' + extra;
-      }
-      const prompt = `A beautiful product design for ${userProductName}, ${selectedTemplates.join(', ')} style${extra}, high quality, detailed, professional`;
-      showMessage('template-status', 'Generating images with Pollen AI...', 'info');
-      document.getElementById('generate-images-btn').disabled = true;
-      try {
-        const urls = await Promise.all([
-          fetchImageUrl(prompt, Date.now()),
-          fetchImageUrl(prompt + ' (variation 2)', Date.now() + 1)
-        ]);
-        const items = urls.map(url => ({ provider: 'Pollen AI', url }));
-        renderImages(items);
-        generationCount++;
-        const generationRef = db.collection('generations').doc();
-        await generationRef.set({
-          userId: currentUser.uid,
-          templates: selectedTemplates,
-          productName: userProductName,
-          specifications: selectedSpecs,
-          images: items.map(item => item.url),
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        const userGenerations = await db.collection('generations')
-          .where('userId', '==', currentUser.uid)
-          .orderBy('createdAt', 'desc')
-          .get();
-        userGenerations.docs.slice(3).forEach(doc => doc.ref.delete());
-        showMessage('template-status', 'Images generated successfully!', 'success');
-      } catch (err) {
-        showMessage('template-status', 'Error generating images. Please try again.', 'error');
-      } finally {
-        document.getElementById('generate-images-btn').disabled = false;
-      }
-    }
-
-    // NEW renderImages FUNCTION
-    function renderImages(items) {
-      const container = document.getElementById('generated-images');
-      const pairDiv = document.getElementById('image-pair');
-      const feedbackDiv = document.getElementById('feedback-buttons');
-
-      pairDiv.innerHTML = '';
-      feedbackDiv.innerHTML = '';
-      container.classList.remove('hidden');
-
-      items.forEach((item, idx) => {
-        const img = document.createElement('img');
-        img.src = item.url;
-        img.alt = `Generated image ${idx + 1}`;
-        img.onload = () => img.classList.add('loaded');
-        pairDiv.appendChild(img);
-      });
-
-      feedbackDiv.innerHTML = `
-        <button class="btn-like-this" onclick="downloadImage('${items[0].url}', 0)">I like this</button>
-        <button class="btn-like-that" onclick="downloadImage('${items[1].url}', 1)">I like that</button>
-        <button class="btn-both-bad" onclick="handleBothBad()">Both bad</button>
-      `;
-    }
-
-    function downloadImage(url, idx) {
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `generated-image-${idx + 1}.png`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      showMessage('template-status', `Image ${idx + 1} downloaded!`, 'success');
-    }
-    function handleBothBad() {
-      generationCount++;
-      generateImages();
-    }
-
     // Past Records
     async function loadRecords() {
       const recordsList = document.getElementById('records-list');
@@ -1340,13 +1487,13 @@
         generations.forEach(doc => {
           const data = doc.data();
           const specsText = data.specifications ? Object.entries(data.specifications).map(([key, value]) => `${key}: ${value}`).join(', ') : '';
-          data.images.forEach((url, idx) => {
+          data.images.forEach((item, idx) => {
             const card = document.createElement('div');
             card.className = 'card';
             card.innerHTML = `
-              <div class="badge">${data.templates.join(', ')} (${data.productName}${specsText ? ', ' + specsText : ''})</div>
-              <img src="${url}" alt="Generated image" onload="this.style.opacity=1" style="opacity:0.5; transition:opacity 0.5s"/>
-              <button onclick="downloadImage('${url}', ${idx})" class="btn">Download</button>
+              <div class="badge">${data.templates.join(', ')} (${data.productName}${specsText ? ', ' + specsText : ''}) - ${item.provider}</div>
+              <img src="${item.url}" alt="Generated image" onload="this.style.opacity=1" style="opacity:0.5; transition:opacity 0.5s"/>
+              <button onclick="downloadImage('${item.url}', ${idx})" class="btn">Download</button>
             `;
             recordsList.appendChild(card);
           });
