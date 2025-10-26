@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Design Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <!-- Authentication Container -->
+  <div id="auth-container" class="auth-container">
+    <div class="auth-header">
+      <h1>AI Design Generator</h1>
+      <p>Create stunning images with AI</p>
+    </div>
+    <div class="auth-content">
+      <!-- Login Form -->
+      <form id="login-form">
+        <div class="form-group">
+          <label for="login-email">Email Address</label>
+          <input id="login-email" type="email" required autocomplete="username" placeholder="Enter your email">
+        </div>
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <input id="login-password" type="password" required autocomplete="current-password" placeholder="Enter your password">
+        </div>
+        <div class="form-group">
+          <a href="#" id="reset-password-link" onclick="resetPassword(); return false;">Forgot password?</a>
+        </div>
+        <button type="submit" class="btn">Sign In</button>
+        <div id="login-msg" class="message" style="display: none;"></div>
+      </form>
+      <!-- Registration Form -->
+      <form id="register-form" class="hidden">
+        <!-- Step 1 -->
+        <div id="register-step1">
+          <div class="form-group">
+            <label for="register-email">Email Address</label>
+            <input id="register-email" type="email" required autocomplete="username" placeholder="Enter your email">
+          </div>
+          <div class="form-group">
+            <label for="register-industry-code">Industry Code</label>
+            <input id="register-industry-code" type="text" required placeholder="Enter industry code">
+          </div>
+          <div class="code-input-group">
+            <button type="button" id="send-code-btn" class="btn btn-code">Send Verification Code</button>
+          </div>
+          <div id="register-msg-step1" class="message" style="display: none;"></div>
+        </div>
+        <!-- Step 2 -->
+        <div id="register-step2" class="hidden">
+          <div class="form-group">
+            <label for="register-code">Verification Code</label>
+            <input id="register-code" type="text" required placeholder="Enter 6-digit code">
+          </div>
+          <button type="button" id="verify-code-btn" class="btn">Verify Code</button>
+          <button type="button" id="back-to-step1" class="btn btn-secondary">Back</button>
+          <div id="register-msg-step2" class="message" style="display: none;"></div>
+        </div>
+        <!-- Step 3 -->
+        <div id="register-step3" class="hidden">
+          <div class="form-group">
+            <label for="register-password">Password</label>
+            <input id="register-password" type="password" required autocomplete="new-password" placeholder="Create a password">
+          </div>
+          <div class="form-group">
+            <label for="register-password2">Confirm Password</label>
+            <input id="register-password2" type="password" required autocomplete="new-password" placeholder="Confirm your password">
+          </div>
+          <div class="form-group">
+            <label for="register-name">Full Name</label>
+            <input id="register-name" type="text" required placeholder="Enter your full name">
+          </div>
+          <button type="submit" class="btn">Create Account</button>
+          <button type="button" id="back-to-step2" class="btn btn-secondary">Back</button>
+          <div id="register-msg-step3" class="message" style="display: none;"></div>
+        </div>
+      </form>
+      <div class="switch-link">
+        <span id="switch-to-register">Don't have an account? <a href="#" onclick="showRegister(); return false;">Sign up</a></span>
+        <span id="switch-to-login" class="hidden">Already have an account? <a href="#" onclick="showLogin(); return false;">Sign in</a></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Application -->
+  <div id="main-app" class="main-app">
+    <div class="app-header">
+      <h1>AI Design Generator</h1>
+      <div class="nav-links">
+        <a href="#" onclick="showPage('setup-page'); return false;">Setup</a>
+        <a href="#" onclick="showPage('account-page'); return false;">Account</a>
+        <a href="#" onclick="showPage('template-page'); return false;">Templates</a>
+        <a href="#" onclick="showPage('records-page'); return false;">Past Records</a>
+        <a href="#" id="create-account-link" onclick="showPage('create-account-page'); return false;" class="hidden">Create Account</a>
+        <button id="logout-btn" class="logout-btn">Logout</button>
+      </div>
+    </div>
+    <div class="app-content">
+      <!-- Setup Page -->
+      <div id="setup-page" class="controls hidden">
+        <h2>Setup Your Profile</h2>
+        <form id="setup-form">
+          <div class="form-group">
+            <label for="setup-name">Full Name</label>
+            <input id="setup-name" type="text" required placeholder="Enter your full name">
+          </div>
+          <div class="form-group hidden" id="setup-industry-group">
+            <label for="setup-industry">Industry</label>
+            <input id="setup-industry" type="text" placeholder="Enter your industry (optional)">
+          </div>
+          <div class="form-group">
+            <label for="setup-product">Product Name</label>
+            <input id="setup-product" type="text" required placeholder="Enter product name (e.g., lip gloss, phone)">
+          </div>
+          <button type="submit" class="btn">Save Profile</button>
+          <div id="setup-msg" class="message" style="display: none;"></div>
+        </form>
+      </div>
+
+      <!-- Account Page -->
+      <div id="account-page" class="controls hidden">
+        <h2>Your Account</h2>
+        <div id="account-info"></div>
+        <form id="account-form" class="hidden">
+          <div class="form-group">
+            <label for="account-name">Full Name</label>
+            <input id="account-name" type="text" required placeholder="Enter your full name">
+          </div>
+          <div class="form-group hidden" id="account-industry-group">
+            <label for="account-industry">Industry</label>
+            <input id="account-industry" type="text" placeholder="Enter your industry (optional)">
+          </div>
+          <div class="form-group">
+            <label for="account-product">Product Name</label>
+            <input id="account-product" type="text" required placeholder="Enter product name (e.g., lip gloss, phone)">
+          </div>
+          <button type="submit" class="btn">Update Profile</button>
+          <button type="button" id="cancel-edit" class="btn btn-secondary">Cancel</button>
+          <div id="account-msg" class="message" style="display: none;"></div>
+        </form>
+        <button id="edit-account-btn" class="btn">Edit Profile</button>
+      </div>
+
+      <!-- Template Page -->
+      <div id="template-page" class="controls">
+        <h2>Generate Images</h2>
+        <div id="product-display" class="product-display" style="display: none;"></div>
+        <div class="row">
+          <div class="form-group">
+            <h3>Select Template</h3>
+            <div class="template-checkboxes" id="template-checkboxes"></div>
+          </div>
+          <div class="form-group">
+            <h3>Select Specifications</h3>
+            <div id="spec-selections"></div>
+          </div>
+          <div class="form-group">
+            <h3>Select AI Model</h3>
+            <select id="llm-select" required>
+              <option value="pollinations">Pollinations AI</option>
+              <option value="stability">Stability AI (SDXL)</option>
+              <option value="huggingface">Hugging Face (FLUX.1-dev)</option>
+            </select>
+          </div>
+        </div>
+        <div id="prompt-display" class="prompt-display" style="display: none;"></div>
+
+        <!-- FIXED BUTTON -->
+        <div class="button-container">
+          <button id="generate-images-btn" class="generate-btn">Generate Images</button>
+        </div>
+
+        <div id="template-status" class="message" style="display: none;"></div>
+
+        <!-- NEW IMAGE LAYOUT -->
+        <div id="generated-images" class="generated-images-container hidden">
+          <div class="image-pair" id="image-pair"></div>
+          <div class="feedback-buttons" id="feedback-buttons"></div>
+        </div>
+      </div>
+
+      <!-- Past Records Page -->
+      <div id="records-page" class="controls hidden">
+        <h2>Past Generation Records</h2>
+        <div id="records-list" class="grid"></div>
+        <div id="records-msg" class="message" style="display: none;"></div>
+      </div>
+
+      <!-- Create Account Page (Master Only) -->
+      <div id="create-account-page" class="controls hidden">
+        <h2>Create Industry Account</h2>
+        <form id="create-account-form">
+          <div class="form-group">
+            <label for="industry-name">Industry Name*</label>
+            <select id="industry-name" required>
+              <option value="">Select industry</option>
+              <option value="advertising">Advertising</option>
+              <option value="ecommerce">E-commerce</option>
+              <option value="entertainment">Entertainment</option>
+              <option value="healthcare">Healthcare</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group hidden" id="custom-industry-group">
+            <label for="custom-industry-name">Custom Industry Name</label>
+            <input id="custom-industry-name" type="text" placeholder="Enter custom industry name">
+          </div>
+          <div id="spec-container">
+            <div class="spec-group" data-spec-id="1">
+              <div class="form-group">
+                <label for="spec-1-type">Specification 1*</label>
+                <select id="spec-1-type" required>
+                  <option value="">Select specification</option>
+                  <option value="size">Size</option>
+                  <option value="colorScheme">Color Scheme</option>
+                  <option value="style">Style</option>
+                  <option value="tone">Tone</option>
+                  <option value="dimensions">Dimensions</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div class="form-group hidden" id="spec-1-custom-group">
+                <label for="spec-1-custom-name">Custom Specification Name</label>
+                <input id="spec-1-custom-name" type="text" placeholder="Enter specification name (e.g., Font)">
+              </div>
+              <div class="value-group" id="spec-1-values">
+                <div class="form-group">
+                  <label for="spec-1-value-1">Value 1</label>
+                  <input id="spec-1-value-1" type="text" required placeholder="Enter value (e.g., 1:1)">
+                </div>
+              </div>
+              <button type="button" class="btn btn-add-value" onclick="addValue(1)">Add Value</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="industry-product">Product Name*</label>
+            <input id="industry-product" type="text" required placeholder="Enter product name (e.g., lip gloss, phone)">
+          </div>
+          <button type="button" id="add-spec-btn" class="btn btn-add-spec">Add Specification</button>
+          <button type="submit" class="btn">Generate Industry Code</button>
+          <button type="button" id="reset-specs" class="btn btn-secondary">Reset</button>
+          <div id="create-account-msg" class “
+
+System: message" style="display: none;"></div>
+        </form>
+        <div id="generated-code" class="code-display hidden">
+          Industry Code: <span id="industry-code"></span>
+          <button onclick="copyCode()">Copy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Product Warning -->
+  <div id="product-warning" class="product-warning">
+    <strong>Warning: Product name not set.</strong> <a href="#" onclick="showPage('account-page'); return false;">Update now</a>
+  </div>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
+
+

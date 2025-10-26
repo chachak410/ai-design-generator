@@ -1,20 +1,25 @@
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
-emailjs.init(emailjsConfig.userId);
+// EmailJS
+    const EMAILJS_SERVICE_ID = 'service_sq0910p';
+    const EMAILJS_TEMPLATE_ID = 'template_6cykjb4';
+    emailjs.init('DjaueAhkuIzk5gj2x');
 
-// In generateWithStability
-const headers = {
-  'Content-Type': 'application/json',
-  'Accept': 'application/json',
-  'Authorization': `Bearer ${STABILITY_API_KEY}`
-};
+    // Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyC0P-rmy6ZiKCBnivZQBahKWaPcqg4nDnU",
+      authDomain: "image-generator-c51e2.firebaseapp.com",
+      projectId: "image-generator-c51e2",
+      storageBucket: "image-generator-c51e2.firebasestorage.app",
+      messagingSenderId: "222706847155",
+      appId: "1:222706847155:web:824453eca61077f5f0cfc6",
+      measurementId: "G-JSK1FHFEMT"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
-// In generateWithHuggingFace
-const headers = {
-  'Content-Type': 'application/json',
-  'Authorization': `Bearer ${HUGGINGFACE_API_KEY}`
-};
+    // API Keys
+    const STABILITY_API_KEY = 'sk-RwqmAp2Q9nr3RgoLh8g04tgrprjlGhrDMYD8JGv1IxF9WnLQ';
+    const HUGGINGFACE_API_KEY = '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';
 
     // Global state
     let currentUser = null;
