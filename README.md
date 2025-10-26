@@ -1,11 +1,12 @@
 # 🎨 AI Design Generator
 
-![AI Design Generator Demo](assets/screenshot.png)  
+[remote content]
+<image-card alt="AI Design Generator Demo" src="assets/screenshot.png" ></image-card>
 **Visualize your ideas in seconds with AI-powered design generation!**
 
-🌐 **Live Demo**: [AI Design Generator](https://chachak410.github.io/ai-design-generator/)  
-📂 **Repository**: [GitHub](https://github.com/chachak410/ai-design-generator)  
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+🌐 **Live Demo**: [AI Design Generator](https://chachak410.github.io/ai-design-generator/)
+📂 **Repository**: [GitHub](https://github.com/chachak410/ai-design-generator)
+[<image-card alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg" ></image-card>](https://opensource.org/licenses/MIT)
 
 ## 📖 About
 
