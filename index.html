@@ -8,41 +8,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
-
-  <!-- Inline styles (replace with your css/styles.css if you keep it separate) -->
-  <style>
-    /* Basic layout – keep your original styles in css/styles.css if you have them */
-    body {font-family: Arial, sans-serif; margin:0; padding:0; background:#f4f4f4;}
-    .auth-container, .main-app {max-width:900px; margin:40px auto; padding:20px; background:#fff; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.1);}
-    .hidden {display:none !important;}
-    .btn {padding:10px 20px; background:#007bff; color:#fff; border:none; border-radius:4px; cursor:pointer;}
-    .btn:hover {background:#0056b3;}
-    .message {margin-top:10px; padding:8px; border-radius:4px;}
-    .message.error {background:#f8d7da; color:#721c24;}
-    .message.success {background:#d4edda; color:#155724;}
-
-    /* Feedback buttons */
-    .feedback-buttons {
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-      margin-top: 20px;
-      flex-wrap: wrap;
-    }
-    .fb-btn {
-      padding: 10px 20px;
-      font-weight: 600;
-      border: 2px solid #555;
-      border-radius: 8px;
-      background: #f9f9f9;
-      cursor: pointer;
-      transition: background .2s;
-    }
-    .fb-btn:hover {background:#eee;}
-    .left-better  {border-color:#2a9d8f;}
-    .right-better {border-color:#e76f51;}
-    .tie          {border-color:#777;}
-  </style>
+  <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
   <!-- Authentication Container -->
@@ -122,7 +88,7 @@
   </div>
 
   <!-- Main Application -->
-  <div id="main-app" class="main-app hidden">
+  <div id="main-app" class="main-app">
     <div class="app-header">
       <h1>AI Design Generator</h1>
       <div class="nav-links">
@@ -134,7 +100,6 @@
         <button id="logout-btn" class="logout-btn">Logout</button>
       </div>
     </div>
-
     <div class="app-content">
       <!-- Setup Page -->
       <div id="setup-page" class="controls hidden">
@@ -205,23 +170,17 @@
         </div>
         <div id="prompt-display" class="prompt-display" style="display: none;"></div>
 
+        <!-- FIXED BUTTON -->
         <div class="button-container">
           <button id="generate-images-btn" class="generate-btn">Generate Images</button>
         </div>
+
         <div id="template-status" class="message" style="display: none;"></div>
 
-        <!-- GENERATED IMAGES + NEW FEEDBACK BUTTONS -->
+        <!-- NEW IMAGE LAYOUT -->
         <div id="generated-images" class="generated-images-container hidden">
           <div class="image-pair" id="image-pair"></div>
-
-          <!-- NEW BUTTONS -->
-          <div class="feedback-buttons" id="feedback-buttons" style="display:none;">
-            <button class="fb-btn left-better"   data-choice="left">Left is better</button>
-            <button class="fb-btn right-better"  data-choice="right">Right is better</button>
-            <button class="fb-btn tie"           data-choice="tie">It’s a tie</button>
-            <!-- hidden “both bad” – does nothing -->
-            <button class="fb-btn both-bad"      data-choice="both-bad" style="display:none;">both bad</button>
-          </div>
+          <div class="feedback-buttons" id="feedback-buttons"></div>
         </div>
       </div>
 
@@ -285,7 +244,9 @@
           <button type="button" id="add-spec-btn" class="btn btn-add-spec">Add Specification</button>
           <button type="submit" class="btn">Generate Industry Code</button>
           <button type="button" id="reset-specs" class="btn btn-secondary">Reset</button>
-          <div id="create-account-msg" class="message" style="display: none;"></div>
+          <div id="create-account-msg" class “
+
+System: message" style="display: none;"></div>
         </form>
         <div id="generated-code" class="code-display hidden">
           Industry Code: <span id="industry-code"></span>
@@ -296,94 +257,11 @@
   </div>
 
   <!-- Product Warning -->
-  <div id="product-warning" class="product-warning hidden">
+  <div id="product-warning" class="product-warning">
     <strong>Warning: Product name not set.</strong> <a href="#" onclick="showPage('account-page'); return false;">Update now</a>
   </div>
 
-  <!-- ------------------------------------------------------------------ -->
-  <!--  ALL JAVASCRIPT (including the new createFeedbackButtons)          -->
-  <!-- ------------------------------------------------------------------ -->
-  <script>
-    // -----------------------------------------------------------------
-    // Minimal placeholder functions – replace with your real main.js
-    // -----------------------------------------------------------------
-    function showPage(id) { /* your existing page switcher */ }
-    function showRegister() { /* ... */ }
-    function showLogin() { /* ... */ }
-    function resetPassword() { /* ... */ }
-
-    // -----------------------------------------------------------------
-    //  NEW: createFeedbackButtons – called after images are generated
-    // -----------------------------------------------------------------
-    function createFeedbackButtons() {
-      const container = document.getElementById('feedback-buttons');
-      container.innerHTML = '';               // clear any old buttons
-      container.style.display = 'flex';
-
-      // Left is better
-      const leftBtn = document.createElement('button');
-      leftBtn.className = 'fb-btn left-better';
-      leftBtn.dataset.choice = 'left';
-      leftBtn.textContent = 'Left is better';
-      leftBtn.onclick = () => submitFeedback('left');
-      container.appendChild(leftBtn);
-
-      // Right is better
-      const rightBtn = document.createElement('button');
-      rightBtn.className = 'fb-btn right-better';
-      rightBtn.dataset.choice = 'right';
-      rightBtn.textContent = 'Right is better';
-      rightBtn.onclick = () => submitFeedback('right');
-      container.appendChild(rightBtn);
-
-      // It’s a tie
-      const tieBtn = document.createElement('button');
-      tieBtn.className = 'fb-btn tie';
-      tieBtn.dataset.choice = 'tie';
-      tieBtn.textContent = 'It’s a tie';
-      tieBtn.onclick = () => submitFeedback('tie');
-      container.appendChild(tieBtn);
-
-      // Hidden “both bad” – does nothing
-      const badBtn = document.createElement('button');
-      badBtn.className = 'fb-btn both-bad';
-      badBtn.dataset.choice = 'both-bad';
-      badBtn.textContent = 'both bad';
-      badBtn.style.display = 'none';
-      badBtn.onclick = () => {};   // no-op
-      container.appendChild(badBtn);
-    }
-
-    // -----------------------------------------------------------------
-    //  submitFeedback – keep your existing logic, just add a guard
-    // -----------------------------------------------------------------
-    function submitFeedback(choice) {
-      if (choice === 'both-bad') {
-        // “both bad” should do nothing – keep old behaviour
-        return;
-      }
-      // ---- YOUR ORIGINAL CODE BELOW (example) ----
-      console.log('User chose:', choice);
-      // e.g. save to Firestore, show next pair, etc.
-      // ...
-    }
-
-    // -----------------------------------------------------------------
-    //  Example: after generating images, call the creator
-    // -----------------------------------------------------------------
-    document.getElementById('generate-images-btn').addEventListener('click', () => {
-      // ... your image-generation code ...
-
-      // Simulate images ready
-      setTimeout(() => {
-        document.getElementById('generated-images').classList.remove('hidden');
-        createFeedbackButtons();          // <-- this shows the new buttons
-      }, 1500);
-    });
-
-    // -----------------------------------------------------------------
-    //  (All your other JS from main.js goes here – just keep it)
-    // -----------------------------------------------------------------
-  </script>
+  <script src="js/main.js"></script>
 </body>
 </html>
+
