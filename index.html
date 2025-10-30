@@ -9,29 +9,61 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
   <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .lang-inline-btn {
+      background: #f0f0f0;
+      border: 1px solid #ddd;
+      padding: 6px 12px;
+      margin-right: 8px;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: normal;
+    }
+    .lang-inline-btn:hover {
+      background: #007bff;
+      color: white;
+      border-color: #007bff;
+    }
+    .lang-inline-btn.active {
+      background: #007bff;
+      color: white;
+      font-weight: bold;
+      border-color: #007bff;
+    }
+  </style>
 </head>
 <body>
   <!-- Authentication Container -->
   <div id="auth-container" class="auth-container">
     <div class="auth-header">
-      <h1>AI Design Generator</h1>
-      <p>Create stunning images with AI</p>
+      <h1 data-i18n="title">AI Design Generator</h1>
+
+    <!-- 登录页 -->
+<div id="lang-switcher-auth" style="margin: 12px 0; text-align: center;">
+  <button data-lang="en"  onclick="setLang('en')"  class="lang-inline-btn">English</button>
+  <button data-lang="yue" onclick="setLang('yue')" class="lang-inline-btn">繁體中文</button>
+  <button data-lang="zh"  onclick="setLang('zh')"  class="lang-inline-btn">简体</button>
+</div>
+  
+      <p data-i18n="createImages">Create stunning images with AI</p>
     </div>
     <div class="auth-content">
       <!-- Login Form -->
       <form id="login-form">
         <div class="form-group">
-          <label for="login-email">Email Address</label>
-          <input id="login-email" type="email" required autocomplete="username" placeholder="Enter your email">
+          <label for="login-email" data-i18n="email">Email Address</label>
+          <input id="login-email" type="email" required autocomplete="username" data-i18n-ph="email" placeholder="Enter your email">
         </div>
         <div class="form-group">
-          <label for="login-password">Password</label>
-          <input id="login-password" type="password" required autocomplete="current-password" placeholder="Enter your password">
+          <label for="login-password" data-i18n="password">Password</label>
+          <input id="login-password" type="password" required autocomplete="current-password" data-i18n-ph="password" placeholder="Enter your password">
         </div>
         <div class="form-group">
-          <a href="#" id="reset-password-link" onclick="resetPassword(); return false;">Forgot password?</a>
+          <a href="#" id="reset-password-link" onclick="resetPassword(); return false;" data-i18n="forgotPassword">Forgot password?</a>
         </div>
-        <button type="submit" class="btn">Sign In</button>
+        <button type="submit" class="btn" data-i18n="signIn">Sign In</button>
         <div id="login-msg" class="message" style="display: none;"></div>
       </form>
       <!-- Registration Form -->
@@ -39,50 +71,53 @@
         <!-- Step 1 -->
         <div id="register-step1">
           <div class="form-group">
-            <label for="register-email">Email Address</label>
-            <input id="register-email" type="email" required autocomplete="username" placeholder="Enter your email">
+            <label for="register-email" data-i18n="email">Email Address</label>
+            <input id="register-email" type="email" required autocomplete="username" data-i18n-ph="email" placeholder="Enter your email">
           </div>
           <div class="form-group">
-            <label for="register-industry-code">Industry Code</label>
-            <input id="register-industry-code" type="text" required placeholder="Enter industry code">
+            <label for="register-industry-code" data-i18n="industryCode">Industry Code</label>
+            <input id="register-industry-code" type="text" required data-i18n-ph="industryCode" placeholder="Enter industry code">
           </div>
           <div class="code-input-group">
-            <button type="button" id="send-code-btn" class="btn btn-code">Send Verification Code</button>
+            <button type="button" id="send-code-btn" class="btn btn-code" data-i18n="sendCode">Send Verification Code</button>
           </div>
           <div id="register-msg-step1" class="message" style="display: none;"></div>
         </div>
         <!-- Step 2 -->
         <div id="register-step2" class="hidden">
           <div class="form-group">
-            <label for="register-code">Verification Code</label>
-            <input id="register-code" type="text" required placeholder="Enter 6-digit code">
+            <label for="register-code" data-i18n="verifyCode">Verification Code</label>
+            <input id="register-code" type="text" required data-i18n-ph="verifyCode" placeholder="Enter 6-digit code">
           </div>
-          <button type="button" id="verify-code-btn" class="btn">Verify Code</button>
-          <button type="button" id="back-to-step1" class="btn btn-secondary">Back</button>
+          <button type="button" id="verify-code-btn" class="btn" data-i18n="verifyCode">Verify Code</button>
+          <button type="button" id="back-to-step1" class="btn btn-secondary" data-i18n="back">Back</button>
           <div id="register-msg-step2" class="message" style="display: none;"></div>
         </div>
         <!-- Step 3 -->
         <div id="register-step3" class="hidden">
           <div class="form-group">
-            <label for="register-password">Password</label>
-            <input id="register-password" type="password" required autocomplete="new-password" placeholder="Create a password">
+            <label for="register-password" data-i18n="password">Password</label>
+            <input id="register-password" type="password" required autocomplete="new-password" data-i18n-ph="password" placeholder="Create a password">
           </div>
           <div class="form-group">
-            <label for="register-password2">Confirm Password</label>
-            <input id="register-password2" type="password" required autocomplete="new-password" placeholder="Confirm your password">
+            <label for="register-password2" data-i18n="confirmPassword">Confirm Password</label>
+            <input id="register-password2" type="password" required autocomplete="new-password" data-i18n-ph="confirmPassword" placeholder="Confirm your password">
           </div>
           <div class="form-group">
-            <label for="register-name">Full Name</label>
-            <input id="register-name" type="text" required placeholder="Enter your full name">
+            <label for="register-name" data-i18n="fullName">Full Name</label>
+            <input id="register-name" type="text" required data-i18n-ph="fullName" placeholder="Enter your full name">
           </div>
-          <button type="submit" class="btn">Create Account</button>
-          <button type="button" id="back-to-step2" class="btn btn-secondary">Back</button>
+          <button type="submit" class="btn" data-i18n="register">Create Account</button>
+          <button type="button" id="back-to-step2" class="btn btn-secondary" data-i18n="back">Back</button>
           <div id="register-msg-step3" class="message" style="display: none;"></div>
         </div>
       </form>
       <div class="switch-link">
-        <span id="switch-to-register">Don't have an account? <a href="#" onclick="showRegister(); return false;">Sign up</a></span>
-        <span id="switch-to-login" class="hidden">Already have an account? <a href="#" onclick="showLogin(); return false;">Sign in</a></span>
+        <span id="switch-to-register">
+          <span data-i18n="noAccountText">Don't have an account?</span> 
+          <a href="#" onclick="showRegister(); return false;" data-i18n="signUp">Sign up</a>
+        </span>
+        <span id="switch-to-login" class="hidden" data-i18n="haveAccount">Already have an account? <a href="#" onclick="showLogin(); return false;">Sign in</a></span>
       </div>
     </div>
   </div>
@@ -90,94 +125,101 @@
   <!-- Main Application -->
   <div id="main-app" class="main-app">
     <div class="app-header">
-      <h1>AI Design Generator</h1>
+      <h1 data-i18n="title">AI Design Generator</h1>
+
+<!-- 主应用语言切换器 -->
+<div id="lang-switcher-inline" style="margin: 12px 0; text-align: left;">
+  <button data-lang="en" onclick="setLang('en')" class="lang-inline-btn">English</button>
+  <button data-lang="yue" onclick="setLang('yue')" class="lang-inline-btn">繁體中文</button>
+  <button data-lang="zh" onclick="setLang('zh')" class="lang-inline-btn">简体</button>
+</div>
+
       <div class="nav-links">
-        <a href="#" onclick="showPage('setup-page'); return false;">Setup</a>
-        <a href="#" onclick="showPage('account-page'); return false;">Account</a>
-        <a href="#" onclick="showPage('template-page'); return false;">Templates</a>
-        <a href="#" onclick="showPage('records-page'); return false;">Past Records</a>
-        <a href="#" id="create-account-link" onclick="showPage('create-account-page'); return false;" class="hidden">Create Account</a>
-        <button id="logout-btn" class="logout-btn">Logout</button>
+        <a href="#" onclick="showPage('setup-page'); return false;" data-i18n="setup">Setup</a>
+        <a href="#" onclick="showPage('account-page'); return false;" data-i18n="account">Account</a>
+        <a href="#" onclick="showPage('template-page'); return false;" data-i18n="templates">Templates</a>
+        <a href="#" onclick="showPage('records-page'); return false;" data-i18n="pastRecords">Past Records</a>
+        <a href="#" id="create-account-link" onclick="showPage('create-account-page'); return false;" class="hidden" data-i18n="createAccount">Create Account</a>
+        <button id="logout-btn" class="logout-btn" data-i18n="logout">Logout</button>
       </div>
     </div>
     <div class="app-content">
       <!-- Setup Page -->
       <div id="setup-page" class="controls hidden">
-        <h2>Setup Your Profile</h2>
+        <h2 data-i18n="setupProfile">Setup Your Profile</h2>
         <form id="setup-form">
           <div class="form-group">
-            <label for="setup-name">Full Name</label>
-            <input id="setup-name" type="text" required placeholder="Enter your full name">
-          </div>
-          <div class="form-group hidden" id="setup-industry-group">
-            <label for="setup-industry">Industry</label>
-            <input id="setup-industry" type="text" placeholder="Enter your industry (optional)">
+            <label for="setup-name" data-i18n="name">Name</label>
+            <input id="setup-name" type="text" required data-i18n-ph="fullName" placeholder="Enter your full name">
           </div>
           <div class="form-group">
-            <label for="setup-product">Product Name</label>
-            <input id="setup-product" type="text" required placeholder="Enter product name (e.g., lip gloss, phone)">
+            <label for="setup-product" data-i18n="productName">Product Name</label>
+            <input id="setup-product" type="text" required data-i18n-ph="productName" placeholder="Enter product name (e.g., lip gloss, phone)">
           </div>
-          <button type="submit" class="btn">Save Profile</button>
+          <div class="form-group hidden" id="setup-industry-group">
+            <label for="setup-industry" data-i18n="industry">Industry</label>
+            <input id="setup-industry" type="text" data-i18n-ph="industry" placeholder="Enter your industry (optional)">
+          </div>
+          <button type="submit" class="btn" data-i18n="saveProfile">Save Profile</button>
           <div id="setup-msg" class="message" style="display: none;"></div>
         </form>
       </div>
 
       <!-- Account Page -->
       <div id="account-page" class="controls hidden">
-        <h2>Your Account</h2>
+        <h2 data-i18n="yourAccount">Your Account</h2>
         <div id="account-info"></div>
         <form id="account-form" class="hidden">
           <div class="form-group">
-            <label for="account-name">Full Name</label>
-            <input id="account-name" type="text" required placeholder="Enter your full name">
+            <label for="account-name" data-i18n="name">Name</label>
+            <input id="account-name" type="text" required data-i18n-ph="fullName" placeholder="Enter your full name">
           </div>
           <div class="form-group hidden" id="account-industry-group">
-            <label for="account-industry">Industry</label>
-            <input id="account-industry" type="text" placeholder="Enter your industry (optional)">
+            <label for="account-industry" data-i18n="industry">Industry</label>
+            <input id="account-industry" type="text" data-i18n-ph="industry" placeholder="Enter your industry (optional)">
           </div>
           <div class="form-group">
-            <label for="account-product">Product Name</label>
-            <input id="account-product" type="text" required placeholder="Enter product name (e.g., lip gloss, phone)">
+            <label for="account-product" data-i18n="productName">Product Name</label>
+            <input id="account-product" type="text" required data-i18n-ph="productName" placeholder="Enter product name (e.g., lip gloss, phone)">
           </div>
-          <button type="submit" class="btn">Update Profile</button>
-          <button type="button" id="cancel-edit" class="btn btn-secondary">Cancel</button>
+          <div class="form-group">
+            <label for="account-email" data-i18n="emailLabel">Email</label>
+            <input id="account-email" type="email" required disabled>
+          </div>
+          <button type="submit" class="btn" data-i18n="updateProfile">Update Profile</button>
+          <button type="button" id="cancel-edit" class="btn btn-secondary" data-i18n="cancel">Cancel</button>
           <div id="account-msg" class="message" style="display: none;"></div>
         </form>
-        <button id="edit-account-btn" class="btn">Edit Profile</button>
+        <button id="edit-account-btn" class="btn" data-i18n="editProfile">Edit Profile</button>
       </div>
 
       <!-- Template Page -->
       <div id="template-page" class="controls">
-        <h2>Generate Images</h2>
+        <h2 data-i18n="generateImages">Generate Images</h2>
         <div id="product-display" class="product-display" style="display: none;"></div>
         <div class="row">
           <div class="form-group">
-            <h3>Select Template</h3>
+            <h3 data-i18n="selectTemplate">Select Template</h3>
             <div class="template-checkboxes" id="template-checkboxes"></div>
           </div>
           <div class="form-group">
-            <h3>Select Specifications</h3>
+            <h3 data-i18n="selectSpecs">Select Specifications</h3>
             <div id="spec-selections"></div>
           </div>
           <div class="form-group">
-            <h3>Select AI Model</h3>
+            <h3 data-i18n="selectModel">Select AI Model</h3>
             <select id="llm-select" required>
-              <option value="pollinations">Pollinations AI</option>
-              <option value="stability">Stability AI (SDXL)</option>
-              <option value="huggingface">Hugging Face (FLUX.1-dev)</option>
+              <option value="pollinations" data-i18n="pollinations">Pollinations AI</option>
+              <option value="stability" data-i18n="stability">Stability AI (SDXL)</option>
+              <option value="huggingface" data-i18n="huggingface">Hugging Face (FLUX.1-dev)</option>
             </select>
           </div>
         </div>
         <div id="prompt-display" class="prompt-display" style="display: none;"></div>
-
-        <!-- FIXED BUTTON -->
         <div class="button-container">
-          <button id="generate-images-btn" class="generate-btn">Generate Images</button>
+          <button id="generate-images-btn" class="generate-btn" data-i18n="generateImages">Generate Images</button>
         </div>
-
         <div id="template-status" class="message" style="display: none;"></div>
-
-        <!-- NEW IMAGE LAYOUT -->
         <div id="generated-images" class="generated-images-container hidden">
           <div class="image-pair" id="image-pair"></div>
           <div class="feedback-buttons" id="feedback-buttons"></div>
@@ -186,71 +228,69 @@
 
       <!-- Past Records Page -->
       <div id="records-page" class="controls hidden">
-        <h2>Past Generation Records</h2>
+        <h2 data-i18n="pastRecords">Past Generation Records</h2>
         <div id="records-list" class="grid"></div>
         <div id="records-msg" class="message" style="display: none;"></div>
       </div>
 
       <!-- Create Account Page (Master Only) -->
       <div id="create-account-page" class="controls hidden">
-        <h2>Create Industry Account</h2>
+        <h2 data-i18n="createAccount">Create Industry Account</h2>
         <form id="create-account-form">
           <div class="form-group">
-            <label for="industry-name">Industry Name*</label>
+            <label for="industry-name" data-i18n="industryNameLabel">Industry Name*</label>
             <select id="industry-name" required>
-              <option value="">Select industry</option>
+              <option value="" data-i18n="selectIndustry">Select industry</option>
               <option value="advertising">Advertising</option>
               <option value="ecommerce">E-commerce</option>
               <option value="entertainment">Entertainment</option>
               <option value="healthcare">Healthcare</option>
-              <option value="other">Other</option>
+              <option value="other" data-i18n="otherIndustry">Other</option>
             </select>
           </div>
           <div class="form-group hidden" id="custom-industry-group">
-            <label for="custom-industry-name">Custom Industry Name</label>
+            <label for="custom-industry-name" data-i18n="customIndustryName">Custom Industry Name</label>
             <input id="custom-industry-name" type="text" placeholder="Enter custom industry name">
           </div>
           <div id="spec-container">
             <div class="spec-group" data-spec-id="1">
               <div class="form-group">
-                <label for="spec-1-type">Specification 1*</label>
+                <label for="spec-1-type" data-i18n-dynamic="specificationLabel" data-spec-n="1">Specification 1*</label>
                 <select id="spec-1-type" required>
-                  <option value="">Select specification</option>
-                  <option value="size">Size</option>
-                  <option value="colorScheme">Color Scheme</option>
-                  <option value="style">Style</option>
-                  <option value="tone">Tone</option>
-                  <option value="dimensions">Dimensions</option>
-                  <option value="other">Other</option>
+                  <option value="" data-i18n="selectSpecification">Select specification</option>
+                  <option value="size" data-i18n="size">Size</option>
+                  <option value="colorScheme" data-i18n="colorScheme">Color Scheme</option>
+                  <option value="style" data-i18n="style">Style</option>
+                  <option value="tone" data-i18n="tone">Tone</option>
+                  <option value="dimensions" data-i18n="dimensions">Dimensions</option>
+                  <option value="other" data-i18n="other">Other</option>
                 </select>
               </div>
               <div class="form-group hidden" id="spec-1-custom-group">
-                <label for="spec-1-custom-name">Custom Specification Name</label>
+                <label for="spec-1-custom-name" data-i18n="customSpecName">Custom Specification Name</label>
                 <input id="spec-1-custom-name" type="text" placeholder="Enter specification name (e.g., Font)">
               </div>
               <div class="value-group" id="spec-1-values">
                 <div class="form-group">
-                  <label for="spec-1-value-1">Value 1</label>
-                  <input id="spec-1-value-1" type="text" required placeholder="Enter value (e.g., 1:1)">
+                  <label for="spec-1-value-1" data-i18n-dynamic="valueLabel" data-spec-n="1">Value 1</label>
+                <input id="spec-1-value-1" type="text" required data-i18n-ph="valuePlaceholder" placeholder="Enter value (e.g., 1:1)">
                 </div>
               </div>
-              <button type="button" class="btn btn-add-value" onclick="addValue(1)">Add Value</button>
+              <button type="button" class="btn btn-add-value" onclick="addValue(1)" data-i18n="addValueBtn">Add Value</button>
             </div>
           </div>
           <div class="form-group">
-            <label for="industry-product">Product Name*</label>
-            <input id="industry-product" type="text" required placeholder="Enter product name (e.g., lip gloss, phone)">
+            <label for="industry-product" data-i18n="productNameLabel">Product Name*</label>
+            <input id="industry-product" type="text" required data-i18n-ph="productName" placeholder="Enter product name (e.g., lip gloss, phone)">
           </div>
-          <button type="button" id="add-spec-btn" class="btn btn-add-spec">Add Specification</button>
-          <button type="submit" class="btn">Generate Industry Code</button>
-          <button type="button" id="reset-specs" class="btn btn-secondary">Reset</button>
-          <div id="create-account-msg" class “
-
-System: message" style="display: none;"></div>
+          <button type="button" id="add-spec-btn" class="btn btn-add-spec" data-i18n="addSpecification">Add Specification</button>
+          <button type="submit" class="btn" data-i18n="generateIndustryCode">Generate Industry Code</button>
+          <button type="button" id="reset-specs" class="btn btn-secondary" data-i18n="reset">Reset</button>
+          <div id="create-account-msg" class="message" style="display: none;"></div>
         </form>
         <div id="generated-code" class="code-display hidden">
           Industry Code: <span id="industry-code"></span>
-          <button onclick="copyCode()">Copy</button>
+          <button onclick="copyCode()" data-i18n="copy">Copy</button>
         </div>
       </div>
     </div>
@@ -258,12 +298,18 @@ System: message" style="display: none;"></div>
 
   <!-- Product Warning -->
   <div id="product-warning" class="product-warning">
-    <strong>Warning: Product name not set.</strong> <a href="#" onclick="showPage('account-page'); return false;">Update now</a>
+    <strong data-i18n="product">Product</strong>: <span id="display-product-name"></span>
   </div>
 
   <script src="js/i18n.js"></script>
-<script src="js/main.js"></script>
+  <script src="js/main.js"></script>
+
+  <!-- 高亮当前语言 -->
+  <script>
+  // 页面加载完成后初始化语言按钮状态
+  if (window.i18n) {
+    window.i18n.initLanguage();
+  }
+</script>
 </body>
 </html>
-
-

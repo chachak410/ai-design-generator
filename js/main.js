@@ -30,6 +30,7 @@
     let generationCount = 0;
     let userProductName = '';
     let userIndustryCode = null;
+    let currentLanguage = 'en'; // 添加这一行来追踪当前语言
 
     // UI Helpers
     function showElement(id) { 
@@ -689,7 +690,7 @@ async function generateWithHuggingFace(prompt, seed, width = 1024, height = 1024
   }
 }
 
-    // Image Generation
+   // Image Generation
     async function generateImages() {
       if (!currentUser) {
         showMessage('template-status', 'Please sign in.', 'error');
@@ -715,13 +716,26 @@ async function generateWithHuggingFace(prompt, seed, width = 1024, height = 1024
         return;
       }
       let extra = '';
-      if (userSpecs) {
-        extra = Object.entries(selectedSpecs)
-          .map(([key, value]) => `${key}: ${value}`)
-          .join(', ');
-        if (extra) extra = ', ' + extra;
-      }
-      const basePrompt = `A beautiful product design for ${userProductName}, ${selectedTemplates.join(', ')} style${extra}, high quality, detailed, professional`;
+if (userSpecs) {
+  extra = Object.entries(selectedSpecs)
+    .map(([key, value]) => `${key}: ${value}`)
+    .join(', ');
+  if (extra) extra = ', ' + extra;
+}
+
+// 根据当前语言生成对应的提示词
+let basePrompt = '';
+if (currentLanguage === 'zh') {
+  // 简体中文提示词
+  basePrompt = `一个精美的${userProductName}产品设计图，${selectedTemplates.join('、')}风格${extra}，高质量，细节丰富，专业级`;
+} else if (currentLanguage === 'yue') {
+  // 繁体中文提示词
+  basePrompt = `一個精美嘅${userProductName}產品設計圖，${selectedTemplates.join('、')}風格${extra}，高質量，細節豐富，專業級`;
+} else {
+  // 英文提示词（默认）
+  basePrompt = `A beautiful product design for ${userProductName}, ${selectedTemplates.join(', ')} style${extra}, high quality, detailed, professional`;
+}
+
       showMessage('template-status', `Generating images with ${llmSelect}...`, 'info');
       const generateBtn = document.getElementById('generate-images-btn');
       if (generateBtn) generateBtn.disabled = true;
@@ -1175,3 +1189,33 @@ async function generateWithHuggingFace(prompt, seed, width = 1024, height = 1024
         }
       });
     });
+    // === 语言切换 + 主题色（贴到 main.js 最底部）===
+function setLang(lang) {
+  currentLanguage = lang;
+  if (!window.i18n) return;
+  window.i18n.setLanguage(lang);
+
+  // 按钮高亮
+  document.querySelectorAll('[data-lang]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === lang);
+  });
+
+  // 整页主题色
+  document.body.className = lang === 'en' ? 'theme-en' : 'theme-zh';
+}
+
+// 初始化主题
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.i18n) {
+    setLang(window.i18n.currentLang);
+  }
+});
+// 页面加载时检查保存的语言设置
+document.addEventListener('DOMContentLoaded', function() {
+  const savedLang = localStorage.getItem('userLanguage') || 'en';
+  currentLanguage = savedLang;
+  // 如果你的 i18n.js 有 setLang 函数，调用它
+  if (typeof setLang === 'function') {
+    setLang(savedLang);
+  }
+});
