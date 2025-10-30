@@ -100,7 +100,6 @@
         <button id="logout-btn" class="logout-btn">Logout</button>
       </div>
     </div>
-
     <div class="app-content">
       <!-- Setup Page -->
       <div id="setup-page" class="controls hidden">
@@ -171,22 +170,17 @@
         </div>
         <div id="prompt-display" class="prompt-display" style="display: none;"></div>
 
+        <!-- FIXED BUTTON -->
         <div class="button-container">
           <button id="generate-images-btn" class="generate-btn">Generate Images</button>
         </div>
+
         <div id="template-status" class="message" style="display: none;"></div>
 
-        <!-- GENERATED IMAGES + 4 FEEDBACK BUTTONS (side by side) -->
+        <!-- NEW IMAGE LAYOUT -->
         <div id="generated-images" class="generated-images-container hidden">
           <div class="image-pair" id="image-pair"></div>
-
-          <!-- 4 BUTTONS: side-by-side, appear with images -->
-          <div class="feedback-buttons" id="feedback-buttons" style="display:none; justify-content:center; gap:12px; margin-top:20px; flex-wrap:wrap;">
-            <button class="fb-btn left-better"   data-choice="left">Left is better</button>
-            <button class="fb-btn right-better"  data-choice="right">Right is better</button>
-            <button class="fb-btn tie"           data-choice="tie">It’s a tie</button>
-            <button class="fb-btn both-bad"      data-choice="both-bad">both bad</button>
-          </div>
+          <div class="feedback-buttons" id="feedback-buttons"></div>
         </div>
       </div>
 
@@ -250,7 +244,9 @@
           <button type="button" id="add-spec-btn" class="btn btn-add-spec">Add Specification</button>
           <button type="submit" class="btn">Generate Industry Code</button>
           <button type="button" id="reset-specs" class="btn btn-secondary">Reset</button>
-          <div id="create-account-msg" class="message" style="display: none;"></div>
+          <div id="create-account-msg" class “
+
+System: message" style="display: none;"></div>
         </form>
         <div id="generated-code" class="code-display hidden">
           Industry Code: <span id="industry-code"></span>
@@ -265,46 +261,7 @@
     <strong>Warning: Product name not set.</strong> <a href="#" onclick="showPage('account-page'); return false;">Update now</a>
   </div>
 
-  <!-- ============================================================= -->
-  <!--  JAVASCRIPT: Show buttons when images appear + "both bad" does nothing -->
-  <!-- ============================================================= -->
-  <script>
-    // This function will be called when images are ready
-    function showGeneratedContent() {
-      const container = document.getElementById('generated-images');
-      const buttons = document.getElementById('feedback-buttons');
-      container.classList.remove('hidden');
-      buttons.style.display = 'flex'; // show all 4 buttons at once
-    }
-
-    // Click handlers for buttons
-    function submitFeedback(choice) {
-      if (choice === 'both-bad') {
-        console.log('"both bad" clicked – no action taken');
-        return; // does nothing
-      }
-      console.log('User chose:', choice);
-      // Your existing logic here (save to Firestore, next round, etc.)
-    }
-
-    // Example: After generating images, show everything
-    document.getElementById('generate-images-btn').addEventListener('click', () => {
-      // ... your image generation code ...
-
-      setTimeout(() => {
-        showGeneratedContent(); // shows images + 4 buttons together
-      }, 1500); // replace with real image load callback
-    });
-
-    // Attach click events to buttons (if not already in main.js)
-    document.addEventListener('DOMContentLoaded', () => {
-      const buttons = document.querySelectorAll('#feedback-buttons button');
-      buttons.forEach(btn => {
-        btn.onclick = () => submitFeedback(btn.dataset.choice);
-      });
-    });
-  </script>
-
   <script src="js/main.js"></script>
 </body>
 </html>
+
