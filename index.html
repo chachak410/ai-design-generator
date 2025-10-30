@@ -9,6 +9,54 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
   <link rel="stylesheet" href="css/styles.css">
+  <style>
+    /* Embedded CSS for buttons & image layout (you can move to styles.css later) */
+    .generated-images-container {
+      margin-top: 30px;
+      text-align: center;
+    }
+    .image-pair {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .image-pair img {
+      max-width: 45%;
+      height: auto;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,.1);
+    }
+    .feedback-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+    .feedback-btn {
+      padding: 10px 16px;
+      font-size: 14px;
+      background-color: #f5f5f5;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all .2s;
+      min-width: 130px;
+    }
+    .feedback-btn:hover {
+      background-color: #e5e5e5;
+      border-color: #999;
+    }
+    .feedback-btn:active,
+    .feedback-btn.selected {
+      background-color: #007bff;
+      color: #fff;
+      border-color: #007bff;
+    }
+  </style>
 </head>
 <body>
   <!-- Authentication Container -->
@@ -170,17 +218,21 @@
         </div>
         <div id="prompt-display" class="prompt-display" style="display: none;"></div>
 
-        <!-- FIXED BUTTON -->
+        <!-- Generate Button -->
         <div class="button-container">
           <button id="generate-images-btn" class="generate-btn">Generate Images</button>
         </div>
-
         <div id="template-status" class="message" style="display: none;"></div>
 
-        <!-- NEW IMAGE LAYOUT -->
+        <!-- IMAGE + 4 BUTTONS LAYOUT -->
         <div id="generated-images" class="generated-images-container hidden">
           <div class="image-pair" id="image-pair"></div>
-          <div class="feedback-buttons" id="feedback-buttons"></div>
+          <div class="feedback-buttons" id="feedback-buttons" style="display: none;">
+            <button type="button" class="feedback-btn" data-choice="left">Left is better</button>
+            <button type="button" class="feedback-btn" data-choice="right">Right is better</button>
+            <button type="button" class="feedback-btn" data-choice="tie">It’s a tie</button>
+            <button type="button" class="feedback-btn" data-choice="both-bad">both bad</button>
+          </div>
         </div>
       </div>
 
@@ -244,9 +296,7 @@
           <button type="button" id="add-spec-btn" class="btn btn-add-spec">Add Specification</button>
           <button type="submit" class="btn">Generate Industry Code</button>
           <button type="button" id="reset-specs" class="btn btn-secondary">Reset</button>
-          <div id="create-account-msg" class “
-
-System: message" style="display: none;"></div>
+          <div id="create-account-msg" class="message" style="display: none;"></div>
         </form>
         <div id="generated-code" class="code-display hidden">
           Industry Code: <span id="industry-code"></span>
@@ -262,6 +312,46 @@ System: message" style="display: none;"></div>
   </div>
 
   <script src="js/main.js"></script>
+
+  <!-- ADD THIS SCRIPT AT THE END (or in main.js) -->
+  <script>
+    // Call this function when images are ready
+    function showGeneratedPair(leftUrl, rightUrl) {
+      const pairDiv = document.getElementById('image-pair');
+      pairDiv.innerHTML = `
+        <img src="${leftUrl}" alt="Left design">
+        <img src="${rightUrl}" alt="Right design">
+      `;
+
+      const container = document.getElementById('generated-images');
+      container.classList.remove('hidden');
+
+      const btns = document.getElementById('feedback-buttons');
+      btns.style.display = 'flex';
+
+      // Remove old listeners
+      document.querySelectorAll('.feedback-btn').forEach(btn => {
+        btn.replaceWith(btn.cloneNode(true));
+      });
+
+      // Add new listeners
+      document.querySelectorAll('.feedback-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+          document.querySelectorAll('.feedback-btn').forEach(b => b.classList.remove('selected'));
+          this.classList.add('selected');
+          const choice = this.getAttribute('data-choice');
+          handleFeedback(choice);
+        });
+      });
+    }
+
+    function handleFeedback(choice) {
+      console.log('Feedback:', choice);
+      // Add your logic: save to Firestore, generate next pair, etc.
+    }
+
+    // Example usage (replace with your actual image URLs):
+    // showGeneratedPair('https://example.com/img1.jpg', 'https://example.com/img2.jpg');
+  </script>
 </body>
 </html>
-
