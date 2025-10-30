@@ -176,17 +176,16 @@
         </div>
         <div id="template-status" class="message" style="display: none;"></div>
 
-        <!-- GENERATED IMAGES + NEW FEEDBACK BUTTONS -->
+        <!-- GENERATED IMAGES + 4 FEEDBACK BUTTONS (side by side) -->
         <div id="generated-images" class="generated-images-container hidden">
           <div class="image-pair" id="image-pair"></div>
 
-          <!-- NEW BUTTONS (side-by-side, below the images) -->
-          <div class="feedback-buttons" id="feedback-buttons" style="display:none;">
+          <!-- 4 BUTTONS: side-by-side, appear with images -->
+          <div class="feedback-buttons" id="feedback-buttons" style="display:none; justify-content:center; gap:12px; margin-top:20px; flex-wrap:wrap;">
             <button class="fb-btn left-better"   data-choice="left">Left is better</button>
             <button class="fb-btn right-better"  data-choice="right">Right is better</button>
             <button class="fb-btn tie"           data-choice="tie">It’s a tie</button>
-            <!-- hidden "both bad" – does nothing -->
-            <button class="fb-btn both-bad"      data-choice="both-bad" style="display:none;">both bad</button>
+            <button class="fb-btn both-bad"      data-choice="both-bad">both bad</button>
           </div>
         </div>
       </div>
@@ -266,90 +265,46 @@
     <strong>Warning: Product name not set.</strong> <a href="#" onclick="showPage('account-page'); return false;">Update now</a>
   </div>
 
-  <!-- ---------------------------------------------------------------- -->
-  <!--  JavaScript (inline – you can move this to js/main.js if you want) -->
-  <!-- ---------------------------------------------------------------- -->
+  <!-- ============================================================= -->
+  <!--  JAVASCRIPT: Show buttons when images appear + "both bad" does nothing -->
+  <!-- ============================================================= -->
   <script>
-    /* --------------------------------------------------------------
-       createFeedbackButtons – called after the two images are ready
-       -------------------------------------------------------------- */
-    function createFeedbackButtons() {
-      const container = document.getElementById('feedback-buttons');
-      container.innerHTML = '';               // clear old buttons
-      container.style.display = 'flex';       // show the row
-
-      // Left is better
-      const left = document.createElement('button');
-      left.className = 'fb-btn left-better';
-      left.dataset.choice = 'left';
-      left.textContent = 'Left is better';
-      left.onclick = () => submitFeedback('left');
-      container.appendChild(left);
-
-      // Right is better
-      const right = document.createElement('button');
-      right.className = 'fb-btn right-better';
-      right.dataset.choice = 'right';
-      right.textContent = 'Right is better';
-      right.onclick = () => submitFeedback('right');
-      container.appendChild(right);
-
-      // It’s a tie
-      const tie = document.createElement('button');
-      tie.className = 'fb-btn tie';
-      tie.dataset.choice = 'tie';
-      tie.textContent = 'It’s a tie';
-      tie.onclick = () => submitFeedback('tie');
-      container.appendChild(tie);
-
-      // hidden “both bad” – does nothing (kept for backward compatibility)
-      const bad = document.createElement('button');
-      bad.className = 'fb-btn both-bad';
-      bad.dataset.choice = 'both-bad';
-      bad.textContent = 'both bad';
-      bad.style.display = 'none';
-      bad.onclick = () => {};   // no-op
-      container.appendChild(bad);
+    // This function will be called when images are ready
+    function showGeneratedContent() {
+      const container = document.getElementById('generated-images');
+      const buttons = document.getElementById('feedback-buttons');
+      container.classList.remove('hidden');
+      buttons.style.display = 'flex'; // show all 4 buttons at once
     }
 
-    /* --------------------------------------------------------------
-       submitFeedback – keep your existing logic, just ignore both-bad
-       -------------------------------------------------------------- */
+    // Click handlers for buttons
     function submitFeedback(choice) {
       if (choice === 'both-bad') {
-        // “both bad” does nothing – required by the spec
-        return;
+        console.log('"both bad" clicked – no action taken');
+        return; // does nothing
       }
-      // ---- YOUR ORIGINAL CODE BELOW (example) ----
       console.log('User chose:', choice);
-      // e.g. save to Firestore, show next pair, etc.
-      // …
+      // Your existing logic here (save to Firestore, next round, etc.)
     }
 
-    /* --------------------------------------------------------------
-       Example: after clicking “Generate Images”
-       -------------------------------------------------------------- */
+    // Example: After generating images, show everything
     document.getElementById('generate-images-btn').addEventListener('click', () => {
-      // … your image-generation code …
+      // ... your image generation code ...
 
-      // Simulate images ready (replace with real logic)
       setTimeout(() => {
-        document.getElementById('generated-images').classList.remove('hidden');
-        createFeedbackButtons();   // shows the new buttons
-      }, 1500);
+        showGeneratedContent(); // shows images + 4 buttons together
+      }, 1500); // replace with real image load callback
     });
 
-    /* --------------------------------------------------------------
-       All your other functions from main.js go here (showPage, etc.)
-       -------------------------------------------------------------- */
-    // function showPage(id) { … }
-    // function showRegister() { … }
-    // etc.
+    // Attach click events to buttons (if not already in main.js)
+    document.addEventListener('DOMContentLoaded', () => {
+      const buttons = document.querySelectorAll('#feedback-buttons button');
+      buttons.forEach(btn => {
+        btn.onclick = () => submitFeedback(btn.dataset.choice);
+      });
+    });
   </script>
 
-  <!-- If you keep a separate js/main.js, just copy the two functions
-       (createFeedbackButtons & submitFeedback) into it and remove the
-       <script> block above. -->
   <script src="js/main.js"></script>
 </body>
 </html>
