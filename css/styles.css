@@ -39,7 +39,7 @@
       font-size: 1.1em;
     }
     .auth-content {
-      padding: 40px 5px;
+      padding: 40px 30px;
     }
     .form-group {
       margin-bottom: 25px;
@@ -423,3 +423,35 @@
       .feedback-buttons { flex-direction: column; }
       .feedback-buttons button { width: 100%; max-width: 280px; }
     }
+/* === 主题色：英文蓝色，中文绿色 === */
+.theme-en {
+  --primary: #007bff;
+  --btn-bg: #007bff;
+  --btn-hover: #0056b3;
+  --text: #333;
+}
+
+.theme-zh {
+  --primary: #28a745;
+  --btn-bg: #28a745;
+  --btn-hover: #1e7e34;
+  --text: #333;
+}
+
+/* 应用变量 */
+body {
+  color: var(--text);
+}
+.btn, .generate-btn, .lang-inline-btn {
+  background: var(--btn-bg) !important;
+  border-color: var(--btn-bg) !important;
+  color: white !important;
+}
+.btn:hover, .generate-btn:hover, .lang-inline-btn:hover {
+  background: var(--btn-hover) !important;
+  border-color: var(--btn-hover) !important;
+}
+.lang-inline-btn.active {
+  background: var(--btn-bg) !important;
+  font-weight: bold;
+}
