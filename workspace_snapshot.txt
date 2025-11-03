@@ -1,3 +1,56 @@
+﻿--- TREE (filtered) ---
+
+
+FullName                        
+--------                        
+C:\Users\user\OneDrive\桌面\ai-...
+C:\Users\user\OneDrive\桌面\ai-...
+C:\Users\user\OneDrive\桌面\ai-...
+C:\Users\user\OneDrive\桌面\ai-...
+C:\Users\user\OneDrive\桌面\ai-...
+C:\Users\user\OneDrive\桌面\ai-...
+C:\Users\user\OneDrive\桌面\ai-...
+C:\Users\user\OneDrive\桌面\ai-...
+C:\Users\user\OneDrive\桌面\ai-...
+C:\Users\user\OneDrive\桌面\ai-...
+C:\Users\user\OneDrive\桌面\ai-...
+C:\Users\user\OneDrive\桌面\ai-...
+C:\Users\user\OneDrive\桌面\ai-...
+C:\Users\user\OneDrive\桌面\ai-...
+C:\Users\user\OneDrive\桌面\ai-...
+C:\Users\user\OneDrive\桌面\ai-...
+C:\Users\user\OneDrive\桌面\ai-...
+C:\Users\user\OneDrive\桌面\ai-...
+C:\Users\user\OneDrive\桌面\ai-...
+C:\Users\user\OneDrive\桌面\ai-...
+C:\Users\user\OneDrive\桌面\ai-...
+C:\Users\user\OneDrive\桌面\ai-...
+C:\Users\user\OneDrive\桌面\ai-...
+C:\Users\user\OneDrive\桌面\ai-...
+C:\Users\user\OneDrive\桌面\ai-...
+C:\Users\user\OneDrive\桌面\ai-...
+C:\Users\user\OneDrive\桌面\ai-...
+C:\Users\user\OneDrive\桌面\ai-...
+C:\Users\user\OneDrive\桌面\ai-...
+C:\Users\user\OneDrive\桌面\ai-...
+C:\Users\user\OneDrive\桌面\ai-...
+C:\Users\user\OneDrive\桌面\ai-...
+C:\Users\user\OneDrive\桌面\ai-...
+C:\Users\user\OneDrive\桌面\ai-...
+C:\Users\user\OneDrive\桌面\ai-...
+C:\Users\user\OneDrive\桌面\ai-...
+C:\Users\user\OneDrive\桌面\ai-...
+C:\Users\user\OneDrive\桌面\ai-...
+
+
+
+
+
+--- FILE CONTENTS ---
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\index.html ---
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,12 +59,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <!-- Firebase (must load before modules) -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     
     <!-- EmailJS -->
-    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
     
     <!-- Styles -->
     <link rel="stylesheet" href="css/styles.css">
@@ -48,11 +101,11 @@
     <div class="auth-header">
       <h1 data-i18n="title">AI Design Generator</h1>
 
-      <!-- 登录页语言切换 -->
+      <!-- ç™»å½•é¡µè¯­è¨€åˆ‡æ¢ -->
       <div id="lang-switcher-auth" style="margin: 12px 0; text-align: center;">
         <button data-lang="en"  onclick="setLang('en')"  class="lang-inline-btn">English</button>
-        <button data-lang="yue" onclick="setLang('yue')" class="lang-inline-btn">繁體中文</button>
-        <button data-lang="zh"  onclick="setLang('zh')"  class="lang-inline-btn">简体</button>
+        <button data-lang="yue" onclick="setLang('yue')" class="lang-inline-btn">ç¹é«”ä¸­æ–‡</button>
+        <button data-lang="zh"  onclick="setLang('zh')"  class="lang-inline-btn">ç®€ä½“</button>
       </div>
 
       <p data-i18n="createImages">Create stunning images with AI</p>
@@ -156,11 +209,11 @@
     <div class="app-header">
       <h1 data-i18n="title">AI Design Generator</h1>
 
-      <!-- 主应用语言切换 -->
+      <!-- ä¸»åº”ç”¨è¯­è¨€åˆ‡æ¢ -->
       <div id="lang-switcher-inline" style="margin: 12px 0; text-align: left;">
         <button data-lang="en" onclick="setLang('en')" class="lang-inline-btn">English</button>
-        <button data-lang="yue" onclick="setLang('yue')" class="lang-inline-btn">繁體中文</button>
-        <button data-lang="zh" onclick="setLang('zh')" class="lang-inline-btn">简体</button>
+        <button data-lang="yue" onclick="setLang('yue')" class="lang-inline-btn">ç¹é«”ä¸­æ–‡</button>
+        <button data-lang="zh" onclick="setLang('zh')" class="lang-inline-btn">ç®€ä½“</button>
       </div>
 
       <div class="nav-links">
@@ -393,7 +446,7 @@
     // Handle feedback button clicks
     function submitFeedback(choice) {
       if (choice === 'both-bad') {
-        console.log('"both bad" clicked – no action');
+        console.log('"both bad" clicked â€“ no action');
         return;
       }
       console.log('User chose:', choice);
@@ -418,28 +471,215 @@
     });
   </script>
 
-  <!-- App Scripts (load in order) -->
-  <script src="js/utils/ui.js"></script>
-  <script src="js/features/auth/auth.js"></script>
-  <script src="js/features/auth/registration.js"></script>
-  <script src="js/features/account/profile.js"></script>
-  <script src="js/features/account/setup.js"></script>
-  <script src="js/features/generation/pollinations.js"></script>
-  <script src="js/features/generation/stability.js"></script>
-  <script src="js/features/generation/renderer.js"></script>
-  <script src="js/features/generation/generator.js"></script>
-  <script src="js/features/templates/template.js"></script>
-  <script src="js/features/records/history.js"></script>
-  <script src="js/features/admin/industry-codes.js"></script>
-  <script src="js/main.js"></script>
+  <!-- i18n + Main Logic -->
   <script src="js/i18n.js"></script>
+  <script src="js/main.js"></script>
 
+  <!-- Initialize language button highlight -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      if (window.i18n?.initLanguage) {
+      if (window.i18n && typeof window.i18n.initLanguage === 'function') {
         window.i18n.initLanguage();
       }
     });
   </script>
 </body>
 </html>
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\README.md ---
+
+# ðŸŽ¨ AI Design Generator
+
+[remote content]
+<image-card alt="AI Design Generator Demo" src="assets/screenshot.png" ></image-card>
+**Visualize your ideas in seconds with AI-powered design generation!**
+
+ðŸŒ **Live Demo**: [AI Design Generator](https://chachak410.github.io/ai-design-generator/)
+ðŸ“‚ **Repository**: [GitHub](https://github.com/chachak410/ai-design-generator)
+[<image-card alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg" ></image-card>](https://opensource.org/licenses/MIT)
+
+## ðŸ“– About
+
+The **AI Design Generator** is a lightweight, browser-based tool that transforms your ideas into stunning design layouts, copy, and visual cues in seconds. Whether you're a designer, marketer, or business owner, this tool helps you create and iterate on designs effortlessly. Powered by AI, it generates customizable templates tailored to your industry, with optional email verification via EmailJS for a seamless user experience.
+
+## âœ¨ Features
+
+- **Instant Design Generation**: Enter a text prompt to get AI-generated layouts, copy, and visuals.
+- **Customizable Templates**: Choose industry-specific templates created by admins.
+- **Browser-Based**: No installation requiredâ€”runs entirely in your browser.
+- **Email Integration**: Optional EmailJS setup for user verification and password resets.
+- **Download & Share**: Save or download your designs for immediate use.
+- **Responsive Design**: Works seamlessly on desktop and mobile devices.
+
+## ðŸš€ Getting Started
+
+### For Users
+1. Visit the [AI Design Generator](https://chachak410.github.io/ai-design-generator/).
+2. Enter the **industry code** provided by your admin (a unique identifier for your template).
+3. Edit your profile and select a template.
+4. Type your design needs (e.g., "modern website layout for a tech startup").
+5. Click **Generate** to explore design variations.
+6. Refine, save, or download your designs.
+7. (Optional) Verify your email to receive industry codes or reset passwords.
+
+### For Admins
+1. Sign up for an [EmailJS account](https://www.emailjs.com/) to enable email features.
+2. Configure EmailJS:
+   - Create email templates for verification or password resets.
+   - Store your EmailJS API keys securely (e.g., in environment variables).
+3. Set up the Master Account:
+   - Create templates for different industries (e.g., e-commerce, education).
+   - Assign industry codes to users.
+4. Manage the tool via the admin dashboard (contact the team for access).
+
+> **Note**: Admin credentials are private. Contact the project maintainers for access or use environment variables for secure setup.
+
+### Running Locally (For Developers)
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/chachak410/ai-design-generator.git
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\css\account.css ---
+
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\css\auth.css ---
+
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\css\common.css ---
+
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\css\styles.css ---
+
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\js\config.js ---
+
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\js\i18n.js ---
+
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\js\main.js ---
+
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\js\core\i18n.js ---
+
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\js\core\router.js ---
+
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\js\core\state.js ---
+
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\js\features\account\profile.js ---
+
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\js\features\account\settings.js ---
+
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\js\features\account\setup.js ---
+
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\js\features\admin\analytics.js ---
+
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\js\features\admin\client-management.js ---
+
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\js\features\admin\industry-codes.js ---
+
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\js\features\auth\auth.js ---
+
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\js\features\auth\password.js ---
+
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\js\features\auth\registration.js ---
+
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\js\features\generation\generator.js ---
+
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\js\features\generation\pollinations.js ---
+
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\js\features\generation\renderer.js ---
+
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\js\features\generation\stability.js ---
+
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\js\features\records\download.js ---
+
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\js\features\records\gallery.js ---
+
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\js\features\records\history.js ---
+
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\js\features\support\responses.js ---
+
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\js\features\support\tickets.js ---
+
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\js\features\templates\prompt.js ---
+
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\js\features\templates\specs.js ---
+
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\js\features\templates\template.js ---
+
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\js\utils\firebase.js ---
+
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\js\utils\helpers.js ---
+
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\js\utils\sanitizer.js ---
+
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\js\utils\ui.js ---
+
+
+
+--- FILE: C:\Users\user\OneDrive\桌面\ai-design-generator-fresh\js\utils\validation.js ---
+
