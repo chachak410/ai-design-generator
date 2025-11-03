@@ -5,11 +5,13 @@
     <title data-i18n="title">AI Design Generator</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <!-- Firebase (must load before modules) -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    
+    <!-- Firebase compat CDN (matches your current global usage) -->
+    <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+    <!-- Optional analytics (only if you use it) -->
+    <!-- <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-analytics-compat.js"></script> -->
+
     <!-- EmailJS -->
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     
@@ -48,11 +50,11 @@
     <div class="auth-header">
       <h1 data-i18n="title">AI Design Generator</h1>
 
-      <!-- ç™»å½•é¡µè¯­è¨€åˆ‡æ¢ -->
+      <!-- 登录页语言切换 -->
       <div id="lang-switcher-auth" style="margin: 12px 0; text-align: center;">
         <button data-lang="en"  onclick="setLang('en')"  class="lang-inline-btn">English</button>
-        <button data-lang="yue" onclick="setLang('yue')" class="lang-inline-btn">ç¹é«”ä¸­æ–‡</button>
-        <button data-lang="zh"  onclick="setLang('zh')"  class="lang-inline-btn">ç®€ä½“</button>
+        <button data-lang="yue" onclick="setLang('yue')" class="lang-inline-btn">繁體中文</button>
+        <button data-lang="zh"  onclick="setLang('zh')"  class="lang-inline-btn">简体</button>
       </div>
 
       <p data-i18n="createImages">Create stunning images with AI</p>
@@ -156,11 +158,11 @@
     <div class="app-header">
       <h1 data-i18n="title">AI Design Generator</h1>
 
-      <!-- ä¸»åº”ç”¨è¯­è¨€åˆ‡æ¢ -->
+      <!-- 主应用语言切换 -->
       <div id="lang-switcher-inline" style="margin: 12px 0; text-align: left;">
         <button data-lang="en" onclick="setLang('en')" class="lang-inline-btn">English</button>
-        <button data-lang="yue" onclick="setLang('yue')" class="lang-inline-btn">ç¹é«”ä¸­æ–‡</button>
-        <button data-lang="zh" onclick="setLang('zh')" class="lang-inline-btn">ç®€ä½“</button>
+        <button data-lang="yue" onclick="setLang('yue')" class="lang-inline-btn">繁體中文</button>
+        <button data-lang="zh" onclick="setLang('zh')" class="lang-inline-btn">简体</button>
       </div>
 
       <div class="nav-links">
@@ -393,7 +395,7 @@
     // Handle feedback button clicks
     function submitFeedback(choice) {
       if (choice === 'both-bad') {
-        console.log('"both bad" clicked â€“ no action');
+        console.log('"both bad" clicked – no action');
         return;
       }
       console.log('User chose:', choice);
@@ -418,9 +420,33 @@
     });
   </script>
 
-  <!-- App Scripts (load in order) -->
+  <!-- ============================================================= -->
+  <!--  CRITICAL: Load scripts in correct order                     -->
+  <!-- ============================================================= -->
+  
+  <!-- 1. Configuration FIRST (must be before everything) -->
+  <script src="js/config/config.js"></script>
+  
+  <!-- 2. Core modules (i18n, state, utilities) -->
+  <script src="js/core/state.js"></script>
+  <script src="js/core/i18n.js"></script>
   <script src="js/utils/ui.js"></script>
+  <script src="js/utils/helpers.js"></script>
+  <script src="js/utils/sanitizer.js"></script>
+  <script src="js/utils/validation.js"></script>
+  <script src="js/utils/firebase.js"></script>
+  <script>
+    // Initialize Firebase before anything else uses it
+    try {
+      (window.initializeFirebase || window.FirebaseHelper?.init)?.(window.AppConfig?.firebase);
+      // Optional: analytics (only if you included analytics-compat)
+      if (firebase.analytics && AppConfig.firebase.measurementId) firebase.analytics();
+    } catch (e) { console.error('Firebase init failed:', e); }
+  </script>
+  
+  <!-- 3. Feature modules -->
   <script src="js/features/auth/auth.js"></script>
+  <script src="js/features/auth/password.js"></script>
   <script src="js/features/auth/registration.js"></script>
   <script src="js/features/account/profile.js"></script>
   <script src="js/features/account/setup.js"></script>
@@ -430,10 +456,13 @@
   <script src="js/features/generation/generator.js"></script>
   <script src="js/features/templates/template.js"></script>
   <script src="js/features/records/history.js"></script>
+  <script src="js/features/admin/client-management.js"></script>
   <script src="js/features/admin/industry-codes.js"></script>
+  
+  <!-- 4. Main entry point (LAST - initializes everything) -->
   <script src="js/core/main.js"></script>
-  <script src="js/core/i18n.js"></script>
 
+  <!-- 5. Initialize i18n after DOM loads -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       if (window.i18n?.initLanguage) {
@@ -441,5 +470,6 @@
       }
     });
   </script>
+  <script src="js/core/main.js"></script>
 </body>
 </html>

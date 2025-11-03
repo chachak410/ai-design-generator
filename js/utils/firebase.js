@@ -1,9 +1,21 @@
-/**
+﻿/**
  * Firebase Utilities
- * Helper functions for Firebase operations
  */
+const FirebaseHelper = {
+  app: null,
+  auth: null,
+  db: null,
+  init(config) {
+    const cfg = config || window.AppConfig?.firebase;
+    if (!cfg) { console.error('Firebase config missing'); return null; }
+    if (!window.firebase?.initializeApp) { console.error('Firebase compat SDK not loaded'); return null; }
 
-export const FirebaseHelper = {
+    this.app = (firebase.apps && firebase.apps.length) ? firebase.app() : firebase.initializeApp(cfg);
+    this.auth = firebase.auth();
+    this.db = firebase.firestore();
+    return this.app;
+  },
+
   /**
    * Check if a user document exists
    */
@@ -120,3 +132,6 @@ export const FirebaseHelper = {
     }
   }
 };
+
+window.FirebaseHelper = FirebaseHelper;
+window.initializeFirebase = (cfg) => FirebaseHelper.init(cfg);

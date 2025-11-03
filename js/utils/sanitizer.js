@@ -1,9 +1,9 @@
-/**
+﻿/**
  * Sanitization Utilities
  * Clean and validate user inputs and prompts
  */
 
-export const Sanitizer = {
+const Sanitizer = {
   /**
    * Sanitize prompt for AI generation
    * Removes special characters, limits length
@@ -62,3 +62,7 @@ export const Sanitizer = {
     return password.length >= 6;
   }
 };
+
+window.Sanitizer = Sanitizer;
+window.sanitizeInput = Sanitizer.sanitizeInput;
+window.sanitizePrompt = Sanitizer.sanitizePrompt;

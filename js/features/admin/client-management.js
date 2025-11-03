@@ -4,7 +4,7 @@
  * Future feature - placeholder for now
  */
 
-export class ClientManagement {
+class ClientManagement {
   constructor(auth, db) {
     this.auth = auth;
     this.db = db;
@@ -76,3 +76,5 @@ export class ClientManagement {
     UI.showMessage('client-management-msg', 'Client management feature coming soon!', 'info');
   }
 }
+
+window.ClientManagement = ClientManagement;

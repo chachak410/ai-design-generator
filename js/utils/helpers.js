@@ -1,9 +1,9 @@
-/**
+﻿/**
  * General Helper Utilities
  * Miscellaneous helper functions
  */
 
-export const Helpers = {
+const Helpers = {
   /**
    * Generate a random 6-digit verification code
    */
@@ -81,3 +81,6 @@ export const Helpers = {
     document.body.removeChild(a);
   }
 };
+
+window.Helpers = Helpers;
+window.HelperFunctions = Helpers;

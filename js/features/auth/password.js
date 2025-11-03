@@ -1,9 +1,9 @@
-/**
+﻿/**
  * Password Management Module
  * Handles password reset and change operations
  */
 
-export class Password {
+class Password {
   constructor(auth) {
     this.auth = auth;
   }
@@ -85,4 +85,11 @@ export class Password {
       return { success: false, error: errorMessage };
     }
   }
+}
+
+window.Password = Password;
+if (typeof resetPassword === 'function') {
+  window.resetPassword = resetPassword;
+} else if (typeof Password.resetPassword === 'function') {
+  window.resetPassword = Password.resetPassword.bind(Password);
 }
