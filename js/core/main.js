@@ -46,6 +46,19 @@ document.addEventListener('DOMContentLoaded', async () => {
           UI.showMainApp();
           UI.toggleMasterUI(AppState.userRole === 'master' || AppState.userRole === 'admin');
 
+          // Show Client Management nav for admin/master
+          const masterNavLink = document.getElementById('master-nav-link');
+          if (AppState.userRole === 'master' || AppState.userRole === 'admin') {
+            if (masterNavLink) {
+              masterNavLink.style.display = 'inline-block';
+              console.log('✅ Client Management nav shown');
+            }
+          }
+
+          // Store user data globally
+          window.currentUserData = userData;
+
+          // If not fully set up, go to setup, else Template page
           if (!userData.setupCompleted && AppState.userRole !== 'master' && AppState.userRole !== 'admin') {
             UI.showPage('setup-page');
           } else {
@@ -177,17 +190,24 @@ function setupEventListeners() {
   console.log(' Event listeners setup complete');
 }
 
-window.showPage = function(pageId) {
-  UI.showPage(pageId, AppState.userRole);
+function showPage(pageId) {
+  // Hide all sections (controls and page-section)
+  const sections = document.querySelectorAll('#main-app .controls, #main-app .page-section');
+  sections.forEach(section => { section.style.display = 'none'; });
 
-  if (pageId === 'account-page') {
-    Profile.loadAccountInfo();
-  } else if (pageId === 'template-page') {
-    TemplateManager.loadTemplates();
-  } else if (pageId === 'records-page') {
-    RecordManager.loadRecords();
+  // Show requested section
+  const targetSection = document.getElementById(pageId);
+  if (targetSection) {
+    targetSection.style.display = 'block';
+
+    if (pageId === 'client-management-section' && window.ClientManagement?.init) {
+      window.ClientManagement.init();
+    }
+  } else {
+    console.error(`❌ Section ${pageId} not found`);
   }
-};
+}
+window.showPage = showPage;
 
 window.addValue = function(specId) {
   IndustryCodeManager.addValue(specId);

@@ -1,28 +1,3 @@
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-
-<!-- EmailJS -->
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-
-<!-- 🔥 ADD THIS LINE - Config MUST load before everything else! -->
-<script src="js/config/config.js"></script>
-
-<!-- Core modules -->
-<script src="js/core/state.js"></script>
-<script src="js/core/i18n.js"></script>
-
-<!-- Utils -->
-<script src="js/utils/ui.js"></script>
-
-<!-- Feature modules -->
-<script src="js/features/auth/auth.js"></script>
-<!-- ...rest of your scripts... -->
-
-<!-- Main entry point (LAST!) -->
-<script src="js/core/main.js"></script>
-
 const AppConfig = {
   firebase: {
     apiKey: "AIzaSyDm0BXeMexwXXwMhF_vR0AULj8w-BJdgTc",
