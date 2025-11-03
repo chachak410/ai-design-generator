@@ -29,39 +29,40 @@ document.addEventListener('DOMContentLoaded', async () => {
           const doc = await AppState.db.collection('users').doc(user.uid).get();
 
           if (!doc.exists) {
-            console.log(' User profile not found, showing setup');
+            // User not found in Firestore – create basic doc
+            await AppState.db.collection('users').doc(user.uid).set({
+              email: user.email,
+              role: 'client',
+              createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            console.log(' New user created, showing template page');
             UI.showMainApp();
-            UI.showPage('setup-page');
-            return;
-          }
-
-          const userData = doc.data();
-          console.log(' User data loaded:', { productName: userData.productName, role: userData.role });
-
-          AppState.userRole = userData.role || 'client';
-          AppState.userProductName = userData.productName || '';
-          AppState.userTemplates = userData.template ? [userData.template] : [];
-          AppState.userSpecs = userData.specifications || {};
-
-          UI.showMainApp();
-          UI.toggleMasterUI(AppState.userRole === 'master' || AppState.userRole === 'admin');
-
-          // Show Client Management nav for admin/master
-          const masterNavLink = document.getElementById('master-nav-link');
-          if (AppState.userRole === 'master' || AppState.userRole === 'admin') {
-            if (masterNavLink) {
-              masterNavLink.style.display = 'inline-block';
-              console.log('✅ Client Management nav shown');
-            }
-          }
-
-          // Store user data globally
-          window.currentUserData = userData;
-
-          // If not fully set up, go to setup, else Template page
-          if (!userData.setupCompleted && AppState.userRole !== 'master' && AppState.userRole !== 'admin') {
-            UI.showPage('setup-page');
+            UI.showPage('template-page');
           } else {
+            const userData = doc.data();
+            console.log(' User data loaded:', { productName: userData.productName, role: userData.role });
+
+            AppState.userRole = userData.role || 'client';
+            AppState.userProductName = userData.productName || '';
+            AppState.userTemplates = userData.template ? [userData.template] : [];
+            AppState.userSpecs = userData.specifications || {};
+
+            UI.showMainApp();
+            UI.toggleMasterUI(AppState.userRole === 'master' || AppState.userRole === 'admin');
+
+            // Show Client Management nav for admin/master
+            const masterNavLink = document.getElementById('master-nav-link');
+            if (AppState.userRole === 'master' || AppState.userRole === 'admin') {
+              if (masterNavLink) {
+                masterNavLink.style.display = 'inline-block';
+                console.log('✅ Client Management nav shown');
+              }
+            }
+
+            // Store user data globally
+            window.currentUserData = userData;
+
+            // Remove setup check - go directly to Template page
             UI.showPage('template-page', AppState.userRole);
             await TemplateManager.loadTemplates();
           }
@@ -144,14 +145,6 @@ function setupEventListeners() {
     });
   }
 
-  const setupForm = document.getElementById('setup-form');
-  if (setupForm) {
-    setupForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      Setup.handleSetup();
-    });
-  }
-
   const editAccountBtn = document.getElementById('edit-account-btn');
   if (editAccountBtn) {
     editAccountBtn.addEventListener('click', () => Profile.showEditAccount());
@@ -200,7 +193,7 @@ function showPage(pageId) {
   if (targetSection) {
     targetSection.style.display = 'block';
 
-    if (pageId === 'client-management-section' && window.ClientManagement?.init) {
+    if (pageId === 'client-management-section' && window.ClientManagement && typeof window.ClientManagement.init === 'function') {
       window.ClientManagement.init();
     }
   } else {
@@ -209,10 +202,75 @@ function showPage(pageId) {
 }
 window.showPage = showPage;
 
-window.addValue = function(specId) {
+// Simple wrappers exposed to window
+window.addValue = function (specId) {
   IndustryCodeManager.addValue(specId);
 };
-
-window.removeSpecification = function(specId) {
+window.removeSpecification = function (specId) {
   IndustryCodeManager.removeSpecification(specId);
+};
+
+// Simple global logout handler
+window.handleLogout = async function () {
+  try {
+    await AppState.auth.signOut();
+    location.reload();
+  } catch (e) {
+    console.error('Logout failed', e);
+    alert('Logout failed. Please try again.');
+  }
+};
+
+// Auth view helpers (toggle login/register)
+function showAuthView(target) {
+  const groups = {
+    login: ['login-panel','login-section','auth-login','login-form-container','login-card'],
+    register: ['register-panel','register-section','auth-register','register-form-container','register-card']
+  };
+
+  // Hide all known auth containers
+  [...groups.login, ...groups.register].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+
+  // Show target group
+  const toShow = groups[target] || [];
+  let shown = false;
+  toShow.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.style.display = 'block'; shown = true; }
+  });
+
+  // If nothing matched, fallback to simple classes
+  if (!shown) {
+    document.querySelectorAll('.auth-login').forEach(el => el.style.display = (target === 'login' ? 'block' : 'none'));
+    document.querySelectorAll('.auth-register').forEach(el => el.style.display = (target === 'register' ? 'block' : 'none'));
+  }
+}
+
+// Expose required globals used by inline onclick in index.html
+window.showLogin = function () {
+  showAuthView('login');
+};
+window.showRegister = function () {
+  showAuthView('register');
+};
+window.resetPassword = async function () {
+  try {
+    // Prefer existing Auth module if present
+    if (window.Auth && typeof window.Auth.resetPassword === 'function') {
+      await window.Auth.resetPassword();
+      return;
+    }
+    // Fallback: ask for email or use login email field
+    const email = (document.getElementById('login-email')?.value || '').trim() ||
+                  prompt('Enter your email to receive a password reset link:') || '';
+    if (!email) return;
+    await AppState.auth.sendPasswordResetEmail(email);
+    alert('Password reset email sent.');
+  } catch (e) {
+    console.error('resetPassword error', e);
+    alert('Failed to send reset email. Please try again.');
+  }
 };

@@ -168,42 +168,20 @@
       </div>
 
       <div class="nav-links">
-        <a href="#" onclick="showPage('setup-page'); return false;" data-i18n="setup">Setup</a>
+        <!-- REMOVE THIS LINE: -->
+        <!-- <a href="#" onclick="showPage('setup-page'); return false;" data-i18n="setup">Setup</a> -->
         <a href="#" onclick="showPage('account-page'); return false;" data-i18n="account">Account</a>
         <a href="#" onclick="showPage('template-page'); return false;" data-i18n="templates">Templates</a>
         <a href="#" onclick="showPage('records-page'); return false;" data-i18n="pastRecords">Past Records</a>
         <a href="#" id="create-account-link" onclick="showPage('create-account-page'); return false;" data-i18n="createAccount" style="display: none;">Create Account</a>
         <a href="#" id="master-nav-link" onclick="showPage('client-management-section'); return false;" style="display: none;">Client Management</a>
+        <a href="#" id="logout-btn" onclick="handleLogout(); return false;">Logout</a>
       </div>
     </div>
 
     <div class="app-content">
-      <!-- Setup Page -->
-      <div id="setup-page" class="controls hidden">
-        <h2 data-i18n="setupProfile">Setup Your Profile</h2>
-        <form id="setup-form">
-          <div class="form-group">
-            <label for="setup-name" data-i18n="name">Name</label>
-            <input id="setup-name" type="text" required
-                   data-i18n-ph="fullName" placeholder="Enter your full name">
-          </div>
-          <div class="form-group hidden" id="setup-industry-group">
-            <label for="setup-industry" data-i18n="industry">Industry</label>
-            <input id="setup-industry" type="text"
-                   data-i18n-ph="industry" placeholder="Enter your industry (optional)">
-          </div>
-          <div class="form-group">
-            <label for="setup-product" data-i18n="productName">Product Name</label>
-            <input id="setup-product" type="text" required
-                   data-i18n-ph="productName" placeholder="Enter product name (e.g., lip gloss, phone)">
-          </div>
-          <button type="submit" class="btn" data-i18n="saveProfile">Save Profile</button>
-          <div id="setup-msg" class="message" style="display: none;"></div>
-        </form>
-      </div>
-
-      <!-- Account Page -->
-      <div id="account-page" class="controls hidden">
+        <!-- Account Page -->
+        <div id="account-page" class="controls hidden">
         <h2 data-i18n="yourAccount">Your Account</h2>
         <div id="account-info"></div>
         <form id="account-form" class="hidden">
@@ -638,7 +616,8 @@
       <script src="js/features/auth/password.js"></script>
       <script src="js/features/auth/registration.js"></script>
       <script src="js/features/account/profile.js"></script>
-      <script src="js/features/account/setup.js"></script>
+      <!-- REMOVE THIS LINE: -->
+      <!-- <script src="js/features/account/setup.js"></script> -->
       <script src="js/features/generation/pollinations.js"></script>
       <script src="js/features/generation/stability.js"></script>
       <script src="js/features/generation/renderer.js"></script>
