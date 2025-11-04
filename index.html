@@ -1,40 +1,50 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title data-i18n="title">AI Design Generator</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
-  <link rel="stylesheet" href="css/styles.css">
+    <meta charset="UTF-8">
+    <title data-i18n="title">AI Design Generator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Firebase compat CDN (matches your current global usage) -->
+    <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+    <!-- Optional analytics (only if you use it) -->
+    <!-- <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-analytics-compat.js"></script> -->
 
-  <!-- Language Switcher Inline Styles -->
-  <style>
-    .lang-inline-btn {
-      background: #f0f0f0;
-      border: 1px solid #ddd;
-      padding: 6px 12px;
-      margin-right: 8px;
-      border-radius: 6px;
-      font-size: 14px;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-weight: normal;
-    }
-    .lang-inline-btn:hover {
-      background: #007bff;
-      color: white;
-      border-color: #007bff;
-    }
-    .lang-inline-btn.active {
-      background: #007bff;
-      color: white;
-      font-weight: bold;
-      border-color: #007bff;
-    }
-  </style>
+    <!-- EmailJS -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/client-management.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><text y=%2214%22 font-size=%2214%22>🧩</text></svg>">
+
+    <!-- Language Switcher Inline Styles -->
+    <style>
+      .lang-inline-btn {
+        background: #f0f0f0;
+        border: 1px solid #ddd;
+        padding: 6px 12px;
+        margin-right: 8px;
+        border-radius: 6px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-weight: normal;
+      }
+      .lang-inline-btn:hover {
+        background: #007bff;
+        color: white;
+        border-color: #007bff;
+      }
+      .lang-inline-btn.active {
+        background: #007bff;
+        color: white;
+        font-weight: bold;
+        border-color: #007bff;
+      }
+    </style>
 </head>
 <body>
   <!-- Authentication Container -->
@@ -158,43 +168,20 @@
       </div>
 
       <div class="nav-links">
-        <a href="#" onclick="showPage('setup-page'); return false;" data-i18n="setup">Setup</a>
+        <!-- REMOVE THIS LINE: -->
+        <!-- <a href="#" onclick="showPage('setup-page'); return false;" data-i18n="setup">Setup</a> -->
         <a href="#" onclick="showPage('account-page'); return false;" data-i18n="account">Account</a>
         <a href="#" onclick="showPage('template-page'); return false;" data-i18n="templates">Templates</a>
         <a href="#" onclick="showPage('records-page'); return false;" data-i18n="pastRecords">Past Records</a>
-        <a href="#" id="create-account-link" onclick="showPage('create-account-page'); return false;"
-           class="hidden" data-i18n="createAccount">Create Account</a>
-        <button id="logout-btn" class="logout-btn" data-i18n="logout">Logout</button>
+        <a href="#" id="create-account-link" onclick="showPage('create-account-page'); return false;" data-i18n="createAccount" style="display: none;">Create Account</a>
+        <a href="#" id="master-nav-link" onclick="showPage('client-management-section'); return false;" style="display: none;">Client Management</a>
+        <a href="#" id="logout-btn" onclick="handleLogout(); return false;">Logout</a>
       </div>
     </div>
 
     <div class="app-content">
-      <!-- Setup Page -->
-      <div id="setup-page" class="controls hidden">
-        <h2 data-i18n="setupProfile">Setup Your Profile</h2>
-        <form id="setup-form">
-          <div class="form-group">
-            <label for="setup-name" data-i18n="name">Name</label>
-            <input id="setup-name" type="text" required
-                   data-i18n-ph="fullName" placeholder="Enter your full name">
-          </div>
-          <div class="form-group hidden" id="setup-industry-group">
-            <label for="setup-industry" data-i18n="industry">Industry</label>
-            <input id="setup-industry" type="text"
-                   data-i18n-ph="industry" placeholder="Enter your industry (optional)">
-          </div>
-          <div class="form-group">
-            <label for="setup-product" data-i18n="productName">Product Name</label>
-            <input id="setup-product" type="text" required
-                   data-i18n-ph="productName" placeholder="Enter product name (e.g., lip gloss, phone)">
-          </div>
-          <button type="submit" class="btn" data-i18n="saveProfile">Save Profile</button>
-          <div id="setup-msg" class="message" style="display: none;"></div>
-        </form>
-      </div>
-
-      <!-- Account Page -->
-      <div id="account-page" class="controls hidden">
+        <!-- Account Page -->
+        <div id="account-page" class="controls hidden">
         <h2 data-i18n="yourAccount">Your Account</h2>
         <div id="account-info"></div>
         <form id="account-form" class="hidden">
@@ -226,46 +213,61 @@
       </div>
 
       <!-- Template Page -->
-      <div id="template-page" class="controls">
+      <div id="template-page" class="controls hidden">
         <h2 data-i18n="generateImages">Generate Images</h2>
-        <div id="product-display" class="product-display" style="display: none;"></div>
-        <div class="row">
-          <div class="form-group">
-            <h3 data-i18n="selectTemplate">Select Template</h3>
-            <div class="template-checkboxes" id="template-checkboxes"></div>
-          </div>
-          <div class="form-group">
-            <h3 data-i18n="selectSpecs">Select Specifications</h3>
-            <div id="spec-selections"></div>
-          </div>
-          <div class="form-group">
-            <h3 data-i18n="selectModel">Select AI Model</h3>
-            <select id="llm-select" required>
-              <option value="pollinations" data-i18n="pollinations">Pollinations AI</option>
-              <option value="stability" data-i18n="stability">Stability AI (SDXL)</option>
-              <option value="huggingface" data-i18n="huggingface">Hugging Face (FLUX.1-dev)</option>
-            </select>
+        
+        <!-- Product Name Display -->
+        <div id="product-display" class="info-box" style="display: none;"></div>
+        
+        <!-- Template Selection -->
+        <div class="form-group">
+          <label data-i18n="select_template">Please select at least one template.</label>
+          <div id="template-checkboxes" class="checkbox-group">
+            <!-- Checkboxes will be populated by JS -->
           </div>
         </div>
-        <div id="prompt-display" class="prompt-display" style="display: none;"></div>
 
-        <div class="button-container">
-          <button id="generate-images-btn" class="generate-btn"
-                  data-i18n="generateImages">Generate Images</button>
+        <!-- AI Model Selection -->
+        <div class="form-group">
+          <label for="ai-model-select" data-i18n="select_ai_model">Select AI Model</label>
+          <select id="ai-model-select">
+            <option value="pollinations">Pollinations AI</option>
+            <option value="stability">Stability AI</option>
+            <option value="both">Both (Compare)</option>
+          </select>
         </div>
+
+        <!-- Specifications (if any) -->
+        <div id="spec-selections">
+          <!-- Spec dropdowns will be populated by JS -->
+        </div>
+
+        <!-- Prompt Display -->
+        <div id="prompt-display" class="info-box" style="display: none;"></div>
+
+        <!-- Generation Counter -->
+        <div id="generation-counter" style="text-align: right; margin-bottom: 10px; font-weight: bold; color: #666;">
+          Generations: 0/20
+        </div>
+
+        <!-- Generate Button -->
+        <button id="generate-images-btn" class="btn btn-primary" type="button">
+          <span data-i18n="generate_button">Generate Images</span>
+        </button>
+
+        <!-- Status Messages -->
         <div id="template-status" class="message" style="display: none;"></div>
 
-        <!-- GENERATED IMAGES + 4 FEEDBACK BUTTONS -->
-        <div id="generated-images" class="generated-images-container hidden">
-          <div class="image-pair" id="image-pair"></div>
+        <!-- Generated Images Container -->
+        <div id="generated-images" class="hidden" style="margin-top: 30px;">
+          <h3 data-i18n="generated_title">Your Generated Images</h3>
+          
+          <div id="image-pair" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
+            <!-- Images will be inserted here -->
+          </div>
 
-          <!-- 4 Buttons: appear with images -->
-          <div class="feedback-buttons" id="feedback-buttons"
-               style="display:none; justify-content:center; gap:12px; margin-top:20px; flex-wrap:wrap;">
-            <button class="fb-btn left-better"   data-choice="left"   data-i18n="leftBetter">Left is better</button>
-            <button class="fb-btn right-better"  data-choice="right"  data-i18n="rightBetter">Right is better</button>
-            <button class="fb-btn tie"           data-choice="tie"    data-i18n="tie">It’s a tie</button>
-            <button class="fb-btn both-bad"      data-choice="both-bad" data-i18n="bothBad">both bad</button>
+          <div id="feedback-buttons" style="margin-top: 20px;">
+            <!-- Feedback buttons will be inserted here -->
           </div>
         </div>
       </div>
@@ -348,66 +350,295 @@
           <button onclick="copyCode()" data-i18n="copy">Copy</button>
         </div>
       </div>
+
+      <!-- Client Management Section (Master Only) -->
+      <section id="client-management-section" class="page-section" style="display: none;">
+          <div class="client-management-container">
+              <h2>Client Management</h2>
+              
+              <!-- Search and Filters -->
+              <div class="filters-section">
+                  <div class="search-bar">
+                      <input type="text" id="search-client" placeholder="Search by client name or email...">
+                      <button id="search-btn" class="btn-primary">Search</button>
+                  </div>
+                  <div class="filters">
+                      <select id="filter-industry">
+                          <option value="">All Industries</option>
+                          <option value="cosmetics">Cosmetics</option>
+                          <option value="fashion">Fashion</option>
+                          <option value="food">Food & Beverage</option>
+                          <option value="tech">Technology</option>
+                          <option value="other">Other</option>
+                      </select>
+                      <select id="filter-template">
+                          <option value="">All Templates</option>
+                          <option value="template1">Template 1</option>
+                          <option value="template2">Template 2</option>
+                          <option value="template3">Template 3</option>
+                      </select>
+                      <select id="filter-status">
+                          <option value="">All Status</option>
+                          <option value="active">Active</option>
+                          <option value="locked">Locked</option>
+                          <option value="suspended">Suspended</option>
+                      </select>
+                      <button id="reset-filters-btn" class="btn-secondary">Reset Filters</button>
+                  </div>
+              </div>
+
+              <!-- Clients Table -->
+              <div class="clients-table-section">
+                  <table id="clients-table" class="data-table">
+                      <thead>
+                          <tr>
+                              <th>Client Name</th>
+                              <th>Email</th>
+                              <th>Industry</th>
+                              <th>Template</th>
+                              <th>Credits</th>
+                              <th>Status</th>
+                              <th>Last Active</th>
+                              <th>Actions</th>
+                          </tr>
+                      </thead>
+                      <tbody id="clients-table-body">
+                          <!-- Populated by JavaScript -->
+                      </tbody>
+                  </table>
+                  <div id="no-results" class="no-results" style="display: none;">
+                      No clients found matching your criteria.
+                  </div>
+              </div>
+
+              <!-- Pagination -->
+              <div class="pagination-section">
+                  <button id="prev-page" class="btn-secondary">Previous</button>
+                  <span id="page-info">Page 1 of 1</span>
+                  <button id="next-page" class="btn-secondary">Next</button>
+              </div>
+          </div>
+      </section>
+
+      <!-- Client Details Modal -->
+      <div id="client-modal" class="modal" style="display: none;">
+          <div class="modal-content large">
+              <span class="close">&times;</span>
+              <h2>Client Details</h2>
+              
+              <div class="modal-body">
+                  <!-- Client Info -->
+                  <section class="client-info-section">
+                      <h3>Client Information</h3>
+                      <div class="info-grid">
+                          <div class="info-item">
+                              <label>Name:</label>
+                              <span id="modal-client-name"></span>
+                          </div>
+                          <div class="info-item">
+                              <label>Email:</label>
+                              <span id="modal-client-email"></span>
+                          </div>
+                          <div class="info-item">
+                              <label>Industry:</label>
+                              <span id="modal-client-industry"></span>
+                          </div>
+                          <div class="info-item">
+                              <label>Status:</label>
+                              <span id="modal-client-status"></span>
+                          </div>
+                          <div class="info-item">
+                              <label>Created:</label>
+                              <span id="modal-client-created"></span>
+                          </div>
+                          <div class="info-item">
+                              <label>Last Active:</label>
+                              <span id="modal-client-lastactive"></span>
+                          </div>
+                      </div>
+                  </section>
+
+                  <!-- Template Settings -->
+                  <section class="template-section">
+                      <h3>Template & Settings</h3>
+                      <div class="template-controls">
+                          <div class="form-group">
+                              <label for="modal-template-select">Assigned Template:</label>
+                              <select id="modal-template-select">
+                                  <option value="">No Template</option>
+                                  <option value="template1">Template 1</option>
+                                  <option value="template2">Template 2</option>
+                                  <option value="template3">Template 3</option>
+                              </select>
+                              <button id="update-template-btn" class="btn-primary">Update Template</button>
+                          </div>
+                          <div id="template-settings" class="template-settings">
+                              <!-- Dynamic template settings -->
+                          </div>
+                      </div>
+                  </section>
+
+                  <!-- Credit Management -->
+                  <section class="credit-section">
+                      <h3>Credit Management</h3>
+                      <div class="credit-controls">
+                          <div class="current-balance">
+                              <label>Current Balance:</label>
+                              <span id="modal-credit-balance" class="credit-amount">0</span>
+                          </div>
+                          <div class="credit-actions">
+                              <input type="number" id="credit-adjustment" placeholder="Amount" min="0">
+                              <button id="add-credits-btn" class="btn-success">Add Credits</button>
+                              <button id="deduct-credits-btn" class="btn-warning">Deduct Credits</button>
+                              <button id="reset-credits-btn" class="btn-secondary">Reset to Default</button>
+                          </div>
+                      </div>
+                  </section>
+
+                  <!-- Generation History -->
+                  <section class="history-section">
+                      <h3>Generation History</h3>
+                      <div class="history-stats">
+                          <div class="stat-item">
+                              <label>Total Generations:</label>
+                              <span id="total-generations">0</span>
+                          </div>
+                          <div class="stat-item">
+                              <label>This Month:</label>
+                              <span id="month-generations">0</span>
+                          </div>
+                          <div class="stat-item">
+                              <label>Credits Used:</label>
+                              <span id="credits-used">0</span>
+                          </div>
+                      </div>
+                      <table class="history-table">
+                          <thead>
+                              <tr>
+                                  <th>Date</th>
+                                  <th>Prompt</th>
+                                  <th>Template</th>
+                                  <th>Credits</th>
+                                  <th>Status</th>
+                              </tr>
+                          </thead>
+                          <tbody id="history-table-body">
+                              <!-- Populated by JavaScript -->
+                          </tbody>
+                      </table>
+                  </section>
+
+                  <!-- Account Actions -->
+                  <section class="account-actions-section">
+                      <h3>Account Actions</h3>
+                      <div class="action-buttons">
+                          <button id="reset-password-btn" class="btn-warning">Reset Password</button>
+                          <button id="toggle-lock-btn" class="btn-warning">Lock Account</button>
+                          <button id="delete-account-btn" class="btn-danger">Delete Account</button>
+                      </div>
+                  </section>
+              </div>
+          </div>
+      </div>
+
+      <!-- Product Warning -->
+      <div id="product-warning" class="product-warning">
+        <strong data-i18n="productWarning">Warning: Product name not set.</strong>
+        <a href="#" onclick="showPage('account-page'); return false;" data-i18n="updateNow">Update now</a>
+      </div>
+
+      <!-- ============================================================= -->
+      <!--  JAVASCRIPT: Show images + 4 feedback buttons together      -->
+      <!-- ============================================================= -->
+      <script>
+        // Show both images and feedback buttons simultaneously
+        function showGeneratedContent() {
+          const container = document.getElementById('generated-images');
+          const buttons = document.getElementById('feedback-buttons');
+          container.classList.remove('hidden');
+          buttons.style.display = 'flex';
+        }
+
+        // Handle feedback button clicks
+        function submitFeedback(choice) {
+          if (choice === 'both-bad') {
+            console.log('"both bad" clicked – no action');
+            return;
+          }
+          console.log('User chose:', choice);
+          // Existing feedback handling logic should go here
+        }
+
+        // Attach click events to feedback buttons
+        document.addEventListener('DOMContentLoaded', () => {
+          const buttons = document.querySelectorAll('#feedback-buttons button');
+          buttons.forEach(btn => {
+            btn.onclick = () => submitFeedback(btn.dataset.choice);
+          });
+
+          // Example trigger (replace with real generation flow)
+          const genBtn = document.getElementById('generate-images-btn');
+          if (genBtn) {
+            genBtn.addEventListener('click', () => {
+              // ...image generation...
+              setTimeout(showGeneratedContent, 1500); // demo delay
+            });
+          }
+        });
+      </script>
+
+      <!-- ============================================================= -->
+      <!--  CRITICAL: Load scripts in correct order                     -->
+      <!-- ============================================================= -->
+      
+      <!-- 1. Configuration FIRST (must be before everything) -->
+      <script src="js/config/config.js"></script>
+      
+      <!-- 2. Core modules (i18n, state, utilities) -->
+      <script src="js/core/state.js"></script>
+      <script src="js/core/i18n.js"></script>
+      <script src="js/utils/ui.js"></script>
+      <script src="js/utils/helpers.js"></script>
+      <script src="js/utils/sanitizer.js"></script>
+      <script src="js/utils/validation.js"></script>
+      <script src="js/utils/firebase.js"></script>
+      <script>
+        // Initialize Firebase before anything else uses it
+        try {
+          (window.initializeFirebase || window.FirebaseHelper?.init)?.(window.AppConfig?.firebase);
+          // Optional: analytics (only if you included analytics-compat)
+          if (firebase.analytics && AppConfig.firebase.measurementId) firebase.analytics();
+        } catch (e) { console.error('Firebase init failed:', e); }
+      </script>
+      
+      <!-- 3. Feature modules -->
+      <script src="js/features/auth/auth.js"></script>
+      <script src="js/features/auth/password.js"></script>
+      <script src="js/features/auth/registration.js"></script>
+      <script src="js/features/account/profile.js"></script>
+      <!-- REMOVE THIS LINE: -->
+      <!-- <script src="js/features/account/setup.js"></script> -->
+      <script src="js/features/generation/pollinations.js"></script>
+      <script src="js/features/generation/stability.js"></script>
+      <script src="js/features/generation/renderer.js"></script>
+      <script src="js/features/generation/generator.js"></script>
+      <script src="js/features/templates/template.js"></script>
+      <script src="js/features/records/history.js"></script>
+      <script src="js/features/admin/client-management.js"></script>
+      <script src="js/features/admin/industry-codes.js"></script>
+      
+      <!-- 4. Main entry point (LAST - initializes everything) -->
+      <script src="js/core/main.js"></script>
+
+      <!-- 5. Initialize i18n after DOM loads -->
+      <script>
+        document.addEventListener('DOMContentLoaded', () => {
+          if (window.i18n?.initLanguage) {
+            window.i18n.initLanguage();
+          }
+        });
+      </script>
     </div>
   </div>
-
-  <!-- Product Warning -->
-  <div id="product-warning" class="product-warning">
-    <strong data-i18n="productWarning">Warning: Product name not set.</strong>
-    <a href="#" onclick="showPage('account-page'); return false;" data-i18n="updateNow">Update now</a>
-  </div>
-
-  <!-- ============================================================= -->
-  <!--  JAVASCRIPT: Show images + 4 feedback buttons together      -->
-  <!-- ============================================================= -->
-  <script>
-    // Show both images and feedback buttons simultaneously
-    function showGeneratedContent() {
-      const container = document.getElementById('generated-images');
-      const buttons = document.getElementById('feedback-buttons');
-      container.classList.remove('hidden');
-      buttons.style.display = 'flex';
-    }
-
-    // Handle feedback button clicks
-    function submitFeedback(choice) {
-      if (choice === 'both-bad') {
-        console.log('"both bad" clicked – no action');
-        return;
-      }
-      console.log('User chose:', choice);
-      // Existing feedback handling logic should go here
-    }
-
-    // Attach click events to feedback buttons
-    document.addEventListener('DOMContentLoaded', () => {
-      const buttons = document.querySelectorAll('#feedback-buttons button');
-      buttons.forEach(btn => {
-        btn.onclick = () => submitFeedback(btn.dataset.choice);
-      });
-
-      // Example trigger (replace with real generation flow)
-      const genBtn = document.getElementById('generate-images-btn');
-      if (genBtn) {
-        genBtn.addEventListener('click', () => {
-          // ...image generation...
-          setTimeout(showGeneratedContent, 1500); // demo delay
-        });
-      }
-    });
-  </script>
-
-  <!-- i18n + Main Logic -->
-  <script src="js/i18n.js"></script>
-  <script src="js/main.js"></script>
-
-  <!-- Initialize language button highlight -->
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      if (window.i18n && typeof window.i18n.initLanguage === 'function') {
-        window.i18n.initLanguage();
-      }
-    });
-  </script>
 </body>
 </html>
