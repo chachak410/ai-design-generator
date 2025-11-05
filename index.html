@@ -5,16 +5,22 @@
     <title data-i18n="title">AI Design Generator</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <!-- Firebase compat CDN (matches your current global usage) -->
-    <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
-    <!-- Optional analytics (only if you use it) -->
-    <!-- <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-analytics-compat.js"></script> -->
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-analytics-compat.js"></script>
 
-    <!-- EmailJS -->
+    <!-- EmailJS SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-    
+
+    <!-- App Configuration -->
+    <script src="./js/config/config.js"></script>
+
+    <!-- App Initialization -->
+    <script src="./js/firebase.js"></script>
+    <script src="./js/main.js"></script>
+
     <!-- Styles -->
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/client-management.css">
@@ -638,7 +644,18 @@
           }
         });
       </script>
+
+      
+          }
+        };
+      </script>
     </div>
   </div>
+
+  <!-- Initialize Firebase -->
+  <script>
+    const app = firebase.initializeApp(AppConfig.firebase);
+    const analytics = getAnalytics(app);
+  </script>
 </body>
 </html>
