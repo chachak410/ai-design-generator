@@ -10,6 +10,7 @@
   generationCount: 0
 };
 
+// Wait for Firebase to initialize
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('🚀 DOM loaded, initializing app...');
 
