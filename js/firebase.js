@@ -1,26 +1,22 @@
-// Initialize Firebase
-function initFirebase() {
-    try {
-        if (!firebase.apps.length) {
-            firebase.initializeApp(window.AppConfig.firebase);
-            
-            // Initialize Firestore
-            const db = firebase.firestore();
-            window.db = db; // Make it globally available
-            
-            // Initialize Analytics if needed
-            if (typeof firebase.analytics === 'function') {
-                const analytics = firebase.analytics();
-                window.analytics = analytics;
-            }
-            
-            console.log('Firebase initialized successfully');
-            return true;
-        }
-    } catch (error) {
-        console.error('Firebase initialization error:', error);
-        return false;
-    }
-}
+// js/firebase.js
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
+import { getAuth } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js';
+import { getFirestore } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
 
-initFirebase();
+const firebaseConfig = {
+  apiKey: "your-api-key",
+  authDomain: "your-auth-domain",
+  projectId: "your-project-id",
+  storageBucket: "your-storage-bucket",
+  messagingSenderId: "your-messaging-sender-id",
+  appId: "your-app-id"
+  // Replace with your actual Firebase config from Firebase Console
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+console.log('Firebase initialized successfully');
+
+export { app, auth, db };

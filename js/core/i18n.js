@@ -1,4 +1,4 @@
-// js/i18n.js – 完整版、已测试、无语法错误、支持动态按钮
+// js/core/i18n.js
 const translations = {
   en: {
     title: "AI Design Generator",
@@ -20,7 +20,7 @@ const translations = {
     setup: "Setup",
     account: "Account",
     templates: "Templates",
-    pastRecords: "Past Records",
+    pastRecords: "Past Generation Records",
     createAccount: "Create Account",
     logout: "Logout",
     setupProfile: "Setup Your Profile",
@@ -30,7 +30,7 @@ const translations = {
     updateProfile: "Update Profile",
     cancel: "Cancel",
     generateImages: "Generate Images",
-    selectTemplate: "Select Template",
+    selectTemplate: "Please select at least one template.",
     selectSpecs: "Select Specifications",
     selectModel: "Select AI Model",
     pollinations: "Pollinations AI",
@@ -52,28 +52,70 @@ const translations = {
     codeLabel: "(Code: {code})",
     generateIndustryCode: "Generate Industry Code",
     language: "Language",
-    product: "product",
+    product: "Product",
     generating: "Generating images with {model}...",
     imagesGenerated: "Images generated successfully!",
-    likeThis: "I like this",
-    likeThat: "I like that",
+    leftBetter: "Left is better",
+    rightBetter: "Right is better",
+    downloadAll: "Download all",
     bothBad: "Both bad",
+    maxBadSelections: "Maximum bad selections reached.",
     pleaseSignIn: "Please sign in.",
     productNameRequired: "Product name required.",
-    selectTemplate: "Please select at least one template.",
     maxGeneration: "Maximum generation limit reached.",
     generationFailed: "Failed to generate images.",
     generationError: "Error during generation.",
     profileSaved: "Profile saved!",
     savingProfile: "Saving profile...",
-
-    // Feedback Buttons
-    'btn-left-better': 'Left is better',
-    'btn-right-better': 'Right is better',
-    'btn-tie': 'It’s a tie',
-    'btn-both-bad': 'Both bad'
+    errorLoadingTemplates: "Error loading templates",
+    uploadReference: "Upload Reference Image",
+    errorUploadingImage: "Error uploading image",
+    basedOnReference: "based on the uploaded reference image",
+    errorGeneratingImages: "Error generating images",
+    generatedLeftImage: "Generated Left Image",
+    generatedRightImage: "Generated Right Image",
+    errorSavingImages: "Error saving images",
+    setProductName: "Please set your product name in Account Settings.",
+    newTemplate: "Add new template",
+    addTemplate: "Add",
+    remove: "Remove",
+    clientManagement: "Client Management",
+    searchClient: "Search by client name or email...",
+    search: "Search",
+    allIndustries: "All Industries",
+    allTemplates: "All Templates",
+    allStatus: "All Status",
+    noClientsFound: "No clients found matching your criteria.",
+    previous: "Previous",
+    next: "Next",
+    pageInfo: "Page {current} of {total}",
+    clientDetails: "Client Details",
+    clientInfo: "Client Information",
+    status: "Status",
+    created: "Created",
+    lastActive: "Last Active",
+    templateSettings: "Template & Settings",
+    assignedTemplate: "Assigned Template",
+    noTemplate: "No Template",
+    updateTemplate: "Update Template",
+    creditManagement: "Credit Management",
+    currentBalance: "Current Balance",
+    creditAmount: "Amount",
+    addCredits: "Add Credits",
+    deductCredits: "Deduct Credits",
+    resetCredits: "Reset to Default",
+    generationHistory: "Generation History",
+    totalGenerations: "Total Generations",
+    thisMonth: "This Month",
+    creditsUsed: "Credits Used",
+    date: "Date",
+    prompt: "Prompt",
+    credits: "Credits",
+    accountActions: "Account Actions",
+    resetPassword: "Reset Password",
+    lockAccount: "Lock Account",
+    deleteAccount: "Delete Account"
   },
-
   zh: {
     title: "AI 设计生成器",
     createImages: "用 AI 秒速生成精美图像",
@@ -104,7 +146,7 @@ const translations = {
     updateProfile: "更新资料",
     cancel: "取消",
     generateImages: "生成图像",
-    selectTemplate: "选择模板",
+    selectTemplate: "请选择至少一个模板。",
     selectSpecs: "选择规格",
     selectModel: "选择 AI 模型",
     pollinations: "Pollinations AI",
@@ -129,25 +171,67 @@ const translations = {
     product: "产品",
     generating: "正在使用 {model} 生成图像...",
     imagesGenerated: "图像生成成功！",
-    likeThis: "我喜欢这个",
-    likeThat: "我喜欢那个",
+    leftBetter: "左图更好",
+    rightBetter: "右图更好",
+    downloadAll: "下载全部",
     bothBad: "两个都不好",
+    maxBadSelections: "已达到最大重新生成次数。",
     pleaseSignIn: "请先登录。",
     productNameRequired: "需要产品名称。",
-    selectTemplate: "请选择至少一个模板。",
     maxGeneration: "已达到最大生成次数。",
     generationFailed: "生成图像失败。",
     generationError: "生成过程中发生错误。",
     profileSaved: "个人资料已保存！",
     savingProfile: "正在保存个人资料...",
-
-    // Feedback Buttons
-    'btn-left-better': '左边更好',
-    'btn-right-better': '右边更好',
-    'btn-tie': '平手',
-    'btn-both-bad': '两个都不好'
+    errorLoadingTemplates: "加载模板时出错",
+    uploadReference: "上传参考图像",
+    errorUploadingImage: "上传图像出错",
+    basedOnReference: "基于上传的参考图像",
+    errorGeneratingImages: "生成图像时出错",
+    generatedLeftImage: "生成的左图",
+    generatedRightImage: "生成的右图",
+    errorSavingImages: "保存图像时出错",
+    setProductName: "请在账户设置中设置产品名称。",
+    newTemplate: "添加新模板",
+    addTemplate: "添加",
+    remove: "移除",
+    clientManagement: "客户管理",
+    searchClient: "按客户姓名或邮箱搜索...",
+    search: "搜索",
+    allIndustries: "所有行业",
+    allTemplates: "所有模板",
+    allStatus: "所有状态",
+    noClientsFound: "未找到符合条件的客户。",
+    previous: "上一页",
+    next: "下一页",
+    pageInfo: "第 {current} 页，共 {total} 页",
+    clientDetails: "客户详情",
+    clientInfo: "客户信息",
+    status: "状态",
+    created: "创建时间",
+    lastActive: "最后活跃",
+    templateSettings: "模板与设置",
+    assignedTemplate: "分配的模板",
+    noTemplate: "无模板",
+    updateTemplate: "更新模板",
+    creditManagement: "信用管理",
+    currentBalance: "当前余额",
+    creditAmount: "金额",
+    addCredits: "添加信用",
+    deductCredits: "扣除信用",
+    resetCredits: "重置为默认",
+    generationHistory: "生成历史",
+    totalGenerations: "总生成次数",
+    thisMonth: "本月",
+    creditsUsed: "已使用信用",
+    date: "日期",
+    prompt: "提示",
+    credits: "信用",
+    accountActions: "账户操作",
+    resetPassword: "重置密码",
+    lockAccount: "锁定账户",
+    deleteAccount: "删除账户"
   },
-
   yue: {
     title: "AI 設計生成器",
     createImages: "用 AI 即時生成靚圖",
@@ -178,7 +262,7 @@ const translations = {
     updateProfile: "更新檔案",
     cancel: "取消",
     generateImages: "生成圖像",
-    selectTemplate: "選擇模板",
+    selectTemplate: "請選擇至少一個模板。",
     selectSpecs: "選擇規格",
     selectModel: "選擇 AI 模型",
     pollinations: "Pollinations AI",
@@ -203,23 +287,66 @@ const translations = {
     product: "產品",
     generating: "用 {model} 生成圖像...",
     imagesGenerated: "圖像生成成功！",
-    likeThis: "我鍾意呢個",
-    likeThat: "我鍾意嗰個",
+    leftBetter: "左圖較好",
+    rightBetter: "右圖較好",
+    downloadAll: "下載全部",
     bothBad: "兩個都唔啱",
+    maxBadSelections: "已達最大重新生成次數。",
     pleaseSignIn: "請先登入。",
     productNameRequired: "需要產品名稱。",
-    selectTemplate: "請選擇至少一個模板。",
     maxGeneration: "已達最大生成次數。",
     generationFailed: "生成圖像失敗。",
     generationError: "生成過程中發生錯誤。",
     profileSaved: "個人檔案已儲存！",
     savingProfile: "儲存緊個人檔案...",
-
-    // Feedback Buttons
-    'btn-left-better': '左邊更好',
-    'btn-right-better': '右邊更好',
-    'btn-tie': '打和',
-    'btn-both-bad': '兩個都唔啱'
+    errorLoadingTemplates: "載入模板時出錯",
+    uploadReference: "上載參考圖像",
+    errorUploadingImage: "上載圖像出錯",
+    basedOnReference: "基於上載嘅參考圖像",
+    errorGeneratingImages: "生成圖像時出錯",
+    generatedLeftImage: "生成嘅左圖",
+    generatedRightImage: "生成嘅右圖",
+    errorSavingImages: "儲存圖像時出錯",
+    setProductName: "請喺帳戶設定中設定產品名稱。",
+    newTemplate: "新增模板",
+    addTemplate: "新增",
+    remove: "移除",
+    clientManagement: "客戶管理",
+    searchClient: "按客戶姓名或電郵搜索...",
+    search: "搜索",
+    allIndustries: "所有行業",
+    allTemplates: "所有模板",
+    allStatus: "所有狀態",
+    noClientsFound: "未搵到符合條件嘅客戶。",
+    previous: "上一頁",
+    next: "下一頁",
+    pageInfo: "第 {current} 頁，共 {total} 頁",
+    clientDetails: "客戶詳情",
+    clientInfo: "客戶資訊",
+    status: "狀態",
+    created: "創建時間",
+    lastActive: "最後活躍",
+    templateSettings: "模板同設定",
+    assignedTemplate: "分配嘅模板",
+    noTemplate: "無模板",
+    updateTemplate: "更新模板",
+    creditManagement: "信用管理",
+    currentBalance: "當前餘額",
+    creditAmount: "金額",
+    addCredits: "添加信用",
+    deductCredits: "扣除信用",
+    resetCredits: "重設為默認",
+    generationHistory: "生成歷史",
+    totalGenerations: "總生成次數",
+    thisMonth: "今個月",
+    creditsUsed: "已使用信用",
+    date: "日期",
+    prompt: "提示",
+    credits: "信用",
+    accountActions: "帳戶操作",
+    resetPassword: "重設密碼",
+    lockAccount: "鎖定帳戶",
+    deleteAccount: "刪除帳戶"
   }
 };
 
@@ -246,9 +373,7 @@ function setLanguage(lang) {
   currentLang = lang;
   document.documentElement.lang = lang === 'zh' ? 'zh-CN' : lang;
   localStorage.setItem('appLang', lang);
-
-  renderAll();               // 立即翻译已存在的元素
-  // 延迟一次，确保 renderImages 插入的动态按钮也被翻译
+  renderAll();
   setTimeout(renderAll, 100);
 }
 
@@ -256,26 +381,19 @@ function setLanguage(lang) {
  * 渲染页面上所有需要翻译的元素
  */
 function renderAll() {
-  // 1. 普通文本 [data-i18n]
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.dataset.i18n;
     el.textContent = t(key);
   });
-
-  // 2. placeholder [data-i18n-ph]
   document.querySelectorAll('[data-i18n-ph]').forEach(el => {
     const key = el.dataset.i18nPh;
     el.placeholder = t(key);
   });
-
-  // 3. 动态占位符 {n} [data-i18n-dynamic]
   document.querySelectorAll('[data-i18n-dynamic]').forEach(el => {
     const key = el.dataset.i18nDynamic;
     const n = el.dataset.specN || 1;
     el.textContent = t(key, { n });
   });
-
-  // 4. 动态按钮（关键！）[data-i18n-button]
   document.querySelectorAll('[data-i18n-button]').forEach(el => {
     const key = el.dataset.i18nButton;
     el.textContent = t(key);

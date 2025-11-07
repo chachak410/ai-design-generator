@@ -1,24 +1,27 @@
-﻿const ImageRenderer = {
+﻿// js/features/generation/renderer.js
+
+const ImageRenderer = {
+  // ADDED: expose current images globally for feedback system
   renderGeneratedImages(images) {
     const pair = document.getElementById('image-pair');
-    const feedbackButtons = document.getElementById('feedback-buttons');
     const container = document.getElementById('generated-images');
 
-    if (!pair || !feedbackButtons || !container) {
+    if (!pair || !container) {
       console.error('Required elements not found');
       return;
     }
 
     pair.innerHTML = '';
-    feedbackButtons.innerHTML = '';
-    
     container.classList.remove('hidden');
     container.style.display = 'block';
+
+    // ADDED: Store images globally so feedback can access them
+    window.currentImages = images;
 
     images.forEach((item, i) => {
       const div = document.createElement('div');
       div.className = 'image-container';
-      
+
       const img = document.createElement('img');
       img.src = item.url;
       img.alt = `Generated image ${i + 1}`;
@@ -33,30 +36,8 @@
       pair.appendChild(div);
     });
 
-    window.currentImages = images;
-
-    const btnContainer = document.createElement('div');
-    btnContainer.className = 'feedback-btn-container';
-    
-    btnContainer.innerHTML = `
-      <button class="btn btn-primary" onclick="Generator.handleFeedback(0)">
-         <span data-i18n="left_better">Left is better</span>
-      </button>
-      <button class="btn btn-primary" onclick="Generator.handleFeedback(1)">
-        <span data-i18n="right_better">Right is better</span> 
-      </button>
-      <button class="btn btn-secondary" onclick="Generator.handleFeedback('tie')">
-         <span data-i18n="tie">It's a tie</span>
-      </button>
-      <button class="btn btn-success" onclick="ImageRenderer.downloadAllImages()">
-         <span data-i18n="download_all">Download All</span>
-      </button>
-      <button class="btn btn-danger" onclick="Generator.generateImages()">
-         <span data-i18n="regenerate">Both bad - Regenerate</span>
-      </button>
-    `;
-    
-    feedbackButtons.appendChild(btnContainer);
+    // REMOVED: Old feedback buttons (now handled in template.js)
+    // We keep only image display here
 
     setTimeout(() => {
       if (window.i18n?.renderAll) {
@@ -64,16 +45,18 @@
       }
       container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, 100);
-    
-    console.log(' Images and buttons rendered successfully');
+
+    console.log('Images rendered successfully');
   },
 
+  // REMOVED: downloadAllImages() – now handled in TemplateManager._download()
+  // But kept as fallback if needed elsewhere
   async downloadAllImages() {
     const images = window.currentImages;
     if (!images || images.length === 0) return;
 
     for (let i = 0; i < images.length; i++) {
-      await new Promise(resolve => setTimeout(resolve, i * 500));
+      await new Promise(resolve => setTimeout(resolve, i * 400));
       this.downloadImage(images[i].url, `design-${Date.now()}-${i + 1}.png`);
     }
   },
@@ -87,3 +70,6 @@
     document.body.removeChild(a);
   }
 };
+
+// ADDED: expose globally (required by TemplateManager)
+window.ImageRenderer = ImageRenderer;
