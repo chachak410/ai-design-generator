@@ -11,8 +11,8 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-analytics-compat.js"></script>
   <!-- EmailJS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-  <!-- App Configuration -->
-  <script src="./js/config/config.js"></script>
+  <!-- App Configuration (MUST be loaded first!) -->
+  <script src="js/config/config.js"></script>
   <!-- Styles -->
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/account.css">
@@ -648,9 +648,10 @@
   <script src="js/features/admin/client-management.js"></script>
   <script src="js/features/admin/industry-codes.js"></script>
 
-  <!-- Admin Utilities (for testing/management) -->
-  <script src="admin-utils.js"></script>
-  <script src="migration-utils.js"></script>
+  <!-- Admin Utilities (for testing/management) 
+  <script src="js/utils/admin-utils.js"></script>
+  <script src="js/utils/migration-utils.js"></script>
+  -->
 
   <!-- Main Entry Point -->
   <script src="js/core/main.js"></script>
