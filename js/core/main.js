@@ -8,37 +8,151 @@ document.addEventListener('DOMContentLoaded', async () => {
     emailjs.init(AppConfig.emailjs.publicKey);
     console.log('EmailJS initialized');
 
+    // Hide main app by default until auth state is verified
+    const mainApp = document.getElementById('main-app');
+    if (mainApp) {
+      mainApp.style.display = 'none';
+    }
+
     // Now safe to use AppState.auth
     AppState.auth.onAuthStateChanged(async (user) => {
+      console.log('onAuthStateChanged fired, user:', user ? user.email : 'null');
+      console.log('[AUTH STATE] User exists:', !!user);
+      console.log('[AUTH STATE] User email:', user?.email);
+      console.log('[AUTH STATE] User UID:', user?.uid);
+      
       if (user) {
         console.log('User signed in:', user.email);
         AppState.currentUser = user;
 
         try {
+          let userData = null;
           const doc = await AppState.db.collection('users').doc(user.uid).get();
+          console.log('[AUTH STATE] Firestore doc exists:', doc.exists);
+          
           if (!doc.exists) {
-            await AppState.db.collection('users').doc(user.uid).set({
-              email: user.email,
-              role: 'client',
-              createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            console.log('New user created');
-            UI.showMainApp();
-            UI.showPage('template-page');
+            // 新用户，创建初始文档
+            console.log('[AUTH STATE] New user - creating initial document');
+            try {
+              const newUserData = {
+                email: user.email,
+                role: 'client',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                questionnaireCompleted: false,
+                credits: 20
+              };
+              await AppState.db.collection('users').doc(user.uid).set(newUserData);
+              console.log('[AUTH STATE] ✓ Initial user document created');
+              userData = newUserData;
+              // 设置标记，新用户需要setup
+              AppState.clientNeedsSetup = true;
+            } catch (createErr) {
+              console.error('[AUTH STATE] Error creating user document:', createErr);
+              userData = {
+                role: 'client',
+                questionnaireCompleted: false
+              };
+              AppState.clientNeedsSetup = true;
+            }
           } else {
-            const userData = doc.data();
+            userData = doc.data();
+            console.log('[AUTH STATE] User data from Firestore:', userData);
+            
+            // 关键修复：如果role字段不存在或为空，强制更新为'client'
+            if (!userData.role) {
+              console.warn('[AUTH STATE] ⚠️  User document missing role field. Auto-fixing...');
+              await AppState.db.collection('users').doc(user.uid).update({
+                role: 'client'
+              });
+              userData.role = 'client';
+              console.log('[AUTH STATE] ✓ Role field auto-fixed');
+            }
+            
+            // 确保email字段存在
+            if (!userData.email) {
+              console.warn('[AUTH STATE] ⚠️  User document missing email field. Auto-fixing...');
+              await AppState.db.collection('users').doc(user.uid).update({
+                email: user.email
+              });
+              userData.email = user.email;
+              console.log('[AUTH STATE] ✓ Email field auto-fixed');
+            }
+          }
+          
+          // Now process userData for both new and existing users
+          if (userData) {
+            const userRole = userData.role || 'client';
+            console.log('[AUTH STATE] Final user role:', userRole, 'Email:', userData.email);
+            
+            AppState.userRole = userRole;
+            
+            // Master/Admin 用户不需要setup重定向
+            if (AppState.userRole === 'master' || AppState.userRole === 'admin') {
+              console.log('[DEBUG] User is master/admin, skipping setup checks');
+            } else if (AppState.userRole === 'client') {
+              // 检查用户是否需要完成问卷（只有 client 账户需要）
+              console.log('[DEBUG] Checking if client needs setup...');
+              try {
+                // 更精确的setup状态判断
+                // 对client账户，需要检查：
+                // 1. questionnaireCompleted 必须为true
+                // 2. 基本信息完整（companyName, contactName, phone, industry）
+                // 3. 产品名称不为空
+                
+                const questionnaireCompleted = !!(userData?.questionnaireCompleted === true);
+                
+                const hasBasicInfo = !!(
+                  userData?.companyName?.trim() && 
+                  userData?.contactName?.trim() && 
+                  userData?.phone?.trim() && 
+                  userData?.industry?.trim()
+                );
+                
+                const hasProduct = !!(userData?.productName?.trim());
+                
+                // 只有当这三个条件都满足时，才认为client的setup已完成
+                const setupComplete = questionnaireCompleted && hasBasicInfo && hasProduct;
+                
+                console.log('[CLIENT SETUP CHECK]', {
+                  questionnaireCompleted,
+                  hasBasicInfo,
+                  hasProduct,
+                  setupComplete,
+                  productName: userData?.productName,
+                  companyName: userData?.companyName
+                });
+
+                if (setupComplete) {
+                  console.log('[SETUP COMPLETE] ✓ Client account is fully setup');
+                  AppState.clientNeedsSetup = false;
+                } else {
+                  console.log('[SETUP INCOMPLETE] ✗ Client account needs to complete setup', {
+                    missing: {
+                      questionnaireNotComplete: !questionnaireCompleted,
+                      noBasicInfo: !hasBasicInfo,
+                      noProduct: !hasProduct
+                    }
+                  });
+                  AppState.clientNeedsSetup = true;
+                }
+              } catch (e) {
+                console.warn('Error while evaluating setup status:', e);
+              }
+            }
+            
             console.log('User data loaded:', {
               productName: userData.productName,
               role: userData.role
             });
 
-            AppState.userRole = userData.role || 'client';
             AppState.userProductName = userData.productName || '';
             AppState.userTemplates = userData.template ? [userData.template] : [];
             AppState.userSpecs = userData.specifications || {};
             AppState.feedbackVector = userData.feedbackVector || null;
             AppState.badSelections = userData.badSelections || 0;
 
+            console.log('Showing main app...');
+            // Only show main app if questionnaire is completed
             UI.showMainApp();
             UI.toggleMasterUI(AppState.userRole === 'master' || AppState.userRole === 'admin');
 
@@ -50,8 +164,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             window.currentUserData = userData;
-            UI.showPage('template-page', AppState.userRole);
-            await TemplateManager.loadTemplates();
+            console.log('Showing template page...');
+            showPage('template-page');
           }
         } catch (err) {
           console.error('Error loading user data:', err);
@@ -113,9 +227,12 @@ function setupEventListeners() {
     verifyCodeBtn.addEventListener('click', () => Registration.verifyCode());
   }
 
-  const completeRegBtn = document.getElementById('complete-registration-btn');
-  if (completeRegBtn) {
-    completeRegBtn.addEventListener('click', () => Registration.completeRegistration());
+  const registerForm = document.getElementById('register-form');
+  if (registerForm) {
+    registerForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      Registration.completeRegistration();
+    });
   }
 
   const logoutBtn = document.getElementById('logout-btn');
@@ -136,12 +253,15 @@ function setupEventListeners() {
     editAccountBtn.addEventListener('click', () => Profile.showEditAccount());
   }
 
-  const updateAccountBtn = document.getElementById('update-account-btn');
-  if (updateAccountBtn) {
-    updateAccountBtn.addEventListener('click', () => Profile.updateAccount());
+  const accountForm = document.getElementById('account-form');
+  if (accountForm) {
+    accountForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      Profile.updateAccount();
+    });
   }
 
-  const cancelEditBtn = document.getElementById('cancel-edit-btn');
+  const cancelEditBtn = document.getElementById('cancel-edit');
   if (cancelEditBtn) {
     cancelEditBtn.addEventListener('click', () => Profile.cancelEdit());
   }
@@ -161,6 +281,55 @@ function setupEventListeners() {
     addSpecBtn.addEventListener('click', () => IndustryCodeManager.addSpecification());
   }
 
+  const createAccountForm = document.getElementById('create-account-form');
+  if (createAccountForm) {
+    createAccountForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (window.IndustryCodeManager && typeof window.IndustryCodeManager.createIndustryCode === 'function') {
+        window.IndustryCodeManager.createIndustryCode();
+      }
+    });
+  }
+
+  const resetSpecsBtn = document.getElementById('reset-specs');
+  if (resetSpecsBtn) {
+    resetSpecsBtn.addEventListener('click', () => {
+      document.getElementById('create-account-form')?.reset();
+      document.getElementById('spec-container').innerHTML = `
+        <div class="spec-group" data-spec-id="1">
+          <div class="form-group">
+            <label for="spec-1-type" data-i18n-dynamic="specificationLabel" data-spec-n="1">Specification 1*</label>
+            <select id="spec-1-type" required>
+              <option value="">Select specification</option>
+              <option value="size">Size</option>
+              <option value="colorScheme">Color Scheme</option>
+              <option value="style">Style</option>
+              <option value="tone">Tone</option>
+              <option value="dimensions">Dimensions</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group hidden" id="spec-1-custom-group">
+            <label for="spec-1-custom-name" data-i18n="customSpecName">Custom Specification Name</label>
+            <input id="spec-1-custom-name" type="text"
+                   data-i18n-ph="customSpecPlaceholder" placeholder="Enter specification name (e.g., Font)">
+          </div>
+          <div class="value-group" id="spec-1-values">
+            <div class="form-group">
+              <label for="spec-1-value-1">Value 1</label>
+              <input id="spec-1-value-1" type="text" required placeholder="Enter value (e.g., 1:1)">
+            </div>
+          </div>
+          <button type="button" class="btn btn-add-value" onclick="addValue(1)">Add Value</button>
+        </div>
+      `;
+      UI.hideElement('generated-code');
+      if (window.IndustryCodeManager) {
+        window.IndustryCodeManager.specCount = 1;
+      }
+    });
+  }
+
   const copyCodeBtn = document.getElementById('copy-code-btn');
   if (copyCodeBtn) {
     copyCodeBtn.addEventListener('click', () => IndustryCodeManager.copyCode());
@@ -170,14 +339,54 @@ function setupEventListeners() {
 }
 
 function showPage(pageId) {
-  const sections = document.querySelectorAll('#main-app .controls, #main-app .page-section');
-  sections.forEach(section => { section.style.display = 'none'; });
+  console.log('showPage called with:', pageId);
+  
+  // Hide all pages
+  const pages = ['account-page', 'template-page', 'records-page', 'create-account-page', 'client-management-section', 'payment-page'];
+  pages.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.classList.add('hidden');
+      el.style.display = 'none';
+      console.log(`Hidden ${id}`);
+    }
+  });
 
   const targetSection = document.getElementById(pageId);
   if (targetSection) {
-    targetSection.style.display = 'block';
-    if (pageId === 'client-management-section' && window.ClientManagement && typeof window.ClientManagement.init === 'function') {
-      window.ClientManagement.init();
+    targetSection.classList.remove('hidden');
+    // Use !important to override .hidden CSS rule
+    targetSection.style.setProperty('display', 'block', 'important');
+    console.log(`Showing ${pageId}`);
+    
+    // Load data when page is shown
+    switch(pageId) {
+      case 'account-page':
+        if (window.Profile && typeof window.Profile.loadAccountInfo === 'function') {
+          window.Profile.loadAccountInfo();
+        }
+        break;
+      case 'records-page':
+        if (window.RecordManager && typeof window.RecordManager.loadRecords === 'function') {
+          window.RecordManager.loadRecords();
+        }
+        break;
+      case 'template-page':
+        if (window.TemplateManager && typeof window.TemplateManager.loadTemplates === 'function') {
+          window.TemplateManager.loadTemplates();
+        }
+        break;
+      case 'create-account-page':
+        // Page is static, no special loading needed
+        if (window.initializeCreateAccountHandlers && typeof window.initializeCreateAccountHandlers === 'function') {
+          window.initializeCreateAccountHandlers();
+        }
+        break;
+      case 'client-management-section':
+        if (window.ClientManagement && typeof window.ClientManagement.init === 'function') {
+          window.ClientManagement.init();
+        }
+        break;
     }
   } else {
     console.error(`Section ${pageId} not found`);

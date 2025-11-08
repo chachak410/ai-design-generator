@@ -1,5 +1,62 @@
 ﻿const IndustryCodeManager = {
   specCount: 0,
+  productCount: 1,
+  products: [], // Store products list
+
+  addProduct() {
+    const productsContainer = document.getElementById('products-container');
+    if (!productsContainer) return;
+
+    this.productCount++;
+    const productId = this.productCount;
+    const productGroup = document.createElement('div');
+    productGroup.className = 'product-group';
+    productGroup.dataset.productId = productId;
+    productGroup.style.cssText = 'margin-bottom: 15px; padding: 10px; background: #f9f9f9; border-radius: 6px; border-left: 3px solid #667eea;';
+
+    productGroup.innerHTML = `
+      <div class="form-group">
+        <label for="product-${productId}">Product ${productId}</label>
+        <div style="display: flex; gap: 10px;">
+          <input id="product-${productId}" type="text" required placeholder="Enter product name" style="flex: 1;">
+          <button type="button" class="btn btn-danger" onclick="window.removeProduct(${productId})" 
+                  style="padding: 10px 15px; font-size: 12px; flex-shrink: 0;">
+            Remove
+          </button>
+        </div>
+      </div>
+    `;
+
+    productsContainer.appendChild(productGroup);
+    this.updateProductList();
+  },
+
+  removeProduct(productId) {
+    const productGroup = document.querySelector(`.product-group[data-product-id="${productId}"]`);
+    if (productGroup) {
+      productGroup.remove();
+    }
+    this.updateProductList();
+  },
+
+  updateProductList() {
+    // Update the products array from DOM
+    this.products = [];
+    const productGroups = document.querySelectorAll('.product-group');
+    productGroups.forEach(group => {
+      const productId = group.dataset.productId;
+      const input = document.getElementById(`product-${productId}`);
+      if (input && input.value.trim()) {
+        this.products.push(input.value.trim());
+      }
+    });
+  },
+
+  collectProducts() {
+    this.updateProductList();
+    // Return products as comma-separated string for storage
+    return this.products.join(', ');
+  },
 
   addSpecification() {
     const container = document.getElementById('spec-container');
@@ -115,7 +172,7 @@
     }
 
     const industryName = document.getElementById('industry-name')?.value.trim();
-    const productName = document.getElementById('industry-product')?.value.trim();
+    const productNames = this.collectProducts(); // Get all products
     const specs = this.collectSpecifications();
 
     if (!industryName || industryName === '') {
@@ -123,8 +180,8 @@
       return;
     }
 
-    if (!productName || productName.length < 2) {
-      UI.showMessage('create-account-msg', 'Please enter a valid product name.', 'error');
+    if (!productNames || productNames.length < 2) {
+      UI.showMessage('create-account-msg', 'Please enter at least one product name.', 'error');
       return;
     }
 
@@ -148,7 +205,9 @@
 
       await AppState.db.collection('industryCodes').doc(code).set({
         industryName: industryName,
-        productName: productName,
+        productName: productNames, // Store as comma-separated string
+        // Also store as array for easier processing
+        productNames: this.products,
         specifications: specs,
         used: false,
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -161,6 +220,9 @@
       UI.showMessage('create-account-msg', ' Industry code created successfully!', 'success');
 
       document.getElementById('create-account-form')?.reset();
+      document.getElementById('products-container').innerHTML = '';
+      this.productCount = 1;
+      this.products = [];
       document.getElementById('spec-container').innerHTML = '';
       this.specCount = 0;
 
@@ -181,3 +243,54 @@
     });
   }
 };
+
+// Export to global scope
+window.IndustryCodeManager = IndustryCodeManager;
+
+// Global functions for onclick handlers
+window.addProduct = function(productId) {
+  IndustryCodeManager.addProduct();
+};
+
+window.removeProduct = function(productId) {
+  IndustryCodeManager.removeProduct(productId);
+};
+
+window.addValue = function(specId) {
+  IndustryCodeManager.addValue(specId);
+};
+
+window.removeSpecification = function(specId) {
+  IndustryCodeManager.removeSpecification(specId);
+};
+
+// Initialize event handlers when create-account page is shown
+function initializeCreateAccountHandlers() {
+  const addProductBtn = document.getElementById('add-product-btn');
+  if (addProductBtn) {
+    addProductBtn.onclick = () => {
+      IndustryCodeManager.addProduct();
+    };
+  }
+  
+  const addSpecBtn = document.getElementById('add-spec-btn');
+  if (addSpecBtn) {
+    addSpecBtn.onclick = () => {
+      IndustryCodeManager.addSpecification();
+    };
+  }
+  
+  const resetBtn = document.getElementById('reset-specs');
+  if (resetBtn) {
+    resetBtn.onclick = () => {
+      document.getElementById('create-account-form').reset();
+      document.getElementById('products-container').innerHTML = '';
+      document.getElementById('spec-container').innerHTML = '';
+      IndustryCodeManager.productCount = 1;
+      IndustryCodeManager.specCount = 0;
+      IndustryCodeManager.products = [];
+    };
+  }
+  
+  console.log('[InitHandler] Create account handlers initialized');
+}

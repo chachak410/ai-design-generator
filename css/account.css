@@ -1,0 +1,198 @@
+/* Account Page Styles */
+
+#account-info {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 1px solid #e0e0e0;
+}
+
+.user-info-section {
+  margin-bottom: 20px;
+}
+
+.user-info-section h3 {
+  color: #333;
+  border-bottom: 2px solid #667eea;
+  padding-bottom: 10px;
+  margin-top: 0;
+}
+
+.user-info-section p {
+  margin: 10px 0;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.user-info-section strong {
+  color: #333;
+  min-width: 120px;
+  display: inline-block;
+}
+
+.questionnaire-section h3 {
+  color: #333;
+  border-bottom: 2px solid #999;
+  padding-bottom: 10px;
+  margin-top: 20px;
+  margin-bottom: 15px;
+}
+
+.questionnaire-section p {
+  margin: 8px 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #555;
+}
+
+#credit-section {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+  margin: 20px 0;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+#credit-section h3 {
+  color: white;
+  margin-top: 0;
+  margin-bottom: 15px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+  padding-bottom: 10px;
+}
+
+#credit-section p {
+  margin: 8px 0;
+  font-size: 15px;
+}
+
+#add-credit-btn {
+  background: white;
+  color: #667eea;
+  font-weight: bold;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 15px;
+}
+
+#add-credit-btn:hover {
+  background: #f0f0f0;
+  transform: scale(1.05);
+}
+
+#add-credit-btn:active {
+  transform: scale(0.98);
+}
+
+#account-form {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+#account-form h3 {
+  color: #333;
+  margin-top: 0;
+}
+
+#account-form .form-group {
+  margin-bottom: 15px;
+}
+
+#account-form label {
+  display: block;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+#account-form input,
+#account-form select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  box-sizing: border-box;
+  transition: border-color 0.3s;
+}
+
+#account-form input:focus,
+#account-form select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+#account-form input:disabled {
+  background: #e9ecef;
+  cursor: not-allowed;
+}
+
+#account-form button {
+  padding: 12px 24px;
+  margin-right: 10px;
+  margin-top: 15px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+#account-form button[type="submit"] {
+  background: #667eea;
+  color: white;
+}
+
+#account-form button[type="submit"]:hover {
+  background: #5568d3;
+}
+
+#account-form button[type="button"] {
+  background: #e9ecef;
+  color: #333;
+}
+
+#account-form button[type="button"]:hover {
+  background: #dee2e6;
+}
+
+#account-msg {
+  padding: 12px;
+  border-radius: 6px;
+  margin-top: 15px;
+  font-size: 14px;
+}
+
+#account-msg.success {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+#account-msg.error {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+#account-msg.info {
+  background: #d1ecf1;
+  color: #0c5460;
+  border: 1px solid #bee5eb;
+}
+
+#account-msg.warning {
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeaa7;
+}

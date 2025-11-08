@@ -53,6 +53,25 @@ const translations = {
     generateIndustryCode: "Generate Industry Code",
     language: "Language",
     product: "Product",
+    productNameLabel: "Product Names",
+    addProduct: "+ Add Product",
+    industryNameLabel: "Industry Name",
+    selectIndustry: "Select industry",
+    customIndustryName: "Custom Industry Name",
+    customIndustryPlaceholder: "Enter custom industry name",
+    specificationLabel: "Specification {n}",
+    selectSpecification: "Select specification",
+    size: "Size",
+    colorScheme: "Color Scheme",
+    style: "Style",
+    tone: "Tone",
+    dimensions: "Dimensions",
+    other: "Other",
+    customSpecName: "Custom Specification Name",
+    customSpecPlaceholder: "Enter specification name (e.g., Font)",
+    valueLabel: "Value {n}",
+    valuePlaceholder: "Enter value (e.g., 1:1)",
+    addValueBtn: "Add Value",
     generating: "Generating images with {model}...",
     imagesGenerated: "Images generated successfully!",
     leftBetter: "Left is better",
@@ -80,6 +99,7 @@ const translations = {
     addTemplate: "Add",
     remove: "Remove",
     clientManagement: "Client Management",
+    templateCreation: "Template Creation",
     searchClient: "Search by client name or email...",
     search: "Search",
     allIndustries: "All Industries",
@@ -115,6 +135,101 @@ const translations = {
     resetPassword: "Reset Password",
     lockAccount: "Lock Account",
     deleteAccount: "Delete Account"
+    ,
+    // Payment / credits
+    purchaseCredits: "Purchase Credits",
+    creditPackages: "Credit Packages",
+    creditsInfo: "Each generation uses 2 credits. Select a package below:",
+    proceedToPayment: "Proceed to Payment",
+    // Client Management & Account Pages
+    userInformation: "User Information",
+    accountInformation: "Account Information",
+    displayName: "N/A",
+    notSet: "Not set",
+    notSpecified2: "Not specified",
+    codeColon: "Code",
+    role: "Role",
+    client: "Client",
+    admin: "Admin",
+    noneValue: "None",
+    actions: "Actions",
+    editing: "Editing",
+    viewDetails: "View",
+    search: "Search",
+    resetFilters: "Reset Filters",
+    unlockAccount: "Unlock Account",
+    lockAccountText: "Lock Account",
+    viewHistory: "View History",
+    noHistory: "No generation history",
+    noResults: "No clients found",
+    noResultsMsg: "No results",
+    never: "Never",
+    orderSummary: "Order Summary",
+    package: "Package",
+    price: "Price",
+    hkd: "HKD",
+    loadingClients: "Loading...",
+    accountManagement: "Account Management",
+    aiLearning: "AI learning from your taste…",
+    editProfile: "Edit Profile",
+    userInfo: "User Information",
+    phone: "Phone",
+    companyName: "Company Name",
+    contactPerson: "Contact Person",
+    industry: "Industry",
+    brandInfo: "Brand Information",
+    companyIntro: "Company Introduction",
+    branches: "Branches",
+    awards: "Awards",
+    productTypes: "Product Types",
+    focusTypes: "Focus Types",
+    advantages: "Advantages",
+    targetAudience: "Target Audience",
+    threshold: "Entry Threshold",
+    copyTheme: "Copy Theme",
+    copyAdjectivesBrand: "Copy Adjectives",
+    brandNotes: "Brand Notes",
+    productInfo: "Product Information",
+    productCategory: "Product Category",
+    productFeatures: "Product Features",
+    solves: "Problem Solved",
+    productAdvantage: "Product Advantage",
+    offer: "Offer",
+    copyAdjectivesProduct: "Copy Adjectives",
+    contraindications: "Contraindications",
+    productNotes: "Product Notes",
+    clientNotFound: "Client not found",
+    otherIndustry: "Other",
+    confirmLock: "Lock this account?",
+    confirmUnlock: "Unlock this account?",
+    accountLocked: "Account locked",
+    accountUnlocked: "Account unlocked",
+    active: "Active",
+    locked: "Locked",
+    loadingRecords: "Loading records...",
+    noRecordsFound: "No generation records found.",
+    errorLoadingRecords: "Error loading records",
+    selectPackage: "Please select a package",
+    processingPayment: "Processing payment...",
+    purchaseSuccess: "Successfully purchased {images} credits!",
+    paymentFailed: "Payment failed",
+    accessDenied: "Access denied. Admin or Master role required.",
+    failedLoadClients: "Failed to load clients.",
+    templateUpdated: "Template updated",
+    failedUpdateTemplate: "Failed to update template.",
+    enterValidAmount: "Enter a valid amount",
+    creditsNegative: "Credits cannot be negative",
+    creditsAdded: "Credits added",
+    creditsDeducted: "Credits deducted",
+    failedAdjustCredits: "Failed to adjust credits.",
+    creditsReset: "Credits reset",
+    failedResetCredits: "Failed to reset credits.",
+    passwordResetSent: "Password reset email sent",
+    failedSendReset: "Failed to send reset email.",
+    failedUpdateStatus: "Failed to update status.",
+    selectProduct: "Select Product",
+    selectedProduct: "Selected",
+    selectProductPlaceholder: "-- Select a product --"
   },
   zh: {
     title: "AI 设计生成器",
@@ -169,6 +284,25 @@ const translations = {
     generateIndustryCode: "生成行业代码",
     language: "语言",
     product: "产品",
+    productNameLabel: "产品名称",
+    addProduct: "+ 添加产品",
+    industryNameLabel: "行业名称",
+    selectIndustry: "选择行业",
+    customIndustryName: "自定义行业名称",
+    customIndustryPlaceholder: "输入自定义行业名称",
+    specificationLabel: "规格 {n}",
+    selectSpecification: "选择规格",
+    size: "尺寸",
+    colorScheme: "色彩方案",
+    style: "风格",
+    tone: "语气",
+    dimensions: "尺寸",
+    other: "其他",
+    customSpecName: "自定义规格名称",
+    customSpecPlaceholder: "输入规格名称（例如：字体）",
+    valueLabel: "值 {n}",
+    valuePlaceholder: "输入值（例如：1:1）",
+    addValueBtn: "添加值",
     generating: "正在使用 {model} 生成图像...",
     imagesGenerated: "图像生成成功！",
     leftBetter: "左图更好",
@@ -196,6 +330,7 @@ const translations = {
     addTemplate: "添加",
     remove: "移除",
     clientManagement: "客户管理",
+    templateCreation: "模板创建",
     searchClient: "按客户姓名或邮箱搜索...",
     search: "搜索",
     allIndustries: "所有行业",
@@ -231,6 +366,101 @@ const translations = {
     resetPassword: "重置密码",
     lockAccount: "锁定账户",
     deleteAccount: "删除账户"
+    ,
+    // Payment / credits
+    purchaseCredits: "购买积分",
+    creditPackages: "积分方案",
+    creditsInfo: "每次生成会消耗 2 点积分。请选择一个充值方案：",
+    proceedToPayment: "前往付款",
+    // Client Management & Account Pages
+    userInformation: "用户信息",
+    accountInformation: "账户信息",
+    displayName: "未设置",
+    notSet: "未设置",
+    notSpecified2: "未指定",
+    codeColon: "代码",
+    role: "角色",
+    client: "客户",
+    admin: "管理员",
+    noneValue: "无",
+    actions: "操作",
+    editing: "编辑中",
+    viewDetails: "查看详情",
+    search: "搜索",
+    resetFilters: "重置筛选",
+    unlockAccount: "解锁账户",
+    lockAccountText: "锁定账户",
+    viewHistory: "查看历史",
+    noHistory: "无生成历史记录",
+    noResults: "未找到客户",
+    noResultsMsg: "没有结果",
+    never: "从未",
+    orderSummary: "订单摘要",
+    package: "套餐",
+    price: "价格",
+    hkd: "港元",
+    loadingClients: "加载中...",
+    accountManagement: "账户管理",
+    aiLearning: "AI 正在学习你的品味…",
+    editProfile: "编辑资料",
+    userInfo: "用户信息",
+    phone: "电话",
+    companyName: "公司名称",
+    contactPerson: "联系人",
+    industry: "行业",
+    brandInfo: "品牌信息",
+    companyIntro: "公司简介",
+    branches: "分支机构",
+    awards: "获得奖项",
+    productTypes: "产品类型",
+    focusTypes: "专注类型",
+    advantages: "主要优势",
+    targetAudience: "目标客群",
+    threshold: "进入门槛",
+    copyTheme: "文案主题",
+    copyAdjectivesBrand: "文案形容词",
+    brandNotes: "品牌备注",
+    productInfo: "产品信息",
+    productCategory: "产品分类",
+    productFeatures: "产品特点",
+    solves: "解决问题",
+    productAdvantage: "产品优势",
+    offer: "优惠方式",
+    copyAdjectivesProduct: "文案形容词",
+    contraindications: "禁忌事项",
+    productNotes: "产品备注",
+    clientNotFound: "客户未找到",
+    otherIndustry: "其他",
+    confirmLock: "确定要锁定此账户？",
+    confirmUnlock: "确定要解锁此账户？",
+    accountLocked: "账户已锁定",
+    accountUnlocked: "账户已解锁",
+    active: "活跃",
+    locked: "已锁定",
+    loadingRecords: "加载记录中...",
+    noRecordsFound: "未找到生成记录。",
+    errorLoadingRecords: "加载记录时出错",
+    selectPackage: "请选择一个套餐",
+    processingPayment: "正在处理付款...",
+    purchaseSuccess: "成功购买了 {images} 个积分！",
+    paymentFailed: "付款失败",
+    accessDenied: "访问被拒绝。需要管理员或主管角色。",
+    failedLoadClients: "加载客户失败。",
+    templateUpdated: "模板已更新",
+    failedUpdateTemplate: "更新模板失败。",
+    enterValidAmount: "输入有效金额",
+    creditsNegative: "积分不能为负数",
+    creditsAdded: "积分已添加",
+    creditsDeducted: "积分已扣除",
+    failedAdjustCredits: "调整积分失败。",
+    creditsReset: "积分已重置",
+    failedResetCredits: "重置积分失败。",
+    passwordResetSent: "密码重置邮件已发送",
+    failedSendReset: "发送重置邮件失败。",
+    failedUpdateStatus: "更新状态失败。",
+    selectProduct: "选择产品",
+    selectedProduct: "已选择",
+    selectProductPlaceholder: "-- 选择产品 --"
   },
   yue: {
     title: "AI 設計生成器",
@@ -312,6 +542,7 @@ const translations = {
     addTemplate: "新增",
     remove: "移除",
     clientManagement: "客戶管理",
+    templateCreation: "模板建立",
     searchClient: "按客戶姓名或電郵搜索...",
     search: "搜索",
     allIndustries: "所有行業",
@@ -330,6 +561,25 @@ const translations = {
     assignedTemplate: "分配嘅模板",
     noTemplate: "無模板",
     updateTemplate: "更新模板",
+    productNameLabel: "產品名稱",
+    addProduct: "+ 新增產品",
+    industryNameLabel: "行業名稱",
+    selectIndustry: "選擇行業",
+    customIndustryName: "自定義行業名稱",
+    customIndustryPlaceholder: "輸入自定義行業名稱",
+    specificationLabel: "規格 {n}",
+    selectSpecification: "選擇規格",
+    size: "尺寸",
+    colorScheme: "色彩方案",
+    style: "風格",
+    tone: "語氣",
+    dimensions: "尺寸",
+    other: "其他",
+    customSpecName: "自定義規格名稱",
+    customSpecPlaceholder: "輸入規格名稱（例如：字體）",
+    valueLabel: "值 {n}",
+    valuePlaceholder: "輸入值（例如：1:1）",
+    addValueBtn: "新增值",
     creditManagement: "信用管理",
     currentBalance: "當前餘額",
     creditAmount: "金額",
@@ -347,10 +597,131 @@ const translations = {
     resetPassword: "重設密碼",
     lockAccount: "鎖定帳戶",
     deleteAccount: "刪除帳戶"
+    ,
+    // Payment / credits
+    purchaseCredits: "購買信用",
+    creditPackages: "信用方案",
+    creditsInfo: "每次生成會消耗 2 個信用。請選擇一個充值方案：",
+    proceedToPayment: "前往付款",
+    // Client Management & Account Pages
+    userInformation: "用戶資訊",
+    accountInformation: "賬戶資訊",
+    displayName: "未設定",
+    notSet: "未設定",
+    notSpecified2: "未指定",
+    codeColon: "代碼",
+    role: "角色",
+    client: "客戶",
+    admin: "管理員",
+    noneValue: "無",
+    actions: "操作",
+    editing: "編輯中",
+    viewDetails: "查看詳情",
+    search: "搜索",
+    resetFilters: "重設篩選",
+    unlockAccount: "解鎖賬戶",
+    lockAccountText: "鎖定賬戶",
+    viewHistory: "查看歷史",
+    noHistory: "無生成歷史記錄",
+    noResults: "未搵到客戶",
+    noResultsMsg: "冇結果",
+    never: "從未",
+    orderSummary: "訂單摘要",
+    package: "套餐",
+    price: "價格",
+    hkd: "港幣",
+    loadingClients: "加載中...",
+    accountManagement: "賬戶管理",
+    aiLearning: "AI 緊學習你嘅品味…",
+    editProfile: "編輯檔案",
+    userInfo: "用戶資訊",
+    phone: "電話",
+    companyName: "公司名稱",
+    contactPerson: "聯絡人",
+    industry: "行業",
+    brandInfo: "品牌資訊",
+    companyIntro: "公司簡介",
+    branches: "分支機構",
+    awards: "獲得獎項",
+    productTypes: "產品類型",
+    focusTypes: "專注類型",
+    advantages: "主要優勢",
+    targetAudience: "目標客群",
+    threshold: "進入門檻",
+    copyTheme: "文案主題",
+    copyAdjectivesBrand: "文案形容詞",
+    brandNotes: "品牌備註",
+    productInfo: "產品資訊",
+    productCategory: "產品分類",
+    productFeatures: "產品特點",
+    solves: "解決問題",
+    productAdvantage: "產品優勢",
+    offer: "優惠方式",
+    copyAdjectivesProduct: "文案形容詞",
+    contraindications: "禁忌事項",
+    productNotes: "產品備註",
+    clientNotFound: "客戶未搵到",
+    otherIndustry: "其他",
+    confirmLock: "確定要鎖定此賬戶？",
+    confirmUnlock: "確定要解鎖此賬戶？",
+    accountLocked: "賬戶已鎖定",
+    accountUnlocked: "賬戶已解鎖",
+    active: "活躍",
+    locked: "已鎖定",
+    loadingRecords: "加載記錄中...",
+    noRecordsFound: "未搵到生成記錄。",
+    errorLoadingRecords: "加載記錄時出錯",
+    selectPackage: "請選擇一個套餐",
+    processingPayment: "正在處理付款...",
+    purchaseSuccess: "成功購買了 {images} 個積分！",
+    paymentFailed: "付款失敗",
+    accessDenied: "訪問被拒絕。需要管理員或主管角色。",
+    failedLoadClients: "加載客戶失敗。",
+    templateUpdated: "模板已更新",
+    failedUpdateTemplate: "更新模板失敗。",
+    enterValidAmount: "輸入有效金額",
+    creditsNegative: "積分唔能為負數",
+    creditsAdded: "積分已添加",
+    creditsDeducted: "積分已扣除",
+    failedAdjustCredits: "調整積分失敗。",
+    creditsReset: "積分已重設",
+    failedResetCredits: "重設積分失敗。",
+    passwordResetSent: "密碼重設郵件已發送",
+    failedSendReset: "發送重設郵件失敗。",
+    failedUpdateStatus: "更新狀態失敗。",
+    selectProduct: "選擇產品",
+    selectedProduct: "已選擇",
+    selectProductPlaceholder: "-- 選擇產品 --"
   }
 };
 
+// Add account navigation keys
+translations.en.basicInfo = 'Basic Info';
+translations.en.brandInfo = 'Brand Info';
+translations.en.productInfo = 'Product Info';
+
+translations.zh.basicInfo = '基本資料';
+translations.zh.brandInfo = '品牌資料';
+translations.zh.productInfo = '產品資料';
+
+translations.yue.basicInfo = '基本資料';
+translations.yue.brandInfo = '品牌資料';
+translations.yue.productInfo = '產品資料';
+
 let currentLang = 'en';
+
+// Language configuration
+const LANGUAGE_CODES = {
+  en: 'en',
+  zh_CN: 'zh',      // Will map 'zh-CN' to existing 'zh' translations (simplified)
+  zh_TW: 'yue'      // Will use Traditional Chinese (Cantonese) translations
+};
+
+const LANGUAGE_NAMES = {
+  en: 'English',
+  zh_CN: '简体中文',
+  zh_TW: '繁體中文'
+};
 
 /**
  * 翻译键，支持占位符 {key}
@@ -367,12 +738,40 @@ function t(key, placeholders = {}) {
 
 /**
  * 切换语言并立即渲染
+ * @param {string} lang - Language code: 'en', 'zh_CN', 'zh_TW'
  */
 function setLanguage(lang) {
-  if (!translations[lang]) return;
-  currentLang = lang;
-  document.documentElement.lang = lang === 'zh' ? 'zh-CN' : lang;
+  // Map input language code to internal translation key
+  const langKey = LANGUAGE_CODES[lang] || lang;
+  
+  if (!translations[langKey]) {
+    console.warn('[i18n] Language not found:', lang);
+    return;
+  }
+  
+  currentLang = langKey;
+  
+  // Set HTML lang attribute
+  if (lang === 'zh_CN') {
+    document.documentElement.lang = 'zh-CN';
+  } else if (lang === 'zh_TW') {
+    document.documentElement.lang = 'zh-TW';
+  } else {
+    document.documentElement.lang = 'en';
+  }
+  
+  // Save preference
   localStorage.setItem('appLang', lang);
+  localStorage.setItem('preferredLanguage', lang); // For Translator.js compatibility
+  
+  console.log('[i18n] Language switched to:', lang);
+  
+  // Trigger global language change event for other modules
+  window.dispatchEvent(new CustomEvent('languageChanged', { 
+    detail: { language: lang, languageName: LANGUAGE_NAMES[lang] } 
+  }));
+  
+  // Re-render UI
   renderAll();
   setTimeout(renderAll, 100);
 }
@@ -404,8 +803,19 @@ function renderAll() {
  * 初始化语言（页面首次加载时调用）
  */
 function initLanguage() {
-  const saved = localStorage.getItem('appLang');
-  setLanguage(saved && translations[saved] ? saved : 'en');
+  const saved = localStorage.getItem('appLang') || localStorage.getItem('preferredLanguage');
+  let defaultLang = 'en';
+  
+  // Map saved language to proper format
+  if (saved === 'zh' || saved === 'zh_CN') {
+    defaultLang = 'zh_CN';
+  } else if (saved === 'yue' || saved === 'zh_TW') {
+    defaultLang = 'zh_TW';
+  } else if (saved === 'en') {
+    defaultLang = 'en';
+  }
+  
+  setLanguage(defaultLang);
 }
 
 /* -------------------------------------------------
@@ -416,7 +826,16 @@ window.i18n = {
   setLanguage,
   renderAll,
   initLanguage,
-  get currentLang() { return currentLang; }
+  get currentLang() { return currentLang; },
+  LANGUAGE_CODES,
+  LANGUAGE_NAMES,
+  // Get all available languages for UI dropdown
+  getAvailableLanguages() {
+    return Object.keys(LANGUAGE_CODES).map(code => ({
+      code,
+      name: LANGUAGE_NAMES[code]
+    }));
+  }
 };
 
 /* -------------------------------------------------

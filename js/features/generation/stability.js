@@ -41,3 +41,6 @@
     }
   }
 };
+
+// Export to global scope
+window.StabilityAPI = StabilityAPI;

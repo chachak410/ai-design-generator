@@ -1,7 +1,7 @@
 ﻿const RecordManager = {
   async loadRecords() {
     if (!AppState.currentUser) {
-      UI.showMessage('records-msg', 'Please sign in to view records.', 'error');
+      UI.showMessage('records-msg', window.i18n?.t('pleaseSignIn') || 'Please sign in to view records.', 'error');
       return;
     }
 
@@ -11,7 +11,7 @@
     recordsList.innerHTML = '';
 
     try {
-      UI.showMessage('records-msg', 'Loading records...', 'info');
+      UI.showMessage('records-msg', window.i18n?.t('loadingRecords') || 'Loading records...', 'info');
 
       const snapshot = await AppState.db.collection('generations')
         .where('userId', '==', AppState.currentUser.uid)
@@ -20,7 +20,7 @@
         .get();
 
       if (snapshot.empty) {
-        UI.showMessage('records-msg', 'No generation records found.', 'info');
+        UI.showMessage('records-msg', window.i18n?.t('noRecordsFound') || 'No generation records found.', 'info');
         return;
       }
 
@@ -33,7 +33,7 @@
 
     } catch (err) {
       console.error(' Error loading records:', err);
-      UI.showMessage('records-msg', 'Error loading records: ' + err.message, 'error');
+      UI.showMessage('records-msg', (window.i18n?.t('errorLoadingRecords') || 'Error loading records: ') + err.message, 'error');
     }
   },
 
@@ -72,9 +72,9 @@
       footer.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-top: 10px;';
       footer.innerHTML = `
         <span style="color: #666; font-size: 12px;">${createdAt}</span>
-        <button class="btn btn-primary" style="padding: 6px 12px; font-size: 14px;"
+        <button class="btn btn-primary" style="padding: 6px 12px; font-size: 14px;" data-i18n="downloadAll"
                 onclick="RecordManager.downloadImage('${image.url}', 'design-${idx}-${Date.now()}.png')">
-           Download
+           ${window.i18n?.t('downloadAll') || 'Download'}
         </button>
       `;
       
@@ -92,3 +92,6 @@
     document.body.removeChild(a);
   }
 };
+
+// Export to global scope
+window.RecordManager = RecordManager;

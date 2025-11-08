@@ -20,5 +20,8 @@ window.AppState = {
   feedbackVector: null,
   badSelections: 0,
   maxBadSelections: 10,
-  creditLimit: 20
+  creditLimit: 20,
+  // NEW: Store the product selected by user from dropdown
+  selectedProduct: null,
+  allowedProducts: []
 };

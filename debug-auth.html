@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Auth Debugging</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #007bff;
+            border-radius: 4px;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .label {
+            font-weight: bold;
+            color: #555;
+        }
+        .value {
+            color: #333;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        .status-ok {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .status-error {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 5px 10px 0;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .log-box {
+            background: #000;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Firebase Authentication Debugging Tool</h1>
+        
+        <div class="section">
+            <h2>Firebase Configuration</h2>
+            <div class="info-row">
+                <span class="label">API Key:</span>
+                <span class="value" id="api-key">Loading...</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Auth Domain:</span>
+                <span class="value" id="auth-domain">Loading...</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Project ID:</span>
+                <span class="value" id="project-id">Loading...</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Storage Bucket:</span>
+                <span class="value" id="storage-bucket">Loading...</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Firebase Initialization Status</h2>
+            <div class="info-row">
+                <span class="label">Firebase Initialized:</span>
+                <span class="value" id="firebase-init">Checking...</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Auth Available:</span>
+                <span class="value" id="auth-available">Checking...</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Firestore Available:</span>
+                <span class="value" id="firestore-available">Checking...</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Current User:</span>
+                <span class="value" id="current-user">No user logged in</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Test Operations</h2>
+            <button id="test-create-btn" onclick="testCreateUser()" disabled>📝 Test Create User Account</button>
+            <button id="test-login-btn" onclick="testLogin()" disabled>🔐 Test Login</button>
+            <button id="test-firestore-btn" onclick="testFirestoreWrite()" disabled>💾 Test Firestore Write</button>
+            <button onclick="clearLogs()">🗑️ Clear Logs</button>
+            <div class="log-box" id="log-box"></div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Global state
+        let firebaseInitialized = false;
+        let auth = null;
+        let db = null;
+
+        const LogBox = {
+            logs: [],
+            
+            add: function(msg, type = 'log') {
+                const timestamp = new Date().toLocaleTimeString();
+                const prefix = {
+                    'log': '[INFO]',
+                    'warn': '[WARN]',
+                    'error': '[ERROR]',
+                    'success': '[✓]'
+                }[type] || '[LOG]';
+                
+                const fullMsg = `${timestamp} ${prefix} ${msg}`;
+                this.logs.push(fullMsg);
+                
+                const logBox = document.getElementById('log-box');
+                if (logBox) {
+                    logBox.textContent += fullMsg + '\n';
+                    logBox.scrollTop = logBox.scrollHeight;
+                }
+            },
+            
+            clear: function() {
+                this.logs = [];
+                const logBox = document.getElementById('log-box');
+                if (logBox) logBox.textContent = '';
+            }
+        };
+
+        // Initialize Firebase
+        function initializeFirebase() {
+            LogBox.add('Initializing Firebase...', 'log');
+            
+            // Firebase config
+            const firebaseConfig = {
+                apiKey: "AIzaSyC0P-rmy6ZiKCBnivZQBahKWaPcqg4nDnU",
+                authDomain: "image-generator-c51e2.firebaseapp.com",
+                projectId: "image-generator-c51e2",
+                storageBucket: "image-generator-c51e2.firebasestorage.app",
+                messagingSenderId: "222706847155",
+                appId: "1:222706847155:web:824453eca61077f5f0cfc6",
+                measurementId: "G-JSK1FHFEMT"
+            };
+
+            // Display config
+            document.getElementById('api-key').textContent = firebaseConfig.apiKey;
+            document.getElementById('auth-domain').textContent = firebaseConfig.authDomain;
+            document.getElementById('project-id').textContent = firebaseConfig.projectId;
+            document.getElementById('storage-bucket').textContent = firebaseConfig.storageBucket;
+
+            try {
+                // Initialize Firebase
+                if (!window.firebase) {
+                    LogBox.add('✗ Firebase library not loaded', 'error');
+                    document.getElementById('firebase-init').innerHTML = '<span class="status-error">✗ Library not loaded</span>';
+                    return;
+                }
+
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                    LogBox.add('✓ Firebase app initialized', 'success');
+                } else {
+                    LogBox.add('✓ Firebase already initialized', 'log');
+                }
+                
+                // Get instances
+                auth = firebase.auth();
+                db = firebase.firestore();
+                
+                if (!auth) {
+                    LogBox.add('✗ Auth not available', 'error');
+                    document.getElementById('auth-available').innerHTML = '<span class="status-error">✗ Not available</span>';
+                    return;
+                }
+                
+                if (!db) {
+                    LogBox.add('✗ Firestore not available', 'error');
+                    document.getElementById('firestore-available').innerHTML = '<span class="status-error">✗ Not available</span>';
+                    return;
+                }
+
+                LogBox.add('✓ Auth instance obtained', 'success');
+                LogBox.add('✓ Firestore instance obtained', 'success');
+                
+                document.getElementById('firebase-init').innerHTML = '<span class="status-ok">✓ Yes</span>';
+                document.getElementById('auth-available').innerHTML = '<span class="status-ok">✓ Yes</span>';
+                document.getElementById('firestore-available').innerHTML = '<span class="status-ok">✓ Yes</span>';
+
+                // Setup auth state listener
+                auth.onAuthStateChanged((user) => {
+                    if (user) {
+                        document.getElementById('current-user').textContent = user.email + ' (UID: ' + user.uid + ')';
+                        LogBox.add('Auth state changed: User logged in - ' + user.email, 'log');
+                    } else {
+                        document.getElementById('current-user').textContent = 'No user logged in';
+                    }
+                });
+
+                firebaseInitialized = true;
+                
+                // Enable buttons
+                document.getElementById('test-create-btn').disabled = false;
+                document.getElementById('test-login-btn').disabled = false;
+                document.getElementById('test-firestore-btn').disabled = false;
+                
+                LogBox.add('✓ Initialization complete! Buttons enabled.', 'success');
+            } catch (err) {
+                LogBox.add('✗ Initialization error: ' + err.message, 'error');
+                document.getElementById('firebase-init').innerHTML = '<span class="status-error">✗ Error</span>';
+            }
+        }
+
+        // Test functions
+        async function testCreateUser() {
+            if (!firebaseInitialized || !auth) {
+                LogBox.add('✗ Firebase not initialized', 'error');
+                return;
+            }
+
+            LogBox.add('===== TEST: Create User Account =====', 'log');
+            
+            const testEmail = 'test-' + Date.now() + '@example.com';
+            const testPassword = 'TestPassword123!';
+            
+            LogBox.add('Test email: ' + testEmail, 'log');
+            LogBox.add('Test password: [hidden]', 'log');
+            
+            try {
+                LogBox.add('Creating account with Firebase...', 'log');
+                const result = await auth.createUserWithEmailAndPassword(testEmail, testPassword);
+                const user = result.user;
+                
+                LogBox.add('✓ Account created!', 'success');
+                LogBox.add('- UID: ' + user.uid, 'log');
+                LogBox.add('- Email: ' + user.email, 'log');
+                LogBox.add('- Email verified: ' + user.emailVerified, 'log');
+                
+                // Try immediate login
+                LogBox.add('Testing immediate login...', 'log');
+                try {
+                    await auth.signOut();
+                    LogBox.add('Signed out', 'log');
+                    
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    LogBox.add('Attempting immediate login after 500ms delay...', 'log');
+                    
+                    const loginResult = await auth.signInWithEmailAndPassword(testEmail, testPassword);
+                    LogBox.add('✓ Immediate login successful!', 'success');
+                } catch (loginErr) {
+                    LogBox.add('⚠️ Immediate login failed: ' + loginErr.code, 'warn');
+                    LogBox.add('Error: ' + loginErr.message, 'warn');
+                }
+                
+                LogBox.add('✓ Test completed', 'success');
+            } catch (err) {
+                LogBox.add('✗ Error: ' + err.code, 'error');
+                LogBox.add('Message: ' + err.message, 'error');
+            }
+        }
+
+        async function testLogin() {
+            if (!firebaseInitialized || !auth) {
+                LogBox.add('✗ Firebase not initialized', 'error');
+                return;
+            }
+
+            const email = prompt('Enter email to test login:');
+            const password = prompt('Enter password:');
+            
+            if (!email || !password) {
+                LogBox.add('Login test cancelled', 'log');
+                return;
+            }
+
+            LogBox.add('===== TEST: Login =====', 'log');
+            LogBox.add('Email: ' + email, 'log');
+            
+            try {
+                LogBox.add('Attempting login...', 'log');
+                const result = await auth.signInWithEmailAndPassword(email, password);
+                const user = result.user;
+                
+                LogBox.add('✓ Login successful!', 'success');
+                LogBox.add('- UID: ' + user.uid, 'log');
+                LogBox.add('- Email: ' + user.email, 'log');
+                
+                // Check Firestore
+                if (db) {
+                    LogBox.add('Checking Firestore user document...', 'log');
+                    const docSnap = await db.collection('users').doc(user.uid).get();
+                    
+                    if (docSnap.exists) {
+                        LogBox.add('✓ Firestore user document exists', 'success');
+                        LogBox.add('Document data: ' + JSON.stringify(docSnap.data()), 'log');
+                    } else {
+                        LogBox.add('✗ Firestore user document does NOT exist', 'error');
+                    }
+                }
+                
+                LogBox.add('✓ Test passed', 'success');
+            } catch (err) {
+                LogBox.add('✗ Error: ' + err.code, 'error');
+                LogBox.add('Message: ' + err.message, 'error');
+            }
+        }
+
+        async function testFirestoreWrite() {
+            if (!firebaseInitialized || !auth || !db) {
+                LogBox.add('✗ Firebase not initialized', 'error');
+                return;
+            }
+
+            LogBox.add('===== TEST: Firestore Write =====', 'log');
+            
+            try {
+                const currentUser = auth.currentUser;
+                
+                if (!currentUser) {
+                    LogBox.add('✗ No user logged in', 'error');
+                    return;
+                }
+                
+                LogBox.add('Current user: ' + currentUser.email, 'log');
+                
+                const testDoc = {
+                    testField: 'Test value ' + Date.now(),
+                    timestamp: new Date(),
+                    uid: currentUser.uid
+                };
+                
+                LogBox.add('Writing test document...', 'log');
+                await db.collection('test').doc('test-' + Date.now()).set(testDoc);
+                
+                LogBox.add('✓ Firestore write successful!', 'success');
+            } catch (err) {
+                LogBox.add('✗ Error: ' + err.code, 'error');
+                LogBox.add('Message: ' + err.message, 'error');
+            }
+        }
+
+        function clearLogs() {
+            LogBox.clear();
+            LogBox.add('Logs cleared', 'log');
+        }
+
+        // Start initialization when Firebase library loads
+        document.addEventListener('DOMContentLoaded', function() {
+            LogBox.add('Page loaded, waiting for Firebase library...', 'log');
+            
+            // Check if Firebase is available
+            let checkAttempts = 0;
+            const checkInterval = setInterval(() => {
+                checkAttempts++;
+                if (window.firebase && window.firebase.initializeApp) {
+                    clearInterval(checkInterval);
+                    LogBox.add('✓ Firebase library detected', 'success');
+                    initializeFirebase();
+                } else if (checkAttempts > 100) {
+                    clearInterval(checkInterval);
+                    LogBox.add('✗ Firebase library failed to load after 10 seconds', 'error');
+                    document.getElementById('firebase-init').innerHTML = '<span class="status-error">✗ Load timeout</span>';
+                }
+            }, 100);
+        });
+    </script>
+</body>
+</html>

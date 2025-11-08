@@ -18,6 +18,13 @@ window.Validation = Validation;
 window.ValidationUtils = Validation;
 
 function setLang(lang) {
+  // Prefer the central i18n module if available
+  if (window.i18n && typeof window.i18n.setLanguage === 'function') {
+    window.i18n.setLanguage(lang);
+    return;
+  }
+
+  // Fallback (legacy)
   currentLang = lang;
   localStorage.setItem('preferred-language', lang);
   updatePageLanguage();

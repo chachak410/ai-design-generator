@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>首次設定 - AI Design Generator</title>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+  <script src="config.js"></script>
+  <style>
+    :root { --primary: #667eea; --light: #f8f9fa; }
+    body { font-family: system-ui, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin:0; height:100vh; display:flex; align-items:center; justify-content:center; }
+    .card { background:white; width:90%; max-width:560px; border-radius:20px; box-shadow:0 20px 60px rgba(0,0,0,0.2); overflow:hidden; }
+    .header { background:var(--primary); color:white; padding:25px; text-align:center; }
+    .header h1 { margin:0; font-size:1.8em; }
+    .body { padding:30px; }
+    .step { animation:fade 0.4s; }
+    @keyframes fade { from{opacity:0; transform:translateY(10px)} to{opacity:1} }
+    input, textarea, select { width:100%; padding:14px; margin:12px 0; border:2px solid #e1e5e9; border-radius:10px; font-size:16px; box-sizing:border-box; }
+    label { font-weight:600; color:#333; display:block; margin-top:15px; }
+    .btn { padding:14px 28px; margin:20px 8px 0; border:none; border-radius:10px; font-size:16px; cursor:pointer; transition:0.3s; }
+    .btn-prev { background:#ddd; }
+    .btn-next { background:var(--primary); color:white; }
+    .btn-submit { background:#28a745; color:white; font-weight:bold; }
+    .hidden { display:none; }
+    .progress { height:6px; background:#ddd; border-radius:3px; margin:20px 0; overflow:hidden; }
+    .bar { height:100%; width:33%; background:var(--primary); transition:width 0.4s; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <h1>首次設定問卷</h1>
+      <p>3 分鐘完成，解鎖專屬 AI 設計</p>
+      <div style="margin-top: 15px; text-align: right;">
+        <button onclick="setSetupLang('en')" class="lang-btn" id="lang-en">English</button>
+        <button onclick="setSetupLang('yue')" class="lang-btn active" id="lang-yue">繁體中文</button>
+        <button onclick="setSetupLang('zh')" class="lang-btn" id="lang-zh">简体</button>
+      </div>
+      <style>
+        .lang-btn {
+          background: rgba(255,255,255,0.2);
+          color: white;
+          border: 1px solid rgba(255,255,255,0.5);
+          padding: 6px 12px;
+          margin: 0 5px;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 12px;
+          transition: all 0.3s;
+        }
+        .lang-btn:hover,
+        .lang-btn.active {
+          background: rgba(255,255,255,0.4);
+          border-color: white;
+        }
+      </style>
+    </div>
+    <div class="body">
+      <div class="progress"><div class="bar" id="bar"></div></div>
+
+      <!-- Step 1 -->
+      <div class="step" id="step1">
+        <label for="companyName">公司名稱 *</label>
+        <input type="text" id="companyName" required>
+        <label for="contactName">聯絡人 *</label>
+        <input type="text" id="contactName" required>
+        <label for="phone">電話 *</label>
+        <input type="tel" id="phone" required>
+        <label for="industry">行業 *</label>
+        <select id="industry" required>
+          <option value="">請選擇</option>
+          <option value="pharmacy">藥妝</option>
+          <option value="snacks">零食</option>
+          <option value="supplements">保健品</option>
+          <option value="beauty">美妝</option>
+          <option value="other">其他</option>
+        </select>
+      </div>
+
+      <!-- Step 2: Brand Info -->
+      <div class="step hidden" id="step2">
+        <h3 style="margin-top: 0; color: #667eea;">品牌資料</h3>
+        <label for="brandCompanyIntro">公司簡介及背景（例：成立年份）</label>
+        <textarea id="brandCompanyIntro" rows="3" placeholder="例：2015年成立，致力於天然健康產品"></textarea>
+        
+        <label for="brandBranches">香港/海外分店數目及地址</label>
+        <textarea id="brandBranches" rows="3" placeholder="例：香港5間分店 · 台灣3間 · 日本東京"></textarea>
+        
+        <label for="brandAwards">曾獲獎紀錄/行業專業背書</label>
+        <textarea id="brandAwards" rows="3" placeholder="例：消委會認證 · 日本有機認證 · 2023年健康大獎"></textarea>
+        
+        <label for="brandProductTypes">銷售產品總類</label>
+        <input type="text" id="brandProductTypes" placeholder="例：保健品、食品補充劑">
+        
+        <label for="brandFocusTypes">重點宣傳產品種類</label>
+        <input type="text" id="brandFocusTypes" placeholder="例：保健飲品、膠囊補充劑">
+        
+        <label for="brandAdvantages">品牌優勢／特點</label>
+        <textarea id="brandAdvantages" rows="3" placeholder="例：進口行貨 · 100%天然成分 · 消委會正品商戶"></textarea>
+        
+        <label for="brandTarget">目標人群（例：男/女/年齡/職業/收入等）</label>
+        <textarea id="brandTarget" rows="3" placeholder="例：25-55歲上班族女性 · 年收入50萬以上"></textarea>
+        
+        <label for="brandThreshold">一般消費門檻</label>
+        <input type="text" id="brandThreshold" placeholder="例：HK$200-500/月">
+        
+        <label for="brandCopyTheme">文案理想主題（可選）</label>
+        <textarea id="brandCopyTheme" rows="2" placeholder="例：健康生活、天然無添加、科學配方"></textarea>
+        
+        <label for="brandCopyAdjectives">適合文案/文案必須要加入的形容詞（可選）</label>
+        <textarea id="brandCopyAdjectives" rows="2" placeholder="例：天然、安全、有效、科學"></textarea>
+        
+        <label for="brandNotes">其他重要備註（可選）</label>
+        <textarea id="brandNotes" rows="2" placeholder="例：不接受代理 · 僅限線上銷售"></textarea>
+      </div>
+
+      <!-- Step 3: Product Info -->
+      <div class="step hidden" id="step3">
+        <h3 style="margin-top: 0; color: #667eea;">產品資料</h3>
+        <label for="productName">推廣產品名稱 * (多個產品用逗號分隔)</label>
+        <div id="products-input-container">
+          <div class="product-input-item" style="margin-bottom: 10px;">
+            <div style="display: flex; gap: 8px;">
+              <input type="text" class="product-input" placeholder="例：九州産大麥若葉 100％ 青汁 50袋" style="flex: 1;">
+              <button type="button" class="btn btn-secondary remove-product-btn" style="padding: 8px 12px; font-size: 12px; display: none;">刪除</button>
+            </div>
+          </div>
+        </div>
+        <button type="button" id="add-product-btn" class="btn btn-secondary" style="margin-bottom: 15px; padding: 8px 15px; font-size: 13px;">+ 新增產品</button>
+        <input type="hidden" id="productName" required>
+        
+        <label for="productCategory">產品種類</label>
+        <input type="text" id="productCategory" placeholder="例：保健品、飲品、膠囊">
+        
+        <label for="productFeatures">產品特點（每行一個，至少7-10個）</label>
+        <textarea id="productFeatures" rows="5" placeholder="˙豐富膳食纖維、維他命及礦物質&#10;˙抑制血糖及預防心血管疾病&#10;˙抗氧化及提升免疫力&#10;˙100%天然成分&#10;˙無添加人工色素&#10;˙日本進口&#10;˙獲得有機認證&#10;˙安全檢測合格"></textarea>
+        
+        <label for="productSolves">產品解決問題</label>
+        <textarea id="productSolves" rows="2" placeholder="例：便秘問題 · 營養不足 · 免疫力低下"></textarea>
+        
+        <label for="productAdvantage">比其他產品的優勢</label>
+        <textarea id="productAdvantage" rows="3" placeholder="例：100% 日本種植 · 成分濃度最高 · 價格最優惠"></textarea>
+        
+        <label for="productPrice">價錢</label>
+        <input type="text" id="productPrice" placeholder="例：HK$88、NT$280">
+        
+        <label for="productOffer">優惠（可選）</label>
+        <textarea id="productOffer" rows="2" placeholder="例：˙限時優惠&#10;˙滿額折扣&#10;˙買2送1"></textarea>
+        
+        <label for="productCopyAdjectives">適合文案/文案必需要加入的形容詞（可選）</label>
+        <textarea id="productCopyAdjectives" rows="2" placeholder="例：天然、有效、安全"></textarea>
+        
+        <label for="productContraindications">不合適人群／門檻（可選）</label>
+        <input type="text" id="productContraindications" placeholder="例：孕婦、未成年、對某成分過敏者">
+        
+        <label for="productNotes">其他重要備註（可選）</label>
+        <textarea id="productNotes" rows="2" placeholder="例：限量版 · 僅供成人使用"></textarea>
+      </div>
+
+      <div style="text-align:center; margin-top:30px;">
+        <button class="btn btn-prev" id="prev" onclick="prev()">上一步</button>
+        <button class="btn btn-next" id="next" onclick="next()">下一步</button>
+        <button class="btn btn-submit hidden" id="submit" onclick="save()">完成並進入主站</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Initialize Firebase first
+    if (!firebase.apps.length) {
+      firebase.initializeApp(window.AppConfig.firebase);
+      console.log('Firebase initialized in setup.html');
+    }
+
+    let step = 1;
+    const total = 3;
+    let setupProductCount = 1;
+
+    // Language management (local but integrated with global i18n if available)
+    let setupLang = localStorage.getItem('setupLang') || 'yue';
+
+    function setSetupLang(lang) {
+      setupLang = lang;
+      localStorage.setItem('setupLang', lang);
+
+      // If a global i18n exists, set it so other pages stay in sync
+      try {
+        if (window.i18n && typeof window.i18n.setLanguage === 'function') {
+          // Map local codes to i18n codes
+          const map = { en: 'en', yue: 'zh_TW', zh: 'zh_CN' };
+          window.i18n.setLanguage(map[lang] || 'en');
+          // i18n will dispatch languageChanged event which we also handle below
+          return;
+        }
+      } catch (e) { /* ignore */ }
+
+      // Update button states
+      document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById('lang-' + lang).classList.add('active');
+
+      // Update labels
+      updateSetupLabels();
+    }
+
+    function updateSetupLabels() {
+      const labels = {
+        en: {
+          // Header
+          h1: 'Initial Setup Questionnaire',
+          p: 'Complete in 3 minutes to unlock AI design',
+          
+          // Step 1 - Basic Info
+          companyName: 'Company Name *',
+          contactName: 'Contact Person *',
+          phone: 'Phone *',
+          industry: 'Industry *',
+          selectIndustry: 'Please Select',
+          pharmacy: 'Pharmacy',
+          snacks: 'Snacks',
+          supplements: 'Supplements',
+          beauty: 'Beauty',
+          other: 'Other',
+          
+          // Step 2 - Brand Info
+          brandTitle: 'Brand Information',
+          brandCompanyIntro: 'Company Introduction and Background (e.g., Year Established)',
+          brandBranches: 'Number and Address of Branches in HK/Overseas',
+          brandAwards: 'Awards/Professional Recognition',
+          brandProductTypes: 'Total Product Types',
+          brandFocusTypes: 'Featured Product Categories',
+          brandAdvantages: 'Brand Advantages/Features',
+          brandTarget: 'Target Audience (e.g., gender/age/profession/income)',
+          brandThreshold: 'Average Purchase Threshold',
+          brandCopyTheme: 'Ideal Copy Themes (Optional)',
+          brandCopyAdjectives: 'Suitable Copy/Adjectives Must Include (Optional)',
+          brandNotes: 'Other Important Notes (Optional)',
+          
+          // Step 3 - Product Info
+          productTitle: 'Product Information',
+          productName: 'Product Name *',
+          productCategory: 'Product Category',
+          productFeatures: 'Product Features (One per line, at least 7-10)',
+          productSolves: 'Problems Product Solves',
+          productAdvantage: 'Advantages Over Other Products',
+          productPrice: 'Price',
+          productOffer: 'Promotions (Optional)',
+          productCopyAdjectives: 'Suitable Copy/Required Adjectives (Optional)',
+          productContraindications: 'Unsuitable for/Restrictions (Optional)',
+          productNotes: 'Other Important Notes (Optional)',
+          
+          // Buttons
+          prev: 'Previous',
+          next: 'Next',
+          submit: 'Complete & Enter Main Site'
+        },
+        yue: {
+          // Header
+          h1: '首次設定問卷',
+          p: '3 分鐘完成，解鎖專屬 AI 設計',
+          
+          // Step 1 - Basic Info
+          companyName: '公司名稱 *',
+          contactName: '聯絡人 *',
+          phone: '電話 *',
+          industry: '行業 *',
+          selectIndustry: '請選擇',
+          pharmacy: '藥妝',
+          snacks: '零食',
+          supplements: '保健品',
+          beauty: '美妝',
+          other: '其他',
+          
+          // Step 2 - Brand Info
+          brandTitle: '品牌資料',
+          brandCompanyIntro: '公司簡介及背景（例：成立年份）',
+          brandBranches: '香港/海外分店數目及地址',
+          brandAwards: '曾獲獎紀錄/行業專業背書',
+          brandProductTypes: '銷售產品總類',
+          brandFocusTypes: '重點宣傳產品種類',
+          brandAdvantages: '品牌優勢／特點',
+          brandTarget: '目標人群（例：男/女/年齡/職業/收入等）',
+          brandThreshold: '一般消費門檻',
+          brandCopyTheme: '文案理想主題（可選）',
+          brandCopyAdjectives: '適合文案/文案必須要加入的形容詞（可選）',
+          brandNotes: '其他重要備註（可選）',
+          
+          // Step 3 - Product Info
+          productTitle: '產品資料',
+          productName: '產品名稱 *',
+          productCategory: '產品種類',
+          productFeatures: '產品特點（每行一個，至少7-10個）',
+          productSolves: '產品解決問題',
+          productAdvantage: '比其他產品的優勢',
+          productPrice: '價錢',
+          productOffer: '優惠（可選）',
+          productCopyAdjectives: '適合文案/文案必需要加入的形容詞（可選）',
+          productContraindications: '不合適人群／門檻（可選）',
+          productNotes: '其他重要備註（可選）',
+          
+          // Buttons
+          prev: '上一步',
+          next: '下一步',
+          submit: '完成並進入主站'
+        },
+        zh: {
+          // Header
+          h1: '首次设定问卷',
+          p: '3 分钟完成，解锁专属 AI 设计',
+          
+          // Step 1 - Basic Info
+          companyName: '公司名称 *',
+          contactName: '联络人 *',
+          phone: '电话 *',
+          industry: '行业 *',
+          selectIndustry: '请选择',
+          pharmacy: '药妆',
+          snacks: '零食',
+          supplements: '保健品',
+          beauty: '美妆',
+          other: '其他',
+          
+          // Step 2 - Brand Info
+          brandTitle: '品牌资料',
+          brandCompanyIntro: '公司简介及背景（例：成立年份）',
+          brandBranches: '香港/海外分店数目及地址',
+          brandAwards: '曾获奖纪录/行业专业背书',
+          brandProductTypes: '销售产品总类',
+          brandFocusTypes: '重点宣传产品种类',
+          brandAdvantages: '品牌优势／特点',
+          brandTarget: '目标人群（例：男/女/年龄/职业/收入等）',
+          brandThreshold: '一般消费门槛',
+          brandCopyTheme: '文案理想主题（可选）',
+          brandCopyAdjectives: '适合文案/文案必须要加入的形容词（可选）',
+          brandNotes: '其他重要备注（可选）',
+          
+          // Step 3 - Product Info
+          productTitle: '产品资料',
+          productName: '产品名称 *',
+          productCategory: '产品种类',
+          productFeatures: '产品特点（每行一个，至少7-10个）',
+          productSolves: '产品解决问题',
+          productAdvantage: '比其他产品的优势',
+          productPrice: '价钱',
+          productOffer: '优惠（可选）',
+          productCopyAdjectives: '适合文案/文案必需要加入的形容词（可选）',
+          productContraindications: '不合适人群／门槛（可选）',
+          productNotes: '其他重要备注（可选）',
+          
+          // Buttons
+          prev: '上一步',
+          next: '下一步',
+          submit: '完成并进入主站'
+        }
+      };
+
+      const t = labels[setupLang] || labels.yue;
+
+      // Update header
+      document.querySelector('.header h1').textContent = t.h1;
+      document.querySelector('.header p').textContent = t.p;
+
+      // Update all form labels dynamically
+      const labelMap = {
+        // Step 1
+        'companyName': t.companyName,
+        'contactName': t.contactName,
+        'phone': t.phone,
+        'industry': t.industry,
+        
+        // Step 2
+        'brandCompanyIntro': t.brandCompanyIntro,
+        'brandBranches': t.brandBranches,
+        'brandAwards': t.brandAwards,
+        'brandProductTypes': t.brandProductTypes,
+        'brandFocusTypes': t.brandFocusTypes,
+        'brandAdvantages': t.brandAdvantages,
+        'brandTarget': t.brandTarget,
+        'brandThreshold': t.brandThreshold,
+        'brandCopyTheme': t.brandCopyTheme,
+        'brandCopyAdjectives': t.brandCopyAdjectives,
+        'brandNotes': t.brandNotes,
+        
+        // Step 3
+        'productName': t.productName,
+        'productCategory': t.productCategory,
+        'productFeatures': t.productFeatures,
+        'productSolves': t.productSolves,
+        'productAdvantage': t.productAdvantage,
+        'productPrice': t.productPrice,
+        'productOffer': t.productOffer,
+        'productCopyAdjectives': t.productCopyAdjectives,
+        'productContraindications': t.productContraindications,
+        'productNotes': t.productNotes
+      };
+
+      // Update all labels
+      Object.keys(labelMap).forEach(id => {
+        const el = document.getElementById(id);
+        if (el && el.previousElementSibling && el.previousElementSibling.tagName === 'LABEL') {
+          el.previousElementSibling.textContent = labelMap[id];
+        }
+      });
+
+      // Update step titles
+      const step2Title = document.querySelector('#step2 h3');
+      if (step2Title) step2Title.textContent = t.brandTitle;
+      
+      const step3Title = document.querySelector('#step3 h3');
+      if (step3Title) step3Title.textContent = t.productTitle;
+
+      // Update buttons
+      document.getElementById('prev').textContent = t.prev;
+      document.getElementById('next').textContent = t.next;
+      document.getElementById('submit').textContent = t.submit;
+
+      // Update select options
+      const industrySelect = document.getElementById('industry');
+      if (industrySelect) {
+        const options = [
+          { value: '', text: t.selectIndustry },
+          { value: 'pharmacy', text: t.pharmacy },
+          { value: 'snacks', text: t.snacks },
+          { value: 'supplements', text: t.supplements },
+          { value: 'beauty', text: t.beauty },
+          { value: 'other', text: t.other }
+        ];
+        industrySelect.innerHTML = options.map(opt => 
+          `<option value="${opt.value}">${opt.text}</option>`
+        ).join('');
+      }
+    }
+
+    // Listen for global language changes (if other parts of the app change language)
+    if (window) {
+      window.addEventListener('languageChanged', (e) => {
+        try {
+          const code = e?.detail?.language || 'en';
+          // Map global code to local setupLang codes
+          const revMap = { en: 'en', zh_CN: 'zh', zh_TW: 'yue', yue: 'yue', zh: 'zh' };
+          setupLang = revMap[code] || 'en';
+          localStorage.setItem('setupLang', setupLang);
+          // Update active button states
+          document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+          const btn = document.getElementById('lang-' + setupLang);
+          if (btn) btn.classList.add('active');
+          updateSetupLabels();
+        } catch (err) { console.warn('languageChanged handler error', err); }
+      });
+    }
+
+    function update() {
+      document.querySelectorAll('.step').forEach(s => s.classList.add('hidden'));
+      document.getElementById(`step${step}`).classList.remove('hidden');
+      document.getElementById('bar').style.width = `${(step/total)*100}%`;
+      document.getElementById('prev').style.display = step===1 ? 'none' : 'inline';
+      document.getElementById('next').classList.toggle('hidden', step===total);
+      document.getElementById('submit').classList.toggle('hidden', step!==total);
+    }
+
+    // No validation when moving between steps - only validate on final submit
+    function next() {
+      if(step<total) step++; update();
+    }
+
+    function prev() { if(step>1) step--; update(); }
+
+    function addProductInput() {
+      setupProductCount++;
+      const container = document.getElementById('products-input-container');
+      const item = document.createElement('div');
+      item.className = 'product-input-item';
+      item.style.cssText = 'margin-bottom: 10px;';
+      item.dataset.productId = setupProductCount;
+      item.innerHTML = `
+        <div style="display: flex; gap: 8px;">
+          <input type="text" class="product-input" placeholder="輸入產品名稱" style="flex: 1;">
+          <button type="button" class="btn btn-secondary remove-product-btn" style="padding: 8px 12px; font-size: 12px;">刪除</button>
+        </div>
+      `;
+      container.appendChild(item);
+      
+      // Add click handler for remove button
+      const removeBtn = item.querySelector('.remove-product-btn');
+      removeBtn.onclick = () => removeProductInput(setupProductCount);
+      
+      updateProductButtons();
+    }
+
+    function removeProductInput(productId) {
+      const item = document.querySelector(`.product-input-item[data-product-id="${productId}"]`);
+      if (item) {
+        item.remove();
+      }
+      updateProductButtons();
+    }
+
+    function updateProductButtons() {
+      // Show/hide remove buttons based on count
+      const items = document.querySelectorAll('.product-input-item');
+      items.forEach(item => {
+        const removeBtn = item.querySelector('.remove-product-btn');
+        if (removeBtn) {
+          removeBtn.style.display = items.length > 1 ? 'block' : 'none';
+        }
+      });
+    }
+
+    function collectProductInputs() {
+      const inputs = document.querySelectorAll('.product-input');
+      const products = [];
+      inputs.forEach(input => {
+        const value = input.value.trim();
+        if (value) {
+          products.push(value);
+        }
+      });
+      return products.join(', '); // Return as comma-separated string
+    }
+
+    // No validation when moving between steps - only validate on final submit
+    function next() {
+      if(step<total) step++; update();
+    }
+
+    function prev() { if(step>1) step--; update(); }
+
+    async function save() {
+      // Final validation: ensure productName present
+      const products = collectProductInputs();
+      
+      // Debug info
+      console.log('[Setup Save Debug]', {
+        products: products,
+        step: step
+      });
+      
+      // If no products entered, check if there's already a value in Firestore
+      // If so, keep the existing value
+      let productVal = products;
+      if (!productVal && window.currentUserData?.productName) {
+        console.log('[Setup Save] Using existing productName from Firestore:', window.currentUserData.productName);
+        productVal = window.currentUserData.productName;
+      }
+      
+      if (!productVal) {
+        const msgs = {
+          en: 'Please enter at least one product name before submitting the setup.',
+          yue: '請先輸入至少一個推廣產品名稱再繼續。',
+          zh: '請先輸入至少一个推广产品名称再继续。'
+        };
+        alert(msgs[setupLang] || msgs.en);
+        // Ensure we're on step 3
+        if (step !== 3) {
+          console.log('[Setup] Jumping to step 3 for product input');
+          step = 3;
+        }
+        update();
+        
+        // Focus on first product input for user
+        const firstInput = document.querySelector('.product-input');
+        if (firstInput) {
+          firstInput.focus();
+          firstInput.style.borderColor = 'red';
+          firstInput.style.borderWidth = '2px';
+        }
+        return;
+      }
+      
+      const data = {
+        // Step 1: Basic info
+        companyName: document.getElementById('companyName').value,
+        contactName: document.getElementById('contactName').value,
+        phone: document.getElementById('phone').value,
+        industry: document.getElementById('industry').value,
+        
+        // Step 2: Brand info
+        brandCompanyIntro: document.getElementById('brandCompanyIntro').value,
+        brandBranches: document.getElementById('brandBranches').value,
+        brandAwards: document.getElementById('brandAwards').value,
+        brandProductTypes: document.getElementById('brandProductTypes').value,
+        brandFocusTypes: document.getElementById('brandFocusTypes').value,
+        brandAdvantages: document.getElementById('brandAdvantages').value,
+        brandTarget: document.getElementById('brandTarget').value,
+        brandThreshold: document.getElementById('brandThreshold').value,
+        brandCopyTheme: document.getElementById('brandCopyTheme').value,
+        brandCopyAdjectives: document.getElementById('brandCopyAdjectives').value,
+        brandNotes: document.getElementById('brandNotes').value,
+        
+        // Step 3: Product info
+        productName: productVal,
+        productCategory: document.getElementById('productCategory').value,
+        productFeatures: document.getElementById('productFeatures').value,
+        productSolves: document.getElementById('productSolves').value,
+        productAdvantage: document.getElementById('productAdvantage').value,
+        productPrice: document.getElementById('productPrice').value,
+        productOffer: document.getElementById('productOffer').value,
+        productCopyAdjectives: document.getElementById('productCopyAdjectives').value,
+        productContraindications: document.getElementById('productContraindications').value,
+        productNotes: document.getElementById('productNotes').value,
+        
+        // Metadata
+        role: 'client', // Ensure role is set for all accounts completing setup
+        questionnaireCompleted: true,
+        setupAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+
+      try {
+        const user = firebase.auth().currentUser;
+        if (!user) throw new Error("未登入");
+
+        const db = firebase.firestore();
+        
+        // Disable submit button and show loading state
+        const submitBtn = document.getElementById('submit');
+        const originalText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = setupLang === 'en' ? 'Saving...' : '保存中...';
+        
+        console.log('[Setup Save] Updating user document...', { email: user.email });
+        await db.collection('users').doc(user.uid).update(data);
+        console.log('[Setup Save] ✓ Update successful, redirecting to index.html');
+        
+        // Success - immediately redirect using replace (prevents back button returning to setup)
+        // Use replace() instead of href to avoid adding to browser history
+        window.location.replace('index.html');
+      } catch (e) {
+        console.error('[Setup Save] Error:', e);
+        // Restore button state
+        const submitBtn = document.getElementById('submit');
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+        
+        const msgs = {
+          en: 'Save failed: ' + e.message,
+          yue: '儲存失敗：' + e.message,
+          zh: '保存失败：' + e.message
+        };
+        alert(msgs[setupLang] || msgs.en);
+      }
+    }
+
+    // Auto login check & prefill
+    firebase.auth().onAuthStateChanged(async user => {
+      if (!user) {
+        alert('請先登入');
+        window.location.href = 'index.html';
+      } else {
+        console.log('User authenticated:', user.email);
+        
+        try {
+          const db = firebase.firestore();
+          const userDoc = await db.collection('users').doc(user.uid).get();
+          if (userDoc.exists) {
+            const userData = userDoc.data();
+            
+            // Master/Admin users should not be on setup page - redirect them
+            if (userData.role === 'master' || userData.role === 'admin') {
+              console.log('Master/Admin account, skipping questionnaire');
+              await db.collection('users').doc(user.uid).update({
+                questionnaireCompleted: true
+              });
+              window.location.href = 'index.html';
+              return;
+            }
+            
+            // Note: We do NOT check if client is complete here
+            // That's the job of main.js. Setup.html just handles input.
+            // If user is complete, main.js will not send them here.
+            
+            // Prefill fields with existing user data
+            try {
+              const d = userData || {};
+              // Step 1
+              if (d.companyName) document.getElementById('companyName').value = d.companyName;
+              if (d.contactName) document.getElementById('contactName').value = d.contactName;
+              if (d.phone) document.getElementById('phone').value = d.phone;
+              if (d.industry) document.getElementById('industry').value = d.industry;
+              
+              // Step 2 - Brand
+              if (d.brandCompanyIntro) document.getElementById('brandCompanyIntro').value = d.brandCompanyIntro;
+              if (d.brandBranches) document.getElementById('brandBranches').value = d.brandBranches;
+              if (d.brandAwards) document.getElementById('brandAwards').value = d.brandAwards;
+              if (d.brandProductTypes) document.getElementById('brandProductTypes').value = d.brandProductTypes;
+              if (d.brandFocusTypes) document.getElementById('brandFocusTypes').value = d.brandFocusTypes;
+              if (d.brandAdvantages) document.getElementById('brandAdvantages').value = d.brandAdvantages;
+              if (d.brandTarget) document.getElementById('brandTarget').value = d.brandTarget;
+              if (d.brandThreshold) document.getElementById('brandThreshold').value = d.brandThreshold;
+              if (d.brandCopyTheme) document.getElementById('brandCopyTheme').value = d.brandCopyTheme;
+              if (d.brandCopyAdjectives) document.getElementById('brandCopyAdjectives').value = d.brandCopyAdjectives;
+              if (d.brandNotes) document.getElementById('brandNotes').value = d.brandNotes;
+              
+              // Step 3 - Product
+              if (d.productName) {
+                console.log('[Setup Prefill] Setting productName:', d.productName);
+                // Parse multiple products from comma-separated string
+                const products = String(d.productName)
+                  .split(',')
+                  .map(p => p.trim())
+                  .filter(p => p.length > 0);
+                
+                const container = document.getElementById('products-input-container');
+                if (container && products.length > 0) {
+                  container.innerHTML = ''; // Clear default
+                  products.forEach((product, index) => {
+                    const productId = index + 1;
+                    setupProductCount = Math.max(setupProductCount, productId);
+                    const item = document.createElement('div');
+                    item.className = 'product-input-item';
+                    item.style.cssText = 'margin-bottom: 10px;';
+                    item.dataset.productId = productId;
+                    item.innerHTML = `
+                      <div style="display: flex; gap: 8px;">
+                        <input type="text" class="product-input" value="${product}" style="flex: 1;">
+                        <button type="button" class="btn btn-secondary remove-product-btn" style="padding: 8px 12px; font-size: 12px; display: none;">刪除</button>
+                      </div>
+                    `;
+                    container.appendChild(item);
+                    
+                    const removeBtn = item.querySelector('.remove-product-btn');
+                    removeBtn.onclick = () => removeProductInput(productId);
+                  });
+                  updateProductButtons();
+                }
+              }
+              if (d.productCategory) document.getElementById('productCategory').value = d.productCategory;
+              if (d.productFeatures) document.getElementById('productFeatures').value = d.productFeatures;
+              if (d.productSolves) document.getElementById('productSolves').value = d.productSolves;
+              if (d.productAdvantage) document.getElementById('productAdvantage').value = d.productAdvantage;
+              if (d.productPrice) document.getElementById('productPrice').value = d.productPrice;
+              if (d.productOffer) document.getElementById('productOffer').value = d.productOffer;
+              if (d.productCopyAdjectives) document.getElementById('productCopyAdjectives').value = d.productCopyAdjectives;
+              if (d.productContraindications) document.getElementById('productContraindications').value = d.productContraindications;
+              if (d.productNotes) document.getElementById('productNotes').value = d.productNotes;
+              
+              // Debug: Log final productName value
+              console.log('[Setup Prefill] Final productName input value:', document.getElementById('productName').value);
+
+              // If basic info exists, jump to step 2 so user fills brand/product
+              const basicFilled = d.companyName && d.contactName && d.phone && d.industry;
+              const productMissing = !d.productName || String(d.productName).trim() === '';
+              if (basicFilled && productMissing) {
+                step = 2;
+                update();
+              }
+            } catch (prefillErr) {
+              console.warn('Error pre-filling setup fields', prefillErr);
+            }
+          }
+        } catch (e) {
+          console.error('Error checking user:', e);
+        }
+      }
+    });
+
+    // Initialize on load
+    updateSetupLabels();
+    update();
+    
+    // Set active language button
+    document.getElementById('lang-' + setupLang).classList.add('active');
+    
+    // Setup product input handlers
+    document.getElementById('add-product-btn')?.addEventListener('click', () => {
+      addProductInput();
+    });
+    
+    // Setup initial remove buttons visibility
+    updateProductButtons();
+  </script>
+</body>
+</html>

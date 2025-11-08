@@ -12,6 +12,59 @@ const TemplateManager = {
       UI.showMessage('template-status', window.i18n.t('pleaseSignIn'), 'error');
       return;
     }
+    
+    // Check if client needs to complete setup
+    if (AppState.userRole === 'client' && AppState.clientNeedsSetup) {
+      console.log('[TemplateManager] Client needs setup, showing notice');
+      
+      // Get language preference
+      const lang = window.i18n?.language || localStorage.getItem('setupLang') || 'en';
+      const messages = {
+        en: {
+          title: '📝 Account Setup Incomplete',
+          message: 'Your account setup is not complete. Please complete the questionnaire to start generating images.',
+          button: '→ Complete Setup Now'
+        },
+        zh_CN: {
+          title: '📝 账户设置未完成',
+          message: '您的账户设置不完整。请完成问卷问题以开始生成图像。',
+          button: '→ 现在完成设置'
+        },
+        zh_TW: {
+          title: '📝 帳戶設定未完成',
+          message: '您的帳戶設定不完整。請完成問卷以開始生成圖像。',
+          button: '→ 現在完成設定'
+        }
+      };
+      
+      const text = messages[lang] || messages.en;
+      
+      const statusEl = document.getElementById('template-status');
+      if (statusEl) {
+        statusEl.innerHTML = `
+          <div style="text-align: center; padding: 30px 20px; background: linear-gradient(135deg, #fff3cd 0%, #fffbea 100%); border-left: 4px solid #ffc107; border-radius: 8px; margin: 20px 0;">
+            <h3 style="margin-top: 0; color: #856404;">${text.title}</h3>
+            <p style="color: #856404; margin: 15px 0;">${text.message}</p>
+            <a href="setup.html" style="
+              display: inline-block;
+              margin-top: 15px;
+              padding: 12px 28px;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: white;
+              text-decoration: none;
+              border-radius: 6px;
+              cursor: pointer;
+              font-weight: 600;
+              transition: transform 0.3s, box-shadow 0.3s;
+            " onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.4)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
+              ${text.button}
+            </a>
+          </div>
+        `;
+      }
+      return;
+    }
+    
     try {
       AppState.generationCount = AppState.generationCount || 0;
       AppState.badSelections = AppState.badSelections || 0;
@@ -30,9 +83,39 @@ const TemplateManager = {
           return;
         }
         const data = doc.data();
-        AppState.userTemplates = data.template ? [data.template] : [];
+        
+        // Use assignedTemplate if available, fallback to template
+        let templateValue = data.assignedTemplate || data.template;
+        
+        // If no template assigned yet, show warning
+        if (!templateValue) {
+          console.warn('No template assigned to client. Defaulting to "modern"');
+          templateValue = 'modern';
+          // Auto-assign default template
+          await AppState.db.collection('users').doc(AppState.currentUser.uid).update({
+            assignedTemplate: 'modern'
+          }).catch(err => console.error('Failed to auto-assign template:', err));
+        }
+        
+        AppState.userTemplates = [templateValue];
         AppState.userSpecs = data.specifications || {};
         AppState.userProductName = data.productName || '';
+        
+        // NEW: Parse and initialize allowed products for dropdown selection
+        const productNameRaw = data.productName || '';
+        const productList = productNameRaw
+          .split(/[,;]/)
+          .map(p => p.trim())
+          .filter(p => p.length > 0);
+        
+        AppState.allowedProducts = productList;
+        
+        // Initialize selectedProduct with the first product if not already set
+        if (!AppState.selectedProduct && productList.length > 0) {
+          AppState.selectedProduct = productList[0];
+          console.log('[TemplateManager] Initialized selectedProduct:', AppState.selectedProduct);
+        }
+        
         AppState.selectedSpecs = Object.keys(AppState.userSpecs).reduce((acc, key) => {
           acc[key] = AppState.userSpecs[key][0] || '';
           return acc;
@@ -175,8 +258,50 @@ ${values.map((value) => `<option value="${value}">${value}</option>`).join('')}
     }
     const productDisplay = document.getElementById('product-display');
     if (productDisplay && AppState.userProductName) {
-      productDisplay.textContent = `${window.i18n.t('product')}: ${AppState.userProductName}`;
-      UI.showElement('product-display');
+      // Parse products - support multiple products separated by comma or semicolon
+      const productList = AppState.allowedProducts.length > 0 
+        ? AppState.allowedProducts 
+        : AppState.userProductName
+          .split(/[,;]/)
+          .map(p => p.trim())
+          .filter(p => p.length > 0);
+      
+      if (productList.length > 0) {
+        // Always show dropdown for product selection
+        const currentProduct = AppState.selectedProduct || productList[0];
+        const options = productList
+          .map(p => `<option value="${p}" ${p === currentProduct ? 'selected' : ''}>${p}</option>`)
+          .join('');
+        
+        const selectLabel = window.i18n?.t('selectProduct') || 'Select Product';
+        const selectedLabel = window.i18n?.t('selectedProduct') || 'Selected:';
+        
+        productDisplay.innerHTML = `
+          <label for="product-selector" style="font-weight: 600; display: block; margin-bottom: 8px;">${selectLabel}</label>
+          <select id="product-selector" required style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; background: white; cursor: pointer;">
+            ${options}
+          </select>
+          <div id="selected-product-info" style="margin-top: 8px; padding: 8px; background: #f0f8ff; border-radius: 4px;">
+            <small><strong>${selectedLabel}</strong> <span id="selected-product-name">${currentProduct}</span></small>
+          </div>
+        `;
+        
+        // Add event listener for product selection changes
+        const selector = document.getElementById('product-selector');
+        if (selector) {
+          selector.addEventListener('change', (e) => {
+            AppState.selectedProduct = e.target.value;
+            const displayName = document.getElementById('selected-product-name');
+            if (displayName) {
+              displayName.textContent = AppState.selectedProduct;
+            }
+            console.log('[TemplateManager] Selected product changed to:', AppState.selectedProduct);
+            this.updatePromptDisplay();
+          });
+        }
+        
+        UI.showElement('product-display');
+      }
     }
     this.updateGenerationCounter();
     window.i18n.renderAll();
@@ -222,63 +347,10 @@ ${values.map((value) => `<option value="${value}">${value}</option>`).join('')}
     const generateBtn = document.getElementById('generate-images-btn');
     if (generateBtn) {
       generateBtn.addEventListener('click', async () => {
-        await this.generateImages(null);
+        // Delegate to Generator.generateImages() which handles translation
+        await Generator.generateImages();
       });
     }
-  },
-
-  async generateImages(referenceImage) {
-    if (AppState.generationCount >= AppState.creditLimit) {
-      UI.showMessage('template-status', window.i18n.t('maxGeneration'), 'error');
-      return;
-    }
-    const selectedTemplates = Array.from(
-      document.querySelectorAll('#template-checkboxes input:checked')
-    ).map((cb) => cb.value);
-    if (!selectedTemplates.length || !AppState.userProductName) {
-      UI.showMessage('template-status', window.i18n.t('selectTemplate'), 'error');
-      return;
-    }
-    let prompt = `Generate a design for ${AppState.userProductName} in ${selectedTemplates.join(', ')} style`;
-    if (AppState.selectedSpecs && Object.keys(AppState.selectedSpecs).length > 0) {
-      const specs = Object.entries(AppState.selectedSpecs)
-        .map(([key, value]) => `${key}: ${value}`)
-        .join(', ');
-      prompt += `, ${specs}`;
-    }
-    if (referenceImage) {
-      prompt += ` ${window.i18n.t('basedOnReference')}`;
-    }
-
-    // ADDED: inject learned style bias
-    prompt = this.enrichPrompt(prompt);
-
-    UI.showMessage('template-status', window.i18n.t('generating', { model: 'AI' }), 'info');
-    AppState.generationCount += 1;
-    const feedbackRow = document.getElementById('image-feedback-row');
-    if (feedbackRow) feedbackRow.classList.add('hidden');
-    let image1, image2;
-    try {
-      const response = await window.ImageGenerator.generate(prompt, referenceImage);
-      image1 = response.images[0];
-      image2 = response.images[1];
-    } catch (err) {
-      UI.showMessage('template-status', window.i18n.t('generationError') + ': ' + err.message, 'error');
-      AppState.generationCount -= 1;
-      const leftImage = document.getElementById('left-image');
-      const rightImage = document.getElementById('right-image');
-      if (leftImage) leftImage.innerHTML = '';
-      if (rightImage) rightImage.innerHTML = '';
-      return;
-    }
-    const timestamp = new Date().toISOString();
-    AppState.generatedImages.push({ id: `img-${AppState.generationCount}-1`, url: image1, prompt, timestamp });
-    AppState.generatedImages.push({ id: `img-${AppState.generationCount}-2`, url: image2, prompt, timestamp });
-    await this.saveImagesToDB();
-    this.displayImages(image1, image2);
-    this.updateGenerationCounter();
-    showGeneratedContent();
-    UI.showMessage('template-status', window.i18n.t('imagesGenerated'), 'success');
   },
 
   displayImages(image1, image2) {
@@ -340,7 +412,7 @@ ${values.map((value) => `<option value="${value}">${value}</option>`).join('')}
         }
         AppState.badSelections += 1;
         await this.recordFeedback(false, false, true, image1, image2);
-        await this.generateImages(null);
+        await Generator.generateImages();
       };
     }
   },
@@ -441,11 +513,13 @@ ${values.map((value) => `<option value="${value}">${value}</option>`).join('')}
     }
     const promptDisplay = document.getElementById('prompt-display');
     if (promptDisplay) {
-      if (selectedTemplates.length > 0 && AppState.userProductName) {
-        promptDisplay.textContent = `Generate a design for ${AppState.userProductName} in ${selectedTemplates.join(
+      // Use selectedProduct (from dropdown) if available, otherwise show placeholder
+      const displayProduct = AppState.selectedProduct || AppState.userProductName || 'Product';
+      if (selectedTemplates.length > 0 && displayProduct) {
+        promptDisplay.textContent = `Generate a design for ${displayProduct} in ${selectedTemplates.join(
           ', '
         )} style${extra}`;
-      } else if (!AppState.userProductName) {
+      } else if (!displayProduct) {
         promptDisplay.textContent = window.i18n.t('setProductName');
       } else {
         promptDisplay.textContent = window.i18n.t('selectTemplate');
@@ -462,4 +536,5 @@ ${values.map((value) => `<option value="${value}">${value}</option>`).join('')}
   },
 };
 
-module.exports = TemplateManager;
+// Make TemplateManager available in the browser global scope
+window.TemplateManager = TemplateManager;

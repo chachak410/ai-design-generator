@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Debug Console</title>
+  <style>
+    body { font-family: monospace; background: #1e1e1e; color: #d4d4d4; padding: 20px; }
+    #logs { border: 1px solid #666; padding: 10px; height: 600px; overflow-y: auto; background: #252526; margin: 10px 0; }
+    .log { margin: 5px 0; }
+    .error { color: #f48771; }
+    .warn { color: #dcdcaa; }
+    .info { color: #4ec9b0; }
+    .log-type { font-weight: bold; margin-right: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Debug Console</h1>
+  <button onclick="clearLogs()">Clear Logs</button>
+  <button onclick="window.location.reload()">Reload</button>
+  <div id="logs"></div>
+
+  <script>
+    const originalLog = console.log;
+    const originalError = console.error;
+    const originalWarn = console.warn;
+
+    function addLog(message, type = 'info') {
+      const logsDiv = document.getElementById('logs');
+      const logEntry = document.createElement('div');
+      logEntry.className = 'log ' + type;
+      const timestamp = new Date().toLocaleTimeString();
+      logEntry.innerHTML = `<span class="log-type">[${timestamp}] ${type.toUpperCase()}:</span> ${message}`;
+      logsDiv.appendChild(logEntry);
+      logsDiv.scrollTop = logsDiv.scrollHeight;
+    }
+
+    console.log = function(...args) {
+      originalLog(...args);
+      addLog(args.join(' '), 'info');
+    };
+
+    console.error = function(...args) {
+      originalError(...args);
+      addLog(args.join(' '), 'error');
+    };
+
+    console.warn = function(...args) {
+      originalWarn(...args);
+      addLog(args.join(' '), 'warn');
+    };
+
+    function clearLogs() {
+      document.getElementById('logs').innerHTML = '';
+    }
+
+    // Load the app in an iframe
+    addLog('Loading app...', 'info');
+  </script>
+
+  <iframe src="index.html" style="width: 100%; height: 800px; border: 1px solid #666; margin-top: 20px;"></iframe>
+</body>
+</html>

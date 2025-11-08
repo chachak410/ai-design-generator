@@ -20,12 +20,18 @@ const ClientManagement = {
     if (this.initialized) return;
     const role = window.currentUserData?.role;
     if (role !== 'admin' && role !== 'master') {
-      alert('Access denied. Admin or Master role required.');
+      alert(window.i18n?.t('accessDenied') || 'Access denied. Admin or Master role required.');
       return;
     }
     this.setupEventListeners();
     await this.loadClients();
     this.initialized = true;
+    
+    // Render all i18n elements including select options
+    if (window.i18n?.renderAll) {
+      window.i18n.renderAll();
+    }
+    
     console.log('✅ Client Management ready');
   },
 
@@ -71,7 +77,7 @@ const ClientManagement = {
       console.log(`Loaded ${this.allClients.length} clients`);
     } catch (e) {
       console.error('loadClients error', e);
-      alert('Failed to load clients.');
+      alert(window.i18n?.t('failedLoadClients') || 'Failed to load clients.');
     }
   },
 
@@ -123,7 +129,7 @@ const ClientManagement = {
         <td>${this.escapeHtml(c.assignedTemplate || 'None')}</td>
         <td>${c.credits || 0}</td>
         <td><span class="status-badge status-${c.status || 'active'}">${c.status || 'active'}</span></td>
-        <td>${c.lastActive ? new Date(c.lastActive).toLocaleDateString() : 'Never'}</td>
+        <td>${c.lastActive ? new Date(c.lastActive).toLocaleDateString() : window.i18n?.t('never') || 'Never'}</td>
         <td><div class="action-btns">
           <button class="btn-icon" onclick="ClientManagement.openClientModal('${c.id}')" title="View">👁️</button>
         </div></td>
@@ -141,14 +147,17 @@ const ClientManagement = {
   async openClientModal(id) {
     this.currentClientId = id;
     const c = this.allClients.find(x => x.id === id);
-    if (!c) return alert('Client not found');
+    if (!c) return alert(window.i18n?.t('clientNotFound') || 'Client not found');
 
-    this.setText('modal-client-name', c.displayName || 'N/A');
+    this.setText('modal-client-name', c.displayName || window.i18n?.t('notSet') || 'Not set');
     this.setText('modal-client-email', c.email || '');
-    this.setText('modal-client-industry', c.industry || 'N/A');
+    this.setText('modal-client-industry', c.industry || window.i18n?.t('notSet') || 'Not set');
     this.setText('modal-client-status', c.status || 'active');
-    this.setText('modal-client-created', c.createdAt ? new Date(c.createdAt).toLocaleDateString() : 'N/A');
-    this.setText('modal-client-lastactive', c.lastActive ? new Date(c.lastActive).toLocaleDateString() : 'Never');
+    this.setText('modal-client-created', c.createdAt ? new Date(c.createdAt).toLocaleDateString() : window.i18n?.t('notSet') || 'Not set');
+    this.setText('modal-client-lastactive', c.lastActive ? new Date(c.lastActive).toLocaleDateString() : window.i18n?.t('never') || 'Never');
+
+    // Load available templates
+    await this.loadTemplateOptions();
 
     const sel = document.getElementById('modal-template-select');
     if (sel) sel.value = c.assignedTemplate || '';
@@ -158,10 +167,37 @@ const ClientManagement = {
     await this.loadGenerationHistory(id);
 
     const lockBtn = document.getElementById('toggle-lock-btn');
-    if (lockBtn) lockBtn.textContent = (c.status === 'locked') ? 'Unlock Account' : 'Lock Account';
+    if (lockBtn) lockBtn.textContent = (c.status === 'locked') ? (window.i18n?.t('unlockAccount') || 'Unlock Account') : (window.i18n?.t('lockAccountText') || 'Lock Account');
 
     const modal = document.getElementById('client-modal');
     if (modal) modal.style.display = 'block';
+  },
+
+  async loadTemplateOptions() {
+    try {
+      const db = firebase.firestore();
+      const snap = await db.collection('templates').get();
+      const templates = snap.docs.map(d => d.data().name).filter(n => n);
+
+      const sel = document.getElementById('modal-template-select');
+      if (!sel) return;
+
+      // Keep the "None" option and add templates
+      const currentValue = sel.value;
+      sel.innerHTML = `<option value="">${window.i18n?.t('noneValue') || 'None'}</option>`;
+      
+      templates.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t;
+        opt.textContent = t;
+        sel.appendChild(opt);
+      });
+
+      // Restore the selected value
+      if (currentValue) sel.value = currentValue;
+    } catch (e) {
+      console.error('loadTemplateOptions error', e);
+    }
   },
 
   closeModal() {
@@ -194,13 +230,14 @@ const ClientManagement = {
       const tbody = document.getElementById('history-table-body');
       if (!tbody) return;
       if (!gens.length) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No generation history</td></tr>';
+        const noHistoryText = window.i18n?.t('noHistory') || 'No generation history';
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">${noHistoryText}</td></tr>`;
       } else {
         tbody.innerHTML = gens.slice(0,10).map(g => `
           <tr>
             <td>${new Date(g.createdAt).toLocaleDateString()}</td>
             <td>${this.escapeHtml((g.prompt || '').slice(0,50))}...</td>
-            <td>${this.escapeHtml(g.template || 'N/A')}</td>
+            <td>${this.escapeHtml(g.template || window.i18n?.t('notSet') || 'Not set')}</td>
             <td>${g.creditsUsed || 1}</td>
             <td>${g.status || 'completed'}</td>
           </tr>
@@ -218,22 +255,22 @@ const ClientManagement = {
         assignedTemplate: val || null,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       });
-      alert('Template updated');
+      alert(window.i18n?.t('templateUpdated') || 'Template updated');
       await this.loadClients();
       this.closeModal();
-    } catch (e) { console.error('updateTemplate error', e); alert('Failed to update template.'); }
+    } catch (e) { console.error('updateTemplate error', e); alert(window.i18n?.t('failedUpdateTemplate') || 'Failed to update template.'); }
   },
 
   async adjustCredits(action) {
     if (!this.currentClientId) return;
     const input = document.getElementById('credit-adjustment');
     const amount = parseInt(input?.value || '0', 10);
-    if (!amount || amount <= 0) return alert('Enter a valid amount');
+    if (!amount || amount <= 0) return alert(window.i18n?.t('enterValidAmount') || 'Enter a valid amount');
 
     const c = this.allClients.find(x => x.id === this.currentClientId);
     const cur = c?.credits || 0;
     const next = action === 'add' ? cur + amount : cur - amount;
-    if (next < 0) return alert('Credits cannot be negative');
+    if (next < 0) return alert(window.i18n?.t('creditsNegative') || 'Credits cannot be negative');
 
     try {
       const db = firebase.firestore();
@@ -243,11 +280,14 @@ const ClientManagement = {
       });
       this.setText('modal-credit-balance', next);
       if (input) input.value = '';
-      alert(`Credits ${action === 'add' ? 'added' : 'deducted'}`);
+      const msg = action === 'add' 
+        ? (window.i18n?.t('creditsAdded') || 'Credits added')
+        : (window.i18n?.t('creditsDeducted') || 'Credits deducted');
+      alert(msg);
       await this.loadClients();
     } catch (e) {
       console.error('adjustCredits error', e);
-      alert('Failed to adjust credits.');
+      alert(window.i18n?.t('failedAdjustCredits') || 'Failed to adjust credits.');
     }
   },
 
@@ -261,11 +301,11 @@ const ClientManagement = {
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       });
       this.setText('modal-credit-balance', 100);
-      alert('Credits reset');
+      alert(window.i18n?.t('creditsReset') || 'Credits reset');
       await this.loadClients();
     } catch (e) {
       console.error('resetCredits error', e);
-      alert('Failed to reset credits.');
+      alert(window.i18n?.t('failedResetCredits') || 'Failed to reset credits.');
     }
   },
 
@@ -276,10 +316,10 @@ const ClientManagement = {
     if (!confirm(`Send password reset to ${c.email}?`)) return;
     try {
       await firebase.auth().sendPasswordResetEmail(c.email);
-      alert('Password reset email sent');
+      alert(window.i18n?.t('passwordResetSent') || 'Password reset email sent');
     } catch (e) {
       console.error('resetPassword error', e);
-      alert('Failed to send reset email.');
+      alert(window.i18n?.t('failedSendReset') || 'Failed to send reset email.');
     }
   },
 
@@ -287,19 +327,25 @@ const ClientManagement = {
     if (!this.currentClientId) return;
     const c = this.allClients.find(x => x.id === this.currentClientId);
     const newStatus = c?.status === 'locked' ? 'active' : 'locked';
-    if (!confirm(`${newStatus === 'locked' ? 'Lock' : 'Unlock'} this account?`)) return;
+    const confirmMsg = newStatus === 'locked' ? 
+      (window.i18n?.t('confirmLock') || 'Lock this account?') : 
+      (window.i18n?.t('confirmUnlock') || 'Unlock this account?');
+    if (!confirm(confirmMsg)) return;
     try {
       const db = firebase.firestore();
       await db.collection('users').doc(this.currentClientId).update({
         status: newStatus,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       });
-      alert(`Account ${newStatus === 'locked' ? 'locked' : 'unlocked'}`);
+      const successMsg = newStatus === 'locked' ? 
+        (window.i18n?.t('accountLocked') || 'Account locked') : 
+        (window.i18n?.t('accountUnlocked') || 'Account unlocked');
+      alert(successMsg);
       await this.loadClients();
       this.closeModal();
     } catch (e) {
       console.error('toggleLock error', e);
-      alert('Failed to update status.');
+      alert(window.i18n?.t('failedUpdateStatus') || 'Failed to update status.');
     }
   },
 

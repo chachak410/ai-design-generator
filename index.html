@@ -15,7 +15,9 @@
   <script src="./js/config/config.js"></script>
   <!-- Styles -->
   <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/account.css">
   <link rel="stylesheet" href="css/client-management.css">
+  <link rel="stylesheet" href="css/payment.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><text y=%2214%22 font-size=%2214%22>puzzle</text></svg>">
   <!-- Language Switcher and Navigation Styles -->
   <style>
@@ -196,8 +198,8 @@
         <a href="#" onclick="showPage('account-page'); return false;" data-i18n="account">Account</a>
         <a href="#" onclick="showPage('records-page'); return false;" data-i18n="pastRecords">Past Records</a>
         <a href="#" id="create-account-link" onclick="showPage('create-account-page'); return false;" data-i18n="createAccount" style="display: none;">Create Account</a>
-        <a href="#" id="master-nav-link" onclick="showPage('client-management-section'); return false;" style="display: none;">Client Management</a>
-        <a href="#" id="master-template-link" onclick="UI.showMasterTemplatePage()" style="display: none;">Template Creation</a>
+        <a href="#" id="master-nav-link" onclick="showPage('client-management-section'); return false;" data-i18n="clientManagement" style="display: none;">Client Management</a>
+        <a href="#" id="master-template-link" onclick="UI.showMasterTemplatePage()" data-i18n="templateCreation" style="display: none;">Template Creation</a>
         <a href="#" id="logout-btn" onclick="handleLogout(); return false;" data-i18n="logout">Logout</a>
       </div>
     </div>
@@ -207,7 +209,10 @@
       <div id="account-page" class="controls hidden">
         <h2 data-i18n="yourAccount">Your Account</h2>
         <div id="account-info"></div>
+        <!-- account actions placeholder (removed to keep setup flow unchanged) -->
+        <div id="credit-section" style="display: none;"></div>
         <form id="account-form" class="hidden">
+          <h3>Edit Profile</h3>
           <div class="form-group">
             <label for="account-name" data-i18n="name">Name</label>
             <input id="account-name" type="text" required
@@ -219,9 +224,10 @@
                    data-i18n-ph="industry" placeholder="Enter your industry (optional)">
           </div>
           <div class="form-group">
-            <label for="account-product" data-i18n="productName">Product Name</label>
+            <label for="account-product" data-i18n="productName">Product Name(s)</label>
+            <p style="font-size: 12px; color: #666; margin: 5px 0;">Multiple products separated by comma will be displayed as dropdown in Template page</p>
             <input id="account-product" type="text" required
-                   data-i18n-ph="productName" placeholder="Enter product name (e.g., lip gloss, phone)">
+                   data-i18n-ph="productName" placeholder="e.g., Product 1, Product 2, Product 3">
           </div>
           <div class="form-group">
             <label for="account-email" data-i18n="emailLabel">Email</label>
@@ -232,14 +238,21 @@
                   data-i18n="cancel">Cancel</button>
           <div id="account-msg" class="message" style="display: none;"></div>
         </form>
-        <button id="edit-account-btn" class="btn" data-i18n="editProfile">Edit Profile</button>
       </div>
 
       <!-- Template Page -->
-      <div id="template-page" class="controls">
+      <div id="template-page" class="controls hidden">
         <h2 data-i18n="generateImages">Generate Images</h2>
-        <!-- Product Name Display -->
-        <div id="product-display" class="info-box" style="display: none;"></div>
+        <!-- Product Selection Dropdown -->
+        <div id="product-display" class="form-group" style="display: none;">
+          <label for="product-selector" data-i18n="selectProduct">Select Product</label>
+          <select id="product-selector" required>
+            <option value="" data-i18n="selectProductPlaceholder">-- Select a product --</option>
+          </select>
+          <div id="selected-product-info" style="margin-top: 8px; padding: 8px; background: #f0f8ff; border-radius: 4px; display: none;">
+            <small><span data-i18n="selectedProduct">Selected Product:</span> <strong id="selected-product-name"></strong></small>
+          </div>
+        </div>
         <!-- Template Selection -->
         <div class="form-group">
           <label data-i18n="selectTemplate">Please select at least one template.</label>
@@ -282,7 +295,7 @@
             <button id="both-bad" class="btn btn-danger" data-i18n="bothBad">Both bad</button>
           </div>
           <!-- ADDED: AI learning indicator -->
-          <div id="learning-indicator" class="hidden" style="text-align:center; margin-top:8px; font-size:0.9em; color:#007bff;">
+          <div id="learning-indicator" class="hidden" style="text-align:center; margin-top:8px; font-size:0.9em; color:#007bff;" data-i18n="aiLearning">
             AI learning from your taste…
           </div>
         </div>
@@ -293,6 +306,31 @@
         <h2 data-i18n="pastRecords">Past Generation Records</h2>
         <div id="records-list" class="grid"></div>
         <div id="records-msg" class="message" style="display: none;"></div>
+      </div>
+
+      <!-- Payment Page -->
+      <div id="payment-page" class="controls hidden">
+        <h2 data-i18n="addCredits">Purchase Credits</h2>
+        <div style="max-width: 600px; margin: 0 auto;">
+          <div style="background: #f0f8ff; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+            <h3 data-i18n="creditPackages">Credit Packages</h3>
+            <p data-i18n="creditsInfo" style="color: #666; margin: 10px 0;">Each generation uses 2 credits. Select a package below:</p>
+          </div>
+
+          <div id="payment-options" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px;">
+            <!-- Payment options will be generated here -->
+          </div>
+
+          <div id="payment-summary" style="background: #fff; border: 1px solid #ddd; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: none;">
+            <h3 data-i18n="orderSummary">Order Summary</h3>
+            <p><strong data-i18n="package">Package</strong>: <span id="summary-package"></span></p>
+            <p><strong data-i18n="price">Price</strong>: <span id="summary-price" style="font-size: 20px; color: #007bff; font-weight: bold;"></span> <span data-i18n="hkd">HKD</span></p>
+            <button id="checkout-btn" class="btn btn-primary" style="width: 100%; margin-top: 15px;" data-i18n="proceedToPayment">Proceed to Payment</button>
+            <button onclick="cancelPayment()" class="btn btn-secondary" style="width: 100%; margin-top: 10px;" data-i18n="cancel">Cancel</button>
+          </div>
+
+          <div id="payment-msg" class="message" style="display: none;"></div>
+        </div>
       </div>
 
       <!-- Create Account Page (Master Only) -->
@@ -345,10 +383,24 @@
                       data-i18n="addValueBtn">Add Value</button>
             </div>
           </div>
+          <!-- Multiple Products Section -->
           <div class="form-group">
-            <label for="industry-product" data-i18n="productNameLabel">Product Name*</label>
-            <input id="industry-product" type="text" required
-                   data-i18n-ph="productName" placeholder="Enter product name (e.g., lip gloss, phone)">
+            <label data-i18n="productNameLabel">Product Names* (Add multiple products)</label>
+            <div id="products-container" style="margin-bottom: 15px;">
+              <!-- First product input will be added here -->
+              <div class="product-group" data-product-id="1" style="margin-bottom: 15px; padding: 10px; background: #f9f9f9; border-radius: 6px; border-left: 3px solid #667eea;">
+                <div class="form-group">
+                  <label for="product-1" data-i18n="product">Product 1</label>
+                  <div style="display: flex; gap: 10px;">
+                    <input id="product-1" type="text" required placeholder="Enter product name" style="flex: 1;">
+                  </div>
+                </div>
+              </div>
+            </div>
+            <button type="button" class="btn btn-add-product" 
+                    id="add-product-btn"
+                    style="margin-bottom: 15px;"
+                    data-i18n="addProduct">+ Add Product</button>
           </div>
           <button type="button" id="add-spec-btn" class="btn btn-add-spec"
                   data-i18n="addSpecification">Add Specification</button>
@@ -364,19 +416,183 @@
       </div>
 
       <!-- Client Management Section (Master Only) -->
-      <section id="client-management-section" class="page-section" style="display: none;">
-        <!-- ... (unchanged) ... -->
+      <section id="client-management-section" class="page-section hidden" style="display: none;">
+        <div class="client-management-container">
+          <!-- Filters Section -->
+          <div class="filters-section">
+            <div class="search-bar">
+              <input type="text" id="search-client" placeholder="Search by name or email..." data-i18n-ph="searchClient">
+              <button id="search-btn" class="btn btn-primary" data-i18n="search">Search</button>
+              <button id="reset-filters-btn" class="btn btn-secondary" data-i18n="reset">Reset</button>
+            </div>
+            <div class="filters">
+              <select id="filter-industry">
+                <option value="" data-i18n="allIndustries">All Industries</option>
+              </select>
+              <select id="filter-template">
+                <option value="" data-i18n="allTemplates">All Templates</option>
+              </select>
+              <select id="filter-status">
+                <option value="" data-i18n="allStatus">All Status</option>
+                <option value="active" data-i18n="active">Active</option>
+                <option value="locked" data-i18n="locked">Locked</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Clients Table -->
+          <div class="clients-table-section">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th data-i18n="name">Name</th>
+                  <th data-i18n="emailLabel">Email</th>
+                  <th data-i18n="industry">Industry</th>
+                  <th data-i18n="template">Template</th>
+                  <th data-i18n="credits">Credits</th>
+                  <th data-i18n="status">Status</th>
+                  <th data-i18n="lastActive">Last Active</th>
+                  <th data-i18n="actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="clients-table-body">
+                <tr><td colspan="8" style="text-align: center; padding: 20px;" data-i18n="loadingClients">Loading...</td></tr>
+              </tbody>
+            </table>
+            <div id="no-results" class="no-results" style="display: none;" data-i18n="noClientsFound">No clients found</div>
+          </div>
+
+          <!-- Pagination -->
+          <div class="pagination-section">
+            <button id="prev-page" class="btn btn-secondary" data-i18n="previous">Previous</button>
+            <span id="page-info">Page 1 of 1</span>
+            <button id="next-page" class="btn btn-secondary" data-i18n="next">Next</button>
+          </div>
+
+          <div id="client-status" style="margin-top: 15px;"></div>
+        </div>
       </section>
 
       <!-- Client Details Modal -->
       <div id="client-modal" class="modal" style="display: none;">
-        <!-- ... (unchanged) ... -->
+        <div class="modal-content">
+          <span class="close">&times;</span>
+          <h2 data-i18n="clientDetails">Client Details</h2>
+          
+          <div class="modal-body">
+            <!-- Client Info Section -->
+            <section>
+              <h3 data-i18n="accountInformation">Account Information</h3>
+              <div class="info-grid">
+                <div class="info-item">
+                  <label data-i18n="name">Name</label>
+                  <span id="modal-client-name">N/A</span>
+                </div>
+                <div class="info-item">
+                  <label data-i18n="emailLabel">Email</label>
+                  <span id="modal-client-email">N/A</span>
+                </div>
+                <div class="info-item">
+                  <label data-i18n="industry">Industry</label>
+                  <span id="modal-client-industry">N/A</span>
+                </div>
+                <div class="info-item">
+                  <label data-i18n="created">Created</label>
+                  <span id="modal-client-created">N/A</span>
+                </div>
+                <div class="info-item">
+                  <label data-i18n="lastActive">Last Active</label>
+                  <span id="modal-client-lastactive">N/A</span>
+                </div>
+                <div class="info-item">
+                  <label data-i18n="status">Status</label>
+                  <span id="modal-client-status">Active</span>
+                </div>
+              </div>
+            </section>
+
+            <!-- Template Settings -->
+            <section>
+              <h3 data-i18n="templateSettings">Template Settings</h3>
+              <div class="template-controls">
+                <div class="form-group">
+                  <label for="modal-template-select" data-i18n="assignedTemplate">Current Template</label>
+                  <select id="modal-template-select">
+                    <option value="" data-i18n="noneValue">None</option>
+                  </select>
+                  <button id="update-template-btn" class="btn btn-primary" data-i18n="updateTemplate">Update Template</button>
+                </div>
+              </div>
+            </section>
+
+            <!-- Credit Management -->
+            <section>
+              <h3 data-i18n="creditManagement">Credit Management</h3>
+              <div class="credit-controls">
+                <div class="current-balance">
+                  <span data-i18n="currentBalance">Balance</span>: <span class="credit-amount" id="modal-credit-balance">0</span> <span data-i18n="credits">credits</span>
+                </div>
+                <div class="credit-actions">
+                  <input type="number" id="credit-adjustment" placeholder="Amount" min="1" data-i18n-ph="creditAmount">
+                  <button id="add-credits-btn" class="btn btn-success" data-i18n="addCredits">Add Credits</button>
+                  <button id="deduct-credits-btn" class="btn btn-warning" data-i18n="deductCredits">Deduct Credits</button>
+                  <button id="reset-credits-btn" class="btn btn-secondary" data-i18n="reset">Reset</button>
+                </div>
+              </div>
+            </section>
+
+            <!-- Generation History -->
+            <section>
+              <h3 data-i18n="generationHistory">Generation History</h3>
+              <div class="history-stats">
+                <div class="stat-item">
+                  <label data-i18n="totalGenerations">Total</label>
+                  <span id="total-generations">0</span>
+                </div>
+                <div class="stat-item">
+                  <label data-i18n="thisMonth">This Month</label>
+                  <span id="month-generations">0</span>
+                </div>
+                <div class="stat-item">
+                  <label data-i18n="creditsUsed">Credits Used</label>
+                  <span id="credits-used">0</span>
+                </div>
+              </div>
+              <table class="history-table data-table">
+                <thead>
+                  <tr>
+                    <th data-i18n="date">Date</th>
+                    <th data-i18n="prompt">Prompt</th>
+                    <th data-i18n="template">Template</th>
+                    <th data-i18n="credits">Credits</th>
+                    <th data-i18n="status">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="history-table-body">
+                  <tr><td colspan="5" style="text-align: center;" data-i18n="noHistory">No history</td></tr>
+                </tbody>
+              </table>
+            </section>
+
+            <!-- Account Actions -->
+            <section>
+              <h3 data-i18n="accountManagement">Account Management</h3>
+              <div class="action-buttons">
+                <button id="toggle-lock-btn" class="btn btn-warning" data-i18n="lockAccount">Lock Account</button>
+                <button id="reset-password-btn" class="btn btn-secondary" data-i18n="resetPassword">Reset Password</button>
+                <button id="delete-account-btn" class="btn btn-danger" data-i18n="deleteAccount">Delete Account</button>
+              </div>
+            </section>
+          </div>
+
+          <div id="modal-message" class="message" style="display: none; margin-top: 15px;"></div>
+        </div>
       </div>
 
       <!-- Product Warning -->
       <div id="product-warning" class="product-warning">
         <strong data-i18n="warningProduct">Warning: Product name not set.</strong>
-        <a href="#" onclick="showPage('account-page'); return false;" data-i18n="updateNow">Update now</a>
+        <a href="setup.html" data-i18n="updateNow">Update now</a>
       </div>
 
       <!-- MASTER: TEMPLATE CREATION PAGE -->
@@ -414,12 +630,15 @@
   <script src="js/utils/sanitizer.js"></script>
   <script src="js/utils/validation.js"></script>
   <script src="js/utils/firebase.js"></script>
+  <script src="js/utils/translator.js"></script>
+  <script src="js/utils/product-translator.js"></script>
 
   <!-- Feature Modules -->
   <script src="js/features/auth/auth.js"></script>
   <script src="js/features/auth/password.js"></script>
   <script src="js/features/auth/registration.js"></script>
   <script src="js/features/account/profile.js"></script>
+  <script src="js/features/payment/payment.js"></script>
   <script src="js/features/generation/pollinations.js"></script>
   <script src="js/features/generation/stability.js"></script>
   <script src="js/features/generation/renderer.js"></script>
@@ -428,6 +647,10 @@
   <script src="js/features/records/history.js"></script>
   <script src="js/features/admin/client-management.js"></script>
   <script src="js/features/admin/industry-codes.js"></script>
+
+  <!-- Admin Utilities (for testing/management) -->
+  <script src="admin-utils.js"></script>
+  <script src="migration-utils.js"></script>
 
   <!-- Main Entry Point -->
   <script src="js/core/main.js"></script>

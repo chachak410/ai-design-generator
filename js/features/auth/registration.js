@@ -83,44 +83,118 @@
 
     try {
       UI.showMessage('register-msg-step3', 'Creating account...', 'info');
+      console.log('[REGISTRATION] Step 1: Starting registration for email:', this.temp.email);
 
-      const result = await AppState.auth.createUserWithEmailAndPassword(this.temp.email, password);
-      const user = result.user;
+      // Step 1: Create Firebase Auth account
+      console.log('[REGISTRATION] Step 2: Creating Firebase Auth account...');
+      console.log('[REGISTRATION] - AppState.auth available:', !!AppState.auth);
+      console.log('[REGISTRATION] - Firebase app initialized:', !!firebase.apps.length);
+      console.log('[REGISTRATION] - Email to register:', this.temp.email);
+      
+      let result;
+      let user;
+      try {
+        console.log('[REGISTRATION] Calling createUserWithEmailAndPassword...');
+        result = await AppState.auth.createUserWithEmailAndPassword(this.temp.email, password);
+        user = result.user;
+        console.log('[REGISTRATION] ✓ createUserWithEmailAndPassword returned successfully');
+      } catch (createErr) {
+        console.error('[REGISTRATION] ✗ createUserWithEmailAndPassword failed:', createErr.code, createErr.message);
+        throw createErr;
+      }
+      
+      console.log('[REGISTRATION] ✓ Firebase Auth account created. UID:', user.uid);
+      console.log('[REGISTRATION] - Email:', user.email);
+      console.log('[REGISTRATION] - Email verified:', user.emailVerified);
+      console.log('[REGISTRATION] - Current auth state:', AppState.auth.currentUser?.email);
 
+      // Step 2: Update user profile
+      console.log('[REGISTRATION] Step 3: Updating user profile...');
       await user.updateProfile({ displayName: name });
+      console.log('[REGISTRATION] ✓ User profile updated');
 
+      // Step 3: Get industry code data
+      console.log('[REGISTRATION] Step 4: Fetching industry code data...');
       const codeDoc = await AppState.db.collection('industryCodes').doc(this.temp.industryCode).get();
       const codeData = codeDoc.data();
+      console.log('[REGISTRATION] ✓ Industry code data fetched:', codeData);
 
-      await AppState.db.collection('users').doc(user.uid).set({
+      // Step 4: Create Firestore user document
+      console.log('[REGISTRATION] Step 5: Creating Firestore user document...');
+      const userData = {
         email: this.temp.email,
         name: name,
         role: 'client',
         industryCode: this.temp.industryCode,
         industryName: codeData.industryName || 'Default Industry',
         template: codeData.specifications?.style?.[0] || 'modern',
+        assignedTemplate: codeData.specifications?.style?.[0] || 'modern',
         specifications: codeData.specifications || {},
+        // Store products as comma-separated string (master can set multiple products)
         productName: codeData.productName || '',
+        // Store allowed products (from master account) as array
+        allowedProducts: Array.isArray(codeData.productName) 
+          ? codeData.productName 
+          : (codeData.productName ? [codeData.productName] : []),
+        questionnaireCompleted: false,
+        credits: 20,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
+      };
+      console.log('[REGISTRATION] User data to save:', userData);
+      
+      await AppState.db.collection('users').doc(user.uid).set(userData);
+      console.log('[REGISTRATION] ✓ Firestore user document created');
 
+      // CRITICAL: Verify that user can still authenticate after creation
+      console.log('[REGISTRATION] Step 5.5: Verifying Firebase Auth account...');
+      try {
+        // Try to get current user immediately
+        const currentUser = AppState.auth.currentUser;
+        console.log('[REGISTRATION] Current user after creation:', currentUser?.email);
+        if (!currentUser || currentUser.email !== this.temp.email) {
+          console.warn('[REGISTRATION] ⚠️ Current user does not match registered email!');
+        }
+      } catch (verifyErr) {
+        console.warn('[REGISTRATION] ⚠️ Error verifying auth state:', verifyErr.message);
+      }
+
+      // Step 5: Mark industry code as used
+      console.log('[REGISTRATION] Step 6: Marking industry code as used...');
       await AppState.db.collection('industryCodes').doc(this.temp.industryCode).update({
         used: true,
         usedBy: user.uid,
         usedAt: firebase.firestore.FieldValue.serverTimestamp()
       });
+      console.log('[REGISTRATION] ✓ Industry code marked as used');
 
       UI.showMessage('register-msg-step3', ' Account created successfully!', 'success');
+      console.log('[REGISTRATION] ✓✓✓ Registration complete! Registered email:', this.temp.email, 'UID:', user.uid);
 
       this.temp = { email: null, industryCode: null, verificationCode: null };
 
+      // 等待 1.5 秒后跳转到 setup.html
+      setTimeout(() => {
+        window.location.href = 'setup.html';
+      }, 1500);
+
     } catch (err) {
       console.error(' Registration error:', err);
+      console.error('[REGISTRATION] Error code:', err.code);
+      console.error('[REGISTRATION] Error message:', err.message);
+      console.error('[REGISTRATION] Full error:', err);
+      
       let errorMessage = 'Registration failed: ' + err.message;
       if (err.code === 'auth/email-already-in-use') {
         errorMessage = 'An account with this email already exists.';
+      } else if (err.code === 'auth/weak-password') {
+        errorMessage = 'Password is too weak. Please use a stronger password.';
+      } else if (err.code === 'auth/invalid-email') {
+        errorMessage = 'Invalid email address.';
       }
       UI.showMessage('register-msg-step3', errorMessage, 'error');
     }
   }
 };
+
+// Export to global scope
+window.Registration = Registration;
