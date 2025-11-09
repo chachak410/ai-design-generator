@@ -5,7 +5,7 @@
 window.AppConfig = {
   firebase: {
     apiKey: "AIzaSyC0P-rmy6ZiKCBnivZQBahKWaPcqg4nDnU",
-    authDomain: "image-generator-c51e2.firebaseapp.com",
+    authDomain: "image-generator-c51e2.firebaseapp.com", // ✅ Keep this
     projectId: "image-generator-c51e2",
     storageBucket: "image-generator-c51e2.firebasestorage.app",
     messagingSenderId: "222706847155",
