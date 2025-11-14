@@ -19,18 +19,20 @@
       const isMaster = AppState.userRole === 'master' || AppState.userRole === 'admin';
       
       if (accountInfo) {
-        let html = `
-          <div class="user-info-section">
-            <h3 data-i18n="userInformation">${window.i18n?.t('userInformation') || 'User Information'}</h3>
-            <p><strong data-i18n="name">${window.i18n?.t('name') || 'Name'}</strong>: <span id="display-name">${data.name || window.i18n?.t('notSet') || 'Not set'}</span></p>
-            <p><strong data-i18n="emailLabel">${window.i18n?.t('emailLabel') || 'Email'}</strong>: ${AppState.currentUser.email}</p>
-            <p><strong data-i18n="industry">${window.i18n?.t('industry') || 'Industry'}</strong>: ${data.industryName || window.i18n?.t('notSpecified2') || 'Not specified'} (${window.i18n?.t('codeColon') || 'Code'}: ${data.industryCode || 'N/A'})</p>
-            <p><strong data-i18n="template">${window.i18n?.t('template') || 'Template'}</strong>: ${data.template || window.i18n?.t('noneValue') || 'None'}</p>
-            <p><strong data-i18n="productName">${window.i18n?.t('productName') || 'Product Name'}</strong>: <span id="display-product">${data.productName || window.i18n?.t('notSet') || 'Not set'}</span></p>
-            <p><strong data-i18n="role">${window.i18n?.t('role') || 'Role'}</strong>: ${AppState.userRole || window.i18n?.t('client') || 'client'}</p>
-            <button id="edit-account-btn" class="btn" data-i18n="editProfile" style="margin-top: 10px;" data-i18n="editProfile">Edit Profile</button>
+        let userInfoHtml = `
+          <div class="user-info-section" style="padding: 12px;">
+            <h3 data-i18n="userInformation" style="margin: 0 0 12px 0; color: #0052b3; font-size: 16px; font-weight: 700;">${window.i18n?.t('userInformation') || 'User Information'}</h3>
+            <p style="margin: 8px 0;"><strong data-i18n="name">${window.i18n?.t('name') || 'Name'}</strong>: <span id="display-name">${data.name || window.i18n?.t('notSet') || 'Not set'}</span></p>
+            <p style="margin: 8px 0;"><strong data-i18n="emailLabel">${window.i18n?.t('emailLabel') || 'Email'}</strong>: ${AppState.currentUser.email}</p>
+            <p style="margin: 8px 0;"><strong data-i18n="industry">${window.i18n?.t('industry') || 'Industry'}</strong>: ${data.industryName || window.i18n?.t('notSpecified2') || 'Not specified'} (${window.i18n?.t('codeColon') || 'Code'}: ${data.industryCode || 'N/A'})</p>
+            <p style="margin: 8px 0;"><strong data-i18n="template">${window.i18n?.t('template') || 'Template'}</strong>: ${data.template || window.i18n?.t('noneValue') || 'None'}</p>
+            <p style="margin: 8px 0;"><strong data-i18n="productName">${window.i18n?.t('productName') || 'Product Name'}</strong>: <span id="display-product">${data.productName || window.i18n?.t('notSet') || 'Not set'}</span></p>
+            <p style="margin: 8px 0;"><strong data-i18n="role">${window.i18n?.t('role') || 'Role'}</strong>: ${AppState.userRole || window.i18n?.t('client') || 'client'}</p>
+            <button id="edit-account-btn" class="btn" data-i18n="editProfile" style="margin-top: 12px; padding: 8px 14px; font-size: 13px; font-weight: 600;">Edit Profile</button>
           </div>
         `;
+
+        let html = userInfoHtml;
 
         // Helper function to get translated label
         const getLabel = (key) => {
@@ -245,7 +247,105 @@
           `;
         }
 
-        accountInfo.innerHTML = html;
+        // If this is a client account, wrap user info and support in two-column layout
+        if (AppState.userRole === 'client') {
+          // Create support section HTML
+          const supportHtml = `
+            <div id="support-request-section" style="flex: 1; min-width: 320px; padding: 16px; background: #f7fbff; border: 1px solid #e0e8ff; border-radius: 10px; display: flex; flex-direction: column;">
+              <h3 style="margin: 0 0 16px 0; color: #0052b3; font-size: 16px; font-weight: 700;" data-i18n="supportRequests">${window.i18n?.t('supportRequests') || 'Support Requests'}</h3>
+              
+              <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;">
+                <label style="color: #333; font-weight: 500; font-size: 13px;" data-i18n="requestType">${window.i18n?.t('requestType') || 'Request Type'}</label>
+                <select id="support-category" style="padding: 10px; border: 1px solid #ccc; border-radius: 6px; background: #fff; font-size: 14px; color: #333;">
+                  <option value="" disabled selected data-i18n="chooseRequestType">${window.i18n?.t('chooseRequestType') || 'Choose request type'}</option>
+                  <option value="technical" data-i18n="technicalIssues">${window.i18n?.t('technicalIssues') || 'Technical Issues'}</option>
+                  <option value="product" data-i18n="productChanges">${window.i18n?.t('productChanges') || 'Product Changes'}</option>
+                  <option value="template" data-i18n="templateNotifications">${window.i18n?.t('templateNotifications') || 'Template Notifications'}</option>
+                  <option value="other" data-i18n="other">${window.i18n?.t('other') || 'Other'}</option>
+                </select>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;">
+                <label style="color: #333; font-weight: 500; font-size: 13px;" data-i18n="describeRequest">${window.i18n?.t('describeRequest') || 'Describe Your Request'}</label>
+                <textarea id="support-message" placeholder="${window.i18n?.t('describeIssue') || 'Type your request details here...'}" style="padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 13px; height: 100px; font-family: inherit; resize: vertical;"></textarea>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px;">
+                <button id="support-submit-btn" class="btn btn-primary" style="padding: 10px 12px; font-size: 13px; font-weight: 600; border-radius: 6px;" disabled data-i18n="submit">${window.i18n?.t('submit') || 'Submit'}</button>
+                <button id="support-cancel-btn" class="btn btn-secondary" style="padding: 10px 12px; font-size: 13px; font-weight: 600; border-radius: 6px;" data-i18n="cancel">${window.i18n?.t('cancel') || 'Cancel'}</button>
+              </div>
+
+              <button id="see-past-submissions-btn" class="btn" style="padding: 10px 12px; font-size: 13px; font-weight: 600; background: #e8f0ff; color: #0052b3; border: 1px solid #b3d9ff; border-radius: 6px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#d9e5ff'" onmouseout="this.style.background='#e8f0ff'" data-i18n="seePastSubmissions">${window.i18n?.t('seePastSubmissions') || 'See Past Submissions'}</button>
+
+              <div id="support-pending-list" style="margin-top: 16px;"></div>
+              <div id="support-msg" class="message" style="display: none; margin-top: 12px;"></div>
+            </div>
+          `;
+
+          // Wrap user info (with questionnaire) and support in two-column container
+          // The support column goes on the right
+          const containerHtml = `<div>
+            <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 0;">
+              <div style="flex: 1; min-width: 280px; border: 1px solid #e0e8ff; border-radius: 10px; background: #f7fbff;">
+                ${userInfoHtml}
+              </div>
+              ${supportHtml}
+            </div>
+            ${html.substring(html.indexOf('<hr'))}
+          </div>`;
+          
+          accountInfo.innerHTML = containerHtml;
+
+        } else {
+          // For non-client accounts, just insert the main HTML (with questionnaire)
+          accountInfo.innerHTML = html;
+        }
+
+        // Attach support handlers (only for client)
+        if (AppState.userRole === 'client') {
+          document.getElementById('support-submit-btn').onclick = async () => {
+            const category = document.getElementById('support-category')?.value || '';
+            const message = document.getElementById('support-message')?.value || '';
+            if (!category) {
+              UI.showMessage('support-msg', 'Please choose a request type first.', 'error');
+              return;
+            }
+            await Profile.submitSupportRequest(category, message);
+          };
+          document.getElementById('support-cancel-btn').onclick = () => {
+            document.getElementById('support-message').value = '';
+            document.getElementById('support-category').selectedIndex = 0;
+            UI.hideMessage('support-msg');
+          };
+          document.getElementById('see-past-submissions-btn').onclick = () => {
+            // Open the past submissions panel from the account page only
+            Profile.openSupportRecords();
+          };
+
+          // Initially hide message textarea until user chooses a type
+          const msgEl = document.getElementById('support-message');
+          if (msgEl) {
+            msgEl.style.display = 'none';
+          }
+
+          const categoryEl = document.getElementById('support-category');
+          const submitBtn = document.getElementById('support-submit-btn');
+          if (categoryEl) {
+            categoryEl.onchange = () => {
+              // show message textarea after a type is selected and enable submit
+              if (categoryEl.value) {
+                if (msgEl) msgEl.style.display = 'block';
+                if (submitBtn) submitBtn.disabled = false;
+              } else {
+                if (msgEl) msgEl.style.display = 'none';
+                if (submitBtn) submitBtn.disabled = true;
+              }
+            };
+          }
+
+          // Load pending requests
+          Profile.loadSupportRequests();
+        }
       }
 
       // Show credit section only for client accounts
@@ -265,13 +365,23 @@
         }
         
         creditSection.innerHTML = `
-          <div class="credit-section" style="background: #f0f8ff; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #007bff; display: flex; justify-content: space-between; align-items: center;">
-            <div>
-              <h3 style="margin-top: 0; margin-bottom: 5px;" data-i18n="creditManagement">${window.i18n?.t('creditManagement') || 'Credit Balance'}</h3>
-              <p style="font-size: 18px; margin: 10px 0;"><strong data-i18n="addCredits">${window.i18n?.t('addCredits') || 'Available Credits'}</strong>: <span style="color: #007bff; font-size: 24px; font-weight: bold;">${credits}</span> ${window.i18n?.t('noneValue') || 'images'}</p>
-              <p style="font-size: 14px; color: #666; margin: 5px 0;">${window.i18n?.t('creditsInfo') || 'Each generation uses 2 credits (max 10 generations)'}</p>
+          <div class="credit-section" style="background: linear-gradient(90deg, #f7fbff, #eef7ff); padding: 18px; border-radius: 10px; margin-top: 20px; border-left: 6px solid #007bff; display: flex; gap: 20px; align-items: center;">
+            <div style="flex: 1; min-width: 220px;">
+              <h3 style="margin: 0 0 6px 0; color: #666;" data-i18n="creditManagement">${window.i18n?.t('creditManagement') || 'Credit Balance'}</h3>
+              <div style="display:flex; align-items:baseline; gap:12px;">
+                <div style="background: #fff; padding: 10px 16px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.06);">
+                  <div style="font-size: 28px; font-weight: 700; color: #007bff;">${credits}</div>
+                  <div style="font-size: 12px; color: #666;">${window.i18n?.t('availableCredits') || 'Available Credits'}</div>
+                </div>
+                <div style="font-size: 14px; color: #666;">${window.i18n?.t('creditsInfo') || 'Each generation uses 2 credits'}</div>
+              </div>
             </div>
-            <button id="add-credit-btn" class="btn btn-primary" style="padding: 10px 20px; font-size: 14px; font-weight: 600; white-space: nowrap; margin-left: 20px; background-color: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; transition: all 0.3s; flex-shrink: 0;" onclick="goToPayment()" onmouseover="this.style.backgroundColor='#0056b3'; this.style.boxShadow='0 2px 8px rgba(0,86,179,0.3)'" onmouseout="this.style.backgroundColor='#007bff'; this.style.boxShadow='none'" data-i18n="addCredits">+ Add Credits</button>
+            <div style="display:flex; align-items:center; gap:12px;">
+              <button id="add-credit-btn" class="btn btn-primary" style="padding: 12px 22px; font-size: 16px; font-weight: 700; white-space: nowrap; background-color: #ffffff; color: #007bff; border: 1px solid #e6eefc; border-radius: 8px; cursor: pointer; transition: all 0.18s; display:flex; align-items:center; gap:10px;" onclick="goToPayment()" onmouseover="this.style.boxShadow='0 6px 18px rgba(0,86,179,0.06)';" onmouseout="this.style.boxShadow='none'" data-i18n="addCredits">
+                <span style="font-size:18px; color: #007bff;">+ ${window.i18n?.t('addCredits') || 'Add Credits'}</span>
+                <span style="background: #ffffff; padding:6px 10px; border-radius:6px; font-weight:700; color: #007bff; border: 1px solid rgba(0,123,255,0.08);">${credits}</span>
+              </button>
+            </div>
           </div>
         `;
         creditSection.style.display = 'block';
@@ -513,6 +623,196 @@
     } catch (err) {
       console.error('Error getting credits:', err);
       return 0;
+    }
+  },
+
+  // Submit a support request (saved under users/{uid}/supportRequests)
+  async submitSupportRequest(category = 'other', message = '') {
+    if (!AppState.currentUser) {
+      UI.showMessage('support-msg', 'Please sign in to submit a support request.', 'error');
+      return;
+    }
+
+    try {
+      UI.showMessage('support-msg', 'Submitting...', 'info');
+      const ref = await AppState.db.collection('users').doc(AppState.currentUser.uid).collection('supportRequests').add({
+        category: category,
+        message: message || '',
+        status: 'pending',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      UI.showMessage('support-msg', 'Request submitted. Our team will follow up.', 'success');
+      // Clear message input
+      const msgInput = document.getElementById('support-message');
+      if (msgInput) msgInput.value = '';
+
+      // Reload pending list
+      await this.loadSupportRequests();
+      return ref.id;
+    } catch (err) {
+      console.error('Error submitting support request:', err);
+      UI.showMessage('support-msg', 'Failed to submit request: ' + err.message, 'error');
+      return null;
+    }
+  },
+
+  // Load pending support requests for current user
+  async loadSupportRequests() {
+    const listEl = document.getElementById('support-pending-list');
+    if (!listEl) return;
+    listEl.innerHTML = '<div style="color:#666">Loading pending requests...</div>';
+
+    if (!AppState.currentUser) {
+      listEl.innerHTML = '<div class="message error">Please sign in to view requests.</div>';
+      return;
+    }
+
+    try {
+      const snapshot = await AppState.db.collection('users').doc(AppState.currentUser.uid).collection('supportRequests')
+        .where('status', '==', 'pending')
+        .orderBy('createdAt', 'desc')
+        .get();
+
+      if (snapshot.empty) {
+        listEl.innerHTML = '<div style="color:#666">No pending requests.</div>';
+        return;
+      }
+
+      const items = [];
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const created = data.createdAt && data.createdAt.toDate ? data.createdAt.toDate().toLocaleString() : '';
+        items.push(`
+          <div class="support-item" data-id="${doc.id}" style="padding:10px; border:1px solid #eef; border-radius:6px; margin-bottom:8px; background:#fbfcff; display:flex; justify-content:space-between; gap:12px;">
+            <div style="flex:1;">
+              <div style="font-weight:700; color:#333;">${(data.category || '').toString()}</div>
+              <div style="color:#555; margin-top:6px; white-space:pre-wrap;">${(data.message || '')}</div>
+              <div style="color:#888; font-size:12px; margin-top:6px;">${created}</div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <button class="btn btn-secondary support-cancel-btn" data-id="${doc.id}" style="padding:6px 10px;">${window.i18n?.t('cancel') || 'Cancel'}</button>
+            </div>
+          </div>
+        `);
+      });
+
+      listEl.innerHTML = items.join('\n');
+
+      // Attach cancel handlers
+      listEl.querySelectorAll('.support-cancel-btn').forEach(btn => {
+        btn.onclick = async () => {
+          const id = btn.getAttribute('data-id');
+          if (!id) return;
+          await Profile.cancelSupportRequest(id);
+        };
+      });
+
+    } catch (err) {
+      console.error('Error loading support requests:', err);
+      listEl.innerHTML = '<div class="message error">Failed to load requests: ' + err.message + '</div>';
+    }
+  },
+
+  // Cancel a pending support request (mark status as cancelled)
+  async cancelSupportRequest(requestId) {
+    if (!AppState.currentUser) return;
+    try {
+      await AppState.db.collection('users').doc(AppState.currentUser.uid).collection('supportRequests').doc(requestId).update({
+        status: 'cancelled',
+        cancelledAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      UI.showMessage('support-msg', 'Request cancelled.', 'info');
+      await this.loadSupportRequests();
+    } catch (err) {
+      console.error('Error cancelling support request:', err);
+      UI.showMessage('support-msg', 'Failed to cancel: ' + err.message, 'error');
+    }
+  },
+
+  // Open the support records page (only accessible from Account page)
+  openSupportRecords() {
+    const supportPage = document.getElementById('support-records-page');
+    const accountPage = document.getElementById('account-page');
+    if (supportPage && accountPage) {
+      accountPage.style.display = 'none';
+      accountPage.classList.add('hidden');
+      supportPage.classList.remove('hidden');
+      supportPage.style.display = 'block';
+      // Load records when opened
+      if (typeof this.loadSupportRecords === 'function') {
+        this.loadSupportRecords();
+      }
+      // wire back button
+      const backBtn = document.getElementById('support-back-btn');
+      if (backBtn) backBtn.onclick = () => { Profile.closeSupportRecords(); };
+    }
+  },
+
+  // Close support records and return to account page
+  closeSupportRecords() {
+    const supportPage = document.getElementById('support-records-page');
+    const accountPage = document.getElementById('account-page');
+    if (supportPage && accountPage) {
+      supportPage.style.display = 'none';
+      supportPage.classList.add('hidden');
+      accountPage.classList.remove('hidden');
+      accountPage.style.display = 'block';
+      // reload account info to refresh pending list
+      if (typeof this.loadAccountInfo === 'function') this.loadAccountInfo();
+    }
+  },
+
+  // Load all support requests (for past submissions page)
+  async loadSupportRecords() {
+    const listEl = document.getElementById('support-records-list');
+    const msgEl = document.getElementById('support-records-msg');
+    if (msgEl) msgEl.style.display = 'none';
+    if (!listEl) return;
+    listEl.innerHTML = '<div style="color:#666">Loading submissions...</div>';
+
+    if (!AppState.currentUser) {
+      listEl.innerHTML = '<div class="message error">Please sign in to view submissions.</div>';
+      return;
+    }
+
+    try {
+      const snapshot = await AppState.db.collection('users').doc(AppState.currentUser.uid).collection('supportRequests')
+        .orderBy('createdAt', 'desc')
+        .get();
+
+      if (snapshot.empty) {
+        listEl.innerHTML = '<div style="color:#666">No submissions found.</div>';
+        return;
+      }
+
+      const items = [];
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const created = data.createdAt && data.createdAt.toDate ? data.createdAt.toDate().toLocaleString() : '';
+        const status = (data.status || 'unknown');
+        const response = data.response || data.masterResponse || '';
+        items.push(`
+          <div class="support-record" style="padding:10px; border:1px solid #eee; border-radius:6px; margin-bottom:8px; background:#fff;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+              <div style="flex:1;">
+                <div style="font-weight:700;">${(data.category || '')} <span style="font-weight:400; color:#888; font-size:12px; margin-left:8px;">${created}</span></div>
+                <div style="color:#555; margin-top:6px; white-space:pre-wrap;">${(data.message || '')}</div>
+                ${response ? `<div style="margin-top:8px; padding:8px; background:#f7f9ff; border-radius:6px; color:#333;"><strong>Response:</strong> <div style="margin-top:6px; white-space:pre-wrap;">${response}</div></div>` : ''}
+              </div>
+              <div style="min-width:110px; text-align:right;">
+                <div style="font-weight:700; color:#333; text-transform:capitalize;">${status}</div>
+              </div>
+            </div>
+          </div>
+        `);
+      });
+
+      listEl.innerHTML = items.join('\n');
+
+    } catch (err) {
+      console.error('Error loading support records:', err);
+      listEl.innerHTML = '<div class="message error">Failed to load submissions: ' + err.message + '</div>';
     }
   }
 };

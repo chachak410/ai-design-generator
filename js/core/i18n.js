@@ -229,7 +229,17 @@ const translations = {
     failedUpdateStatus: "Failed to update status.",
     selectProduct: "Select Product",
     selectedProduct: "Selected",
-    selectProductPlaceholder: "-- Select a product --"
+    selectProductPlaceholder: "-- Select a product --",
+    // Support Requests
+    supportRequests: "Support Requests",
+    requestType: "Request Type",
+    chooseRequestType: "Choose request type",
+    technicalIssues: "Technical Issues",
+    productChanges: "Product Changes",
+    templateNotifications: "Template Notifications",
+    describeRequest: "Describe Your Request",
+    describeIssue: "Type your request details here...",
+    seePastSubmissions: "See Past Submissions"
   },
   zh: {
     title: "AI 设计生成器",
@@ -460,7 +470,17 @@ const translations = {
     failedUpdateStatus: "更新状态失败。",
     selectProduct: "选择产品",
     selectedProduct: "已选择",
-    selectProductPlaceholder: "-- 选择产品 --"
+    selectProductPlaceholder: "-- 选择产品 --",
+    // Support Requests
+    supportRequests: "支持请求",
+    requestType: "请求类型",
+    chooseRequestType: "选择请求类型",
+    technicalIssues: "技术问题",
+    productChanges: "产品变更",
+    templateNotifications: "模板通知",
+    describeRequest: "描述您的请求",
+    describeIssue: "在此输入您的请求详情...",
+    seePastSubmissions: "查看过去的提交"
   },
   yue: {
     title: "AI 設計生成器",
@@ -691,7 +711,17 @@ const translations = {
     failedUpdateStatus: "更新狀態失敗。",
     selectProduct: "選擇產品",
     selectedProduct: "已選擇",
-    selectProductPlaceholder: "-- 選擇產品 --"
+    selectProductPlaceholder: "-- 選擇產品 --",
+    // Support Requests
+    supportRequests: "支援請求",
+    requestType: "請求類型",
+    chooseRequestType: "選擇請求類型",
+    technicalIssues: "技術問題",
+    productChanges: "產品變更",
+    templateNotifications: "模板通知",
+    describeRequest: "描述您的請求",
+    describeIssue: "喺呢到輸入您的請求詳情...",
+    seePastSubmissions: "查看過去的提交"
   }
 };
 

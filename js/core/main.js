@@ -151,8 +151,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             AppState.feedbackVector = userData.feedbackVector || null;
             AppState.badSelections = userData.badSelections || 0;
 
+            console.log('Deciding whether to show main app or redirect to setup...');
+
+            // If the client account is not fully setup, force them to complete the
+            // initial questionnaire/setup before they can use the app. Exception: allow
+            // the special email 'langtechgroup5@gmail.com' to bypass the redirect.
+            const exemptEmail = 'langtechgroup5@gmail.com';
+            const currentEmail = (AppState.currentUser && AppState.currentUser.email) || user.email || '';
+            if (AppState.clientNeedsSetup && currentEmail.toLowerCase() !== exemptEmail.toLowerCase()) {
+              console.log('[SETUP REDIRECT] Client needs to complete setup, redirecting to setup.html for', currentEmail);
+              // Use replace so the back button doesn't easily navigate back to the app without completing setup
+              window.location.replace('setup.html');
+              return; // Stop further initialization for now
+            }
+
+            // Setup is complete — show the main app UI
             console.log('Showing main app...');
-            // Only show main app if questionnaire is completed
             UI.showMainApp();
             UI.toggleMasterUI(AppState.userRole === 'master' || AppState.userRole === 'admin');
 
@@ -366,6 +380,8 @@ function showPage(pageId) {
           window.Profile.loadAccountInfo();
         }
         break;
+      // support-records-page is intentionally not part of the main page navigation
+      // It is shown only via Account page controls (Profile.openSupportRecords)
       case 'records-page':
         if (window.RecordManager && typeof window.RecordManager.loadRecords === 'function') {
           window.RecordManager.loadRecords();

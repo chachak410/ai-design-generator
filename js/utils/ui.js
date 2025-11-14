@@ -76,7 +76,7 @@
     }
   },
   showPage(pageId, userRole = null) {
-    const pages = ['setup-page', 'account-page', 'template-page', 'records-page', 'create-account-page'];
+  const pages = ['setup-page', 'account-page', 'template-page', 'records-page', 'create-account-page'];
     // Change this check:
     if (pageId === 'create-account-page' && userRole !== 'master' && userRole !== 'admin') {
       this.showMessage('template-status', 'Access denied: Only master/admin accounts can create industry codes.', 'error');

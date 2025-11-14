@@ -196,7 +196,7 @@
       <div class="nav-links">
         <a href="#" onclick="showPage('template-page'); return false;" data-i18n="templates" class="active">Templates</a>
         <a href="#" onclick="showPage('account-page'); return false;" data-i18n="account">Account</a>
-        <a href="#" onclick="showPage('records-page'); return false;" data-i18n="pastRecords">Past Records</a>
+  <a href="#" onclick="showPage('records-page'); return false;" data-i18n="pastRecords">Past Records</a>
         <a href="#" id="create-account-link" onclick="showPage('create-account-page'); return false;" data-i18n="createAccount" style="display: none;">Create Account</a>
         <a href="#" id="master-nav-link" onclick="showPage('client-management-section'); return false;" data-i18n="clientManagement" style="display: none;">Client Management</a>
         <a href="#" id="master-template-link" onclick="UI.showMasterTemplatePage()" data-i18n="templateCreation" style="display: none;">Template Creation</a>
@@ -306,6 +306,17 @@
         <h2 data-i18n="pastRecords">Past Generation Records</h2>
         <div id="records-list" class="grid"></div>
         <div id="records-msg" class="message" style="display: none;"></div>
+      </div>
+
+      <!-- Support / Past Submissions Page (opened only from Account page) -->
+      <div id="support-records-page" class="controls hidden" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+          <h2 data-i18n="supportRequests">Support Requests</h2>
+          <button id="support-back-btn" class="btn btn-secondary">&larr; Back to Account</button>
+        </div>
+        <p style="color:#666;">History of resolved or cancelled support requests and responses from the team.</p>
+        <div id="support-records-list" style="margin-top: 12px; display: grid; gap: 10px;"></div>
+        <div id="support-records-msg" class="message" style="display: none; margin-top: 12px;"></div>
       </div>
 
       <!-- Payment Page -->
@@ -649,8 +660,8 @@
   <script src="js/features/admin/industry-codes.js"></script>
 
   <!-- Admin Utilities (for testing/management) -->
-  <script src="admin-utils.js"></script>
-  <script src="migration-utils.js"></script>
+  <script src="js/utils/admin-utils.js"></script>
+  <script src="js/utils/migration-utils.js"></script>
 
   <!-- Main Entry Point -->
   <script src="js/core/main.js"></script>

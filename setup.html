@@ -7,7 +7,10 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
-  <script src="config.js"></script>
+  <script src="js/config/config.js"></script>
+  <!-- Load shared i18n & language helper so setup page can use the same language system as index.html -->
+  <script src="js/core/i18n.js"></script>
+  <script src="js/utils/validation.js"></script>
   <style>
     :root { --primary: #667eea; --light: #f8f9fa; }
     body { font-family: system-ui, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin:0; height:100vh; display:flex; align-items:center; justify-content:center; }
@@ -174,12 +177,13 @@
       console.log('Firebase initialized in setup.html');
     }
 
-    let step = 1;
-    const total = 3;
-    let setupProductCount = 1;
+  let step = 1;
+  const total = 3;
+  let setupProductCount = 1;
+  // Ensure setupLang is defined early so inline handlers can call setSetupLang safely
+  let setupLang = localStorage.getItem('setupLang') || 'yue';
 
-    // Language management (local but integrated with global i18n if available)
-    let setupLang = localStorage.getItem('setupLang') || 'yue';
+  // Language management (local but integrated with global i18n if available)
 
     function setSetupLang(lang) {
       setupLang = lang;
@@ -202,6 +206,11 @@
 
       // Update labels
       updateSetupLabels();
+      // Notify other parts of the app about language change so listeners can update
+      try {
+        const revMap = { en: 'en', yue: 'zh_TW', zh: 'zh_CN' };
+        window.dispatchEvent(new CustomEvent('languageChanged', { detail: { language: revMap[lang] || 'en' } }));
+      } catch (e) { /* ignore */ }
     }
 
     function updateSetupLabels() {
@@ -460,11 +469,6 @@
     }
 
     // No validation when moving between steps - only validate on final submit
-    function next() {
-      if(step<total) step++; update();
-    }
-
-    function prev() { if(step>1) step--; update(); }
 
     function addProductInput() {
       setupProductCount++;
@@ -760,6 +764,13 @@
     
     // Set active language button
     document.getElementById('lang-' + setupLang).classList.add('active');
+
+    // Ensure clicks are wired reliably (some browsers may not wire inline onclick if scripts run later).
+    try {
+      document.getElementById('lang-en')?.addEventListener('click', (e) => { e.preventDefault(); setSetupLang('en'); });
+      document.getElementById('lang-yue')?.addEventListener('click', (e) => { e.preventDefault(); setSetupLang('yue'); });
+      document.getElementById('lang-zh')?.addEventListener('click', (e) => { e.preventDefault(); setSetupLang('zh'); });
+    } catch (e) { console.warn('Failed to attach language button listeners', e); }
     
     // Setup product input handlers
     document.getElementById('add-product-btn')?.addEventListener('click', () => {
