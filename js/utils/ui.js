@@ -101,11 +101,22 @@
     }
   },
   toggleMasterUI(isMaster) {
-    // Change this check:
+    const masterEmail = 'langtechgroup5@gmail.com';
+    const currentEmail = (AppState.currentUser?.email || '').toLowerCase();
+    const isMasterAccount = currentEmail === masterEmail.toLowerCase();
+    
+    // Show create account link for master/admin
     if (isMaster || AppState.userRole === 'admin') {
       this.showElement('create-account-link');
     } else {
       this.hideElement('create-account-link');
+    }
+    
+    // Show support response link only for the master account email
+    if (isMasterAccount) {
+      this.showElement('master-support-link');
+    } else {
+      this.hideElement('master-support-link');
     }
   }
 };
