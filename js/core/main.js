@@ -356,7 +356,7 @@ function showPage(pageId) {
   console.log('showPage called with:', pageId);
   
   // Hide all pages
-  const pages = ['account-page', 'template-page', 'records-page', 'create-account-page', 'client-management-section', 'payment-page'];
+  const pages = ['account-page', 'template-page', 'records-page', 'create-account-page', 'client-management-section', 'payment-page', 'support-response-page'];
   pages.forEach(id => {
     const el = document.getElementById(id);
     if (el) {
@@ -401,6 +401,11 @@ function showPage(pageId) {
       case 'client-management-section':
         if (window.ClientManagement && typeof window.ClientManagement.init === 'function') {
           window.ClientManagement.init();
+        }
+        break;
+      case 'support-response-page':
+        if (window.SupportResponse && typeof window.SupportResponse.init === 'function') {
+          window.SupportResponse.init();
         }
         break;
     }

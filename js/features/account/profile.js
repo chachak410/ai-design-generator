@@ -671,7 +671,6 @@
     try {
       const snapshot = await AppState.db.collection('users').doc(AppState.currentUser.uid).collection('supportRequests')
         .where('status', '==', 'pending')
-        .orderBy('createdAt', 'desc')
         .get();
 
       if (snapshot.empty) {
@@ -680,7 +679,16 @@
       }
 
       const items = [];
-      snapshot.forEach(doc => {
+      const docs = snapshot.docs;
+      
+      // Sort by createdAt in memory (descending)
+      docs.sort((a, b) => {
+        const timeA = a.data().createdAt?.toMillis?.() || 0;
+        const timeB = b.data().createdAt?.toMillis?.() || 0;
+        return timeB - timeA;
+      });
+      
+      docs.forEach(doc => {
         const data = doc.data();
         const created = data.createdAt && data.createdAt.toDate ? data.createdAt.toDate().toLocaleString() : '';
         items.push(`
@@ -778,7 +786,6 @@
 
     try {
       const snapshot = await AppState.db.collection('users').doc(AppState.currentUser.uid).collection('supportRequests')
-        .orderBy('createdAt', 'desc')
         .get();
 
       if (snapshot.empty) {
@@ -787,7 +794,16 @@
       }
 
       const items = [];
-      snapshot.forEach(doc => {
+      const docs = snapshot.docs;
+      
+      // Sort by createdAt in memory (descending)
+      docs.sort((a, b) => {
+        const timeA = a.data().createdAt?.toMillis?.() || 0;
+        const timeB = b.data().createdAt?.toMillis?.() || 0;
+        return timeB - timeA;
+      });
+      
+      docs.forEach(doc => {
         const data = doc.data();
         const created = data.createdAt && data.createdAt.toDate ? data.createdAt.toDate().toLocaleString() : '';
         const status = (data.status || 'unknown');
