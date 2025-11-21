@@ -313,13 +313,88 @@ const ClientManagement = {
     if (!this.currentClientId) return;
     const c = this.allClients.find(x => x.id === this.currentClientId);
     if (!c?.email) return;
-    if (!confirm(`Send password reset to ${c.email}?`)) return;
+    if (!confirm(`Send a password reset email to ${c.email}? The client will receive an email to reset their password.`)) return;
     try {
-      await firebase.auth().sendPasswordResetEmail(c.email);
-      alert(window.i18n?.t('passwordResetSent') || 'Password reset email sent');
+      // Try to send a password reset email immediately (this uses Firebase Auth client SDK)
+      if (AppState && AppState.auth && typeof AppState.auth.sendPasswordResetEmail === 'function') {
+        await AppState.auth.sendPasswordResetEmail(c.email);
+        alert('Password reset email sent to client.');
+
+        // Record the action as a support note (DB if available, otherwise localStorage)
+        try {
+          const db = AppState.db;
+          if (db) {
+            await db.collection('users').doc(this.currentClientId).collection('supportRequests').add({
+              category: 'security',
+              message: `Master (${AppState.currentUser?.email || 'master'}) sent a password reset email to this account.`,
+              status: 'resolved',
+              createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+              type: 'admin'
+            });
+          } else {
+            // local fallback: push a local incident so master history shows the action
+            const key = 'local_security_incidents';
+            const list = JSON.parse(localStorage.getItem(key) || '[]');
+            list.push({
+              id: 'local-admin-' + Math.random().toString(36).slice(2,9),
+              email: c.email,
+              attempts: 0,
+              status: 'resolved',
+              category: 'security',
+              type: 'admin',
+              message: `Master (${AppState.currentUser?.email || 'master'}) sent a password reset email to this account.`,
+              clientId: this.currentClientId,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            });
+            localStorage.setItem(key, JSON.stringify(list));
+          }
+        } catch (logErr) {
+          console.warn('Failed to record reset action in DB/local:', logErr);
+        }
+      } else {
+        // If sendPasswordResetEmail isn't available, fallback to creating an adminAction for backend processing
+        const db = AppState.db;
+        if (db) {
+          await db.collection('users').doc(this.currentClientId).collection('adminActions').add({
+            action: 'resetPassword',
+            tempPassword: null,
+            status: 'pending',
+            initiatedBy: AppState.currentUser?.email || 'master',
+            initiatedByUid: AppState.currentUser?.uid || null,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          await db.collection('users').doc(this.currentClientId).collection('supportRequests').add({
+            category: 'security',
+            message: `Master (${AppState.currentUser?.email || 'master'}) requested a password reset for this account.`,
+            status: 'pending',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            type: 'admin'
+          });
+          alert('Admin reset request created. A backend admin process is required to actually change the Firebase Auth password.');
+        } else {
+          // everything is offline and we can't reach DB or Auth SDK — store a local admin action so master sees it
+          const key = 'local_security_incidents';
+          const list = JSON.parse(localStorage.getItem(key) || '[]');
+          list.push({
+            id: 'local-admin-' + Math.random().toString(36).slice(2,9),
+            email: c.email,
+            attempts: 0,
+            status: 'pending',
+            category: 'security',
+            type: 'admin',
+            message: `Master (${AppState.currentUser?.email || 'master'}) requested a password reset for this account (local).`,
+            clientId: this.currentClientId,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          });
+          localStorage.setItem(key, JSON.stringify(list));
+          alert('Local admin reset recorded. Master action pending (offline).');
+        }
+      }
     } catch (e) {
       console.error('resetPassword error', e);
-      alert(window.i18n?.t('failedSendReset') || 'Failed to send reset email.');
+      alert(window.i18n?.t('failedSendReset') || 'Failed to send password reset.');
     }
   },
 
@@ -341,6 +416,40 @@ const ClientManagement = {
         (window.i18n?.t('accountLocked') || 'Account locked') : 
         (window.i18n?.t('accountUnlocked') || 'Account unlocked');
       alert(successMsg);
+      // When unlocking reset failedAttempts; when locking log attempts
+      try {
+        const db2 = AppState.db || firebase.firestore();
+        const updates = {};
+        if (newStatus === 'active') {
+          updates.failedAttempts = 0;
+        } else if (newStatus === 'locked') {
+          updates.failedAttempts = 5;
+          updates.lockedAt = firebase.firestore.FieldValue.serverTimestamp();
+        }
+        if (Object.keys(updates).length) {
+          await db2.collection('users').doc(this.currentClientId).update(updates);
+        }
+
+        // Create a security incident for this lock/unlock action
+        try {
+          const incidentDb = AppState.db;
+          if (incidentDb) {
+            await incidentDb.collection('users').doc(this.currentClientId).collection('supportRequests').add({
+              category: 'security',
+              message: newStatus === 'locked'
+                ? `Master (${AppState.currentUser?.email || 'master'}) locked this account.`
+                : `Master (${AppState.currentUser?.email || 'master'}) unlocked this account.`,
+              status: 'resolved',
+              createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+              type: 'admin'
+            });
+          }
+        } catch (e3) {
+          console.warn('Failed to log lock/unlock incident:', e3);
+        }
+      } catch (e4) {
+        console.warn('Failed to update failedAttempts after lock/unlock:', e4);
+      }
       await this.loadClients();
       this.closeModal();
     } catch (e) {
