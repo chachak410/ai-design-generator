@@ -65,6 +65,7 @@ const SupportResponse = {
     byId('support-send-response-btn')?.addEventListener('click', () => this.sendResponse());
     byId('support-mark-resolved-btn')?.addEventListener('click', () => this.markAsResolved());
     byId('support-mark-rejected-btn')?.addEventListener('click', () => this.markAsRejected());
+    byId('support-unlock-btn')?.addEventListener('click', () => this.unlockAccount());
   },
 
   /**
@@ -141,6 +142,29 @@ const SupportResponse = {
         const timeB = b.createdAt?.toMillis?.() || 0;
         return timeB - timeA;
       });
+
+      // Also include any top-level public supportRequests (fallback from clients that couldn't write into their user doc)
+      try {
+        console.log('Attempting to read top-level supportRequests...');
+        const topSnap = await db.collection('supportRequests').get();
+        console.log(`Found ${topSnap.docs.length} top-level requests`);
+        topSnap.forEach((doc) => {
+          const data = doc.data() || {};
+          allRequests.push({
+            id: doc.id,
+            clientId: data.clientId || null,
+            clientName: data.name || data.email || 'Unknown',
+            clientEmail: data.email || 'Unknown',
+            category: data.category || 'other',
+            message: data.message || '',
+            status: data.status || 'pending',
+            createdAt: data.createdAt || null,
+            _publicFallback: true
+          });
+        });
+      } catch (e) {
+        console.warn('Could not read top-level supportRequests (may not exist or permission denied):', e);
+      }
 
       this.allRequests = allRequests;
       this.filteredRequests = [...allRequests];
@@ -366,11 +390,100 @@ const SupportResponse = {
         document.getElementById('modal-response-text').value = '';
       }
 
+      // Show unlock button for security requests / locked clients
+      try {
+        const unlockBtn = document.getElementById('support-unlock-btn');
+        if (unlockBtn) {
+          // show if client status is locked or the request category suggests security
+          const shouldShow = (clientData && (clientData.status === 'locked' || clientData.status === 'disabled')) || (requestData.category === 'security') || /lock/i.test(requestData.message || '');
+          unlockBtn.style.display = shouldShow ? 'inline-block' : 'none';
+        }
+      } catch (e) {
+        console.warn('Error toggling unlock button visibility', e);
+      }
+
       const modal = document.getElementById('support-request-modal');
       if (modal) modal.style.display = 'block';
     } catch (err) {
       console.error('Error opening request modal:', err);
       alert(`Error loading request: ${err.message}`);
+    }
+  },
+
+  /**
+   * Unlock client account (master action)
+   */
+  async unlockAccount() {
+    if (!this.currentRequestClientId || !this.currentRequestClientData) {
+      alert('Client information not loaded');
+      return;
+    }
+
+    const clientId = this.currentRequestClientId;
+    const clientEmail = this.currentRequestClientData.email;
+
+    if (!confirm(`Unlock account for ${clientEmail}?`)) return;
+
+    try {
+      const db = AppState.db;
+      if (!db) throw new Error('Database not available');
+
+      // Update user status and reset attempts
+      await db.collection('users').doc(clientId).update({
+        status: 'active',
+        failedAttempts: 0,
+        unlockedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      // Create adminAction so backend can re-enable Firebase Auth if required
+      try {
+        await db.collection('users').doc(clientId).collection('adminActions').add({
+          action: 'activate',
+          status: 'pending',
+          initiatedBy: AppState.currentUser?.email || 'master',
+          initiatedByUid: AppState.currentUser?.uid || null,
+          reason: 'manual-unlock-by-master',
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      } catch (aaErr) {
+        console.warn('Failed to create adminAction to activate account:', aaErr);
+      }
+
+      // Mark the support request as resolved with note about unlock
+      try {
+        if (this.currentRequestId) {
+          await db.collection('users').doc(clientId).collection('supportRequests').doc(this.currentRequestId).update({
+            status: 'resolved',
+            response: `Account unlocked by master (${AppState.currentUser?.email || 'master'})`,
+            resolvedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          });
+        }
+      } catch (reqErr) {
+        console.warn('Failed to update supportRequest status after unlock:', reqErr);
+      }
+
+      // Also clear any top-level securityIncidents for this email (best-effort)
+      try {
+        const secCol = db.collection('securityIncidents');
+        const secSnap = await secCol.where('email', '==', clientEmail).limit(10).get();
+        for (const sdoc of secSnap.docs) {
+          try {
+            await secCol.doc(sdoc.id).update({ status: 'resolved', resolvedAt: firebase.firestore.FieldValue.serverTimestamp() });
+          } catch (e) {
+            console.warn('Could not mark securityIncident resolved:', e);
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+
+      // Close modal and refresh list
+      alert(`Account ${clientEmail} unlocked (master). Client should be able to sign in again once server-side activation completes.`);
+      this.closeModal();
+      await this.loadAllRequests();
+    } catch (err) {
+      console.error('Error unlocking account:', err);
+      alert(`Error unlocking account: ${err.message}`);
     }
   },
 
