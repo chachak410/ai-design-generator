@@ -273,43 +273,23 @@
       const doc = snap.docs[0];
       const clientId = doc.id;
 
-      try {
-        await db.collection('users').doc(clientId).collection('supportRequests').add({
-          category: 'security',
-          message: window.i18n?.t ? window.i18n.t('unlockRequestMessage', { email }) : `Unlock request submitted by user (${email}). Please review and unlock if appropriate.`,
-          status: 'pending',
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-          type: 'client'
-        });
+      await db.collection('users').doc(clientId).collection('supportRequests').add({
+        category: 'security',
+        message: window.i18n?.t ? window.i18n.t('unlockRequestMessage', { email }) : `Unlock request submitted by user (${email}). Please review and unlock if appropriate.`,
+        status: 'pending',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        type: 'client'
+      });
 
-        await db.collection('users').doc(clientId).collection('adminActions').add({
-          action: 'unlockRequest',
-          status: 'pending',
-          initiatedBy: email,
-          initiatedByUid: AppState.currentUser?.uid || null,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
+      await db.collection('users').doc(clientId).collection('adminActions').add({
+        action: 'unlockRequest',
+        status: 'pending',
+        initiatedBy: email,
+        initiatedByUid: AppState.currentUser?.uid || null,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
 
-        alert(window.i18n?.t('unlock.requestSubmitted') || 'Unlock request submitted. The master account will be notified.');
-      } catch (writeErr) {
-        console.warn('Could not write to user subcollections (permissions?) - falling back to top-level supportRequests', writeErr);
-        // If permission denied for subcollection writes, write to a top-level collection that master can read
-        try {
-          await db.collection('supportRequests').add({
-            clientId: clientId || null,
-            email,
-            category: 'security',
-            message: window.i18n?.t ? window.i18n.t('unlockRequestMessage', { email }) : `Unlock request submitted by user (${email}). Please review and unlock if appropriate.`,
-            status: 'pending',
-            type: 'public',
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-          });
-          alert(window.i18n?.t('unlock.requestSubmitted') || 'Unlock request submitted. The master account will be notified.');
-        } catch (topErr) {
-          console.error('Failed to create top-level supportRequest fallback:', topErr);
-          alert((window.i18n?.t('unlock.requestFailed') || 'Failed to submit unlock request: ') + (topErr.message || topErr));
-        }
-      }
+      alert('Unlock request submitted. The master account will be notified.');
       // refresh notice to show pending state
       this.updateFailedAttemptNotice(email);
     } catch (err) {

@@ -1,8 +1,11 @@
 {
-  "name": "ai-design-generator-functions",
-  "version": "1.0.0",
-  "description": "Cloud Functions for AI Design Generator: process adminActions to enable/disable users",
-  "main": "index.js",
+  "name": "functions",
+  "description": "Cloud Functions for AI Design Generator admin actions",
+  "scripts": {
+    "lint": "eslint . || true",
+    "start": "firebase emulators:start --only functions,firestore,auth",
+    "deploy": "firebase deploy --only functions"
+  },
   "engines": {
     "node": "18"
   },
