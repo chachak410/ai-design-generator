@@ -202,6 +202,7 @@ const SupportResponse = {
     byId('support-send-response-btn')?.addEventListener('click', () => this.sendResponse());
     byId('support-mark-resolved-btn')?.addEventListener('click', () => this.markAsResolved());
     byId('support-mark-rejected-btn')?.addEventListener('click', () => this.markAsRejected());
+    byId('support-unlock-btn')?.addEventListener('click', () => this.unlockAccount());
   },
 
   /**
@@ -330,6 +331,29 @@ const SupportResponse = {
       };
 
       allRequests.sort((a, b) => getTime(b.createdAt) - getTime(a.createdAt));
+
+      // Also include any top-level public supportRequests (fallback from clients that couldn't write into their user doc)
+      try {
+        console.log('Attempting to read top-level supportRequests...');
+        const topSnap = await db.collection('supportRequests').get();
+        console.log(`Found ${topSnap.docs.length} top-level requests`);
+        topSnap.forEach((doc) => {
+          const data = doc.data() || {};
+          allRequests.push({
+            id: doc.id,
+            clientId: data.clientId || null,
+            clientName: data.name || data.email || 'Unknown',
+            clientEmail: data.email || 'Unknown',
+            category: data.category || 'other',
+            message: data.message || '',
+            status: data.status || 'pending',
+            createdAt: data.createdAt || null,
+            _publicFallback: true
+          });
+        });
+      } catch (e) {
+        console.warn('Could not read top-level supportRequests (may not exist or permission denied):', e);
+      }
 
       this.allRequests = allRequests;
       this.filteredRequests = [...allRequests];
@@ -595,6 +619,18 @@ const SupportResponse = {
         responseSection.style.display = 'block';
         resolvedSection.style.display = 'none';
         document.getElementById('modal-response-text').value = '';
+      }
+
+      // Show unlock button for security requests / locked clients
+      try {
+        const unlockBtn = document.getElementById('support-unlock-btn');
+        if (unlockBtn) {
+          // show if client status is locked or the request category suggests security
+          const shouldShow = (clientData && (clientData.status === 'locked' || clientData.status === 'disabled')) || (requestData.category === 'security') || /lock/i.test(requestData.message || '');
+          unlockBtn.style.display = shouldShow ? 'inline-block' : 'none';
+        }
+      } catch (e) {
+        console.warn('Error toggling unlock button visibility', e);
       }
 
       const modal = document.getElementById('support-request-modal');

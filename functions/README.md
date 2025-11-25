@@ -1,62 +1,41 @@
-This folder contains a minimal Firebase Cloud Function to process admin actions created by the frontend.
+# Cloud Functions for AI Design Generator
+
+This folder contains a simple Cloud Function that processes `adminActions` documents under `users/{uid}/adminActions/{aid}`.
 
 What it does
-- Listens for documents created at `users/{uid}/adminActions/{actionId}`.
-- Validates initiator against an allowlist of master UIDs (configured via functions config).
-- Performs privileged operations via the Admin SDK: `deactivate` (disable user), `activate` (enable user), and `resetPassword` (generates password reset link).
-- Marks the adminAction document `done` or `failed` and writes an audit entry under `users/{uid}/supportRequests`.
+- Listens for newly created adminActions
+- If `action === 'activate'`, calls Firebase Admin SDK to set `disabled: false` for that user
+- If `action === 'deactivate'` or `action === 'lock'`, sets `disabled: true`
+- Marks the `adminAction` document as `done` or `error`
+- Attempts to update the user's Firestore doc status (best-effort)
 
-Quick setup & deploy
-1. Ensure Firebase CLI is installed and you're logged in:
+How to deploy
+
+1. Install Firebase CLI and login:
 
 ```bash
 npm install -g firebase-tools
 firebase login
 ```
 
-2. Initialize functions (if you didn't earlier):
-
-```bash
-cd /Users/mazihan/Desktop/ai-design-generator
-firebase init functions
-# choose JavaScript, keep using existing folder if prompted
-```
-
-3. Install function deps:
+2. From this project root, initialize functions (if you haven't) and deploy:
 
 ```bash
 cd functions
 npm install
+# Optionally run emulator for local testing
+# firebase emulators:start --only functions,firestore
+
+# Deploy only the functions
+firebase deploy --only functions:processAdminActions
 ```
 
-4. Set master UID(s) so the function authorizes requests (replace with your master UID):
+Notes
+- Ensure your Firebase project has the proper billing/setup to run Cloud Functions.
+- The function uses the default service account in Cloud Functions environment.
+- For local testing you must set `GOOGLE_APPLICATION_CREDENTIALS` to a service-account key with appropriate permissions.
 
-```bash
-firebase functions:config:set admin.master_uids="MASTER_UID_1,MASTER_UID_2"
-```
+Security
+- The function requires Firestore & Auth admin privileges (provided by its service account).
+- Make sure Firestore rules still prevent unprivileged clients from changing arbitrary user documents.
 
-5. Test with emulators (recommended):
-
-```bash
-# from repo root
-firebase emulators:start --only firestore,auth,functions
-```
-
-Then create a document under `users/{uid}/adminActions` with `status: 'pending'` and `action: 'deactivate'` (use the emulator UI or a script) to trigger processing.
-
-6. Deploy to production:
-
-```bash
-# from repo root
-firebase deploy --only functions
-```
-
-Security notes
-- Use master UIDs rather than emails when possible. Get the master UID from the Firebase Console -> Authentication -> user details.
-- The function treats initiator 'system' as allowed (useful for automated system-created requests). If you need stricter checks, update the validation logic.
-- Avoid storing plaintext passwords — the function generates password reset links instead.
-
-If you want, I can also:
-- Add a second function to react to `securityIncidents` top-level docs,
-- Add automated tests or an emulator script to create test adminActions,
-- Help you run the emulator locally and perform a smoke test.
