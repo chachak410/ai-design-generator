@@ -268,6 +268,15 @@ const TemplateCreation = {
         this.removeCustomSpec(btn);
       }
       
+      // Add custom spec value button
+      if (target.matches('.btn-add-value') || target.closest('.btn-add-value')) {
+        const btn = target.matches('.btn-add-value') ? target : target.closest('.btn-add-value');
+        const specId = btn.dataset.specId;
+        if (specId) {
+          this.addCustomSpecValue(parseInt(specId, 10));
+        }
+      }
+      
       // Remove custom spec value button
       if (target.matches('.btn-remove-value') || target.closest('.btn-remove-value')) {
         const btn = target.matches('.btn-remove-value') ? target : target.closest('.btn-remove-value');
@@ -350,7 +359,7 @@ const TemplateCreation = {
     }
 
     this.customSpecCount++;
-    const specId = this.customSpecCount;
+    const specId = parseInt(this.customSpecCount, 10); // Ensure it's a number
     const specGroup = document.createElement('div');
     specGroup.className = 'custom-spec-group';
     specGroup.dataset.specId = specId;
@@ -368,11 +377,6 @@ const TemplateCreation = {
       </div>
     `;
     container.appendChild(specGroup);
-
-    // Add event listener for adding values
-    specGroup.querySelector('.btn-add-value').addEventListener('click', (e) => {
-      this.addCustomSpecValue(parseInt(e.target.dataset.specId));
-    });
   },
 
   /**
@@ -389,7 +393,11 @@ const TemplateCreation = {
    * Add a value to a custom specification
    */
   addCustomSpecValue(specId) {
-    const container = document.querySelector(`.custom-spec-values[data-spec-id="${specId}"]`);
+    // Safely parse and validate specId
+    const parsedId = parseInt(specId, 10);
+    if (isNaN(parsedId)) return;
+    
+    const container = document.querySelector(`.custom-spec-values[data-spec-id="${parsedId}"]`);
     if (!container) return;
 
     const values = container.querySelectorAll('.custom-spec-value-item');
