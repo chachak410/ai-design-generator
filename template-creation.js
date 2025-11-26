@@ -196,17 +196,17 @@ const TemplateCreation = {
             ${this.currentTemplates.length > 0 ? 
               this.currentTemplates.map(t => `
                 <div class="template-name-item">
-                  <input type="text" value="${t}" placeholder="Template name">
-                  <button class="btn-remove-template" onclick="TemplateCreation.removeTemplateName(this)">×</button>
+                  <input type="text" value="${this.escapeHtml(t)}" placeholder="Template name">
+                  <button class="btn-remove-template" data-action="remove-template">×</button>
                 </div>
               `).join('') :
               `<div class="template-name-item">
                 <input type="text" placeholder="Template name (e.g., modern, classic)">
-                <button class="btn-remove-template" onclick="TemplateCreation.removeTemplateName(this)">×</button>
+                <button class="btn-remove-template" data-action="remove-template">×</button>
               </div>`
             }
           </div>
-          <button type="button" class="btn btn-secondary" onclick="TemplateCreation.addTemplateName()">
+          <button type="button" class="btn btn-secondary" id="add-template-name-btn">
             + Add Template
           </button>
         </div>
@@ -216,7 +216,7 @@ const TemplateCreation = {
           <button id="save-template-settings-btn" class="btn btn-primary">
             Save Template Settings
           </button>
-          <button type="button" class="btn btn-secondary" onclick="TemplateCreation.generateIndustryCode()">
+          <button type="button" id="generate-code-btn" class="btn btn-secondary">
             Generate Client Assignment Code
           </button>
         </div>
@@ -224,6 +224,46 @@ const TemplateCreation = {
         <div id="template-status" class="message" style="display: none;"></div>
       </div>
     `;
+    
+    // Setup event listeners using event delegation
+    this.setupTemplateEditorListeners();
+  },
+
+  /**
+   * Setup event listeners for template editor
+   */
+  setupTemplateEditorListeners() {
+    const editor = document.getElementById('template-editor');
+    if (!editor) return;
+
+    // Event delegation for remove template buttons
+    editor.addEventListener('click', (e) => {
+      if (e.target.matches('.btn-remove-template') || e.target.closest('.btn-remove-template')) {
+        const btn = e.target.matches('.btn-remove-template') ? e.target : e.target.closest('.btn-remove-template');
+        this.removeTemplateName(btn);
+      }
+    });
+
+    // Add template button
+    const addBtn = document.getElementById('add-template-name-btn');
+    if (addBtn) {
+      addBtn.addEventListener('click', () => this.addTemplateName());
+    }
+
+    // Generate code button
+    const genBtn = document.getElementById('generate-code-btn');
+    if (genBtn) {
+      genBtn.addEventListener('click', () => this.generateIndustryCode());
+    }
+  },
+
+  /**
+   * Escape HTML to prevent XSS
+   */
+  escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   },
 
   /**
@@ -237,7 +277,7 @@ const TemplateCreation = {
     newItem.className = 'template-name-item';
     newItem.innerHTML = `
       <input type="text" placeholder="Template name (e.g., modern, classic)">
-      <button class="btn-remove-template" onclick="TemplateCreation.removeTemplateName(this)">×</button>
+      <button class="btn-remove-template" data-action="remove-template">×</button>
     `;
     container.appendChild(newItem);
   },
@@ -377,20 +417,22 @@ const TemplateCreation = {
     try {
       UI.showMessage('template-status', 'Generating industry code...', 'info');
 
-      // Generate unique 6-digit code
-      let code;
-      let exists = true;
-      let attempts = 0;
-
-      while (exists && attempts < 10) {
-        code = Math.floor(100000 + Math.random() * 900000).toString();
-        const codeDoc = await AppState.db.collection('industryCodes').doc(code).get();
-        exists = codeDoc.exists;
-        attempts++;
+      // Generate unique 6-digit code with better collision detection
+      let code = null;
+      const maxAttempts = 10;
+      
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        const candidateCode = Math.floor(100000 + Math.random() * 900000).toString();
+        const codeDoc = await AppState.db.collection('industryCodes').doc(candidateCode).get();
+        
+        if (!codeDoc.exists) {
+          code = candidateCode;
+          break;
+        }
       }
 
-      if (exists) {
-        throw new Error('Failed to generate unique code');
+      if (!code) {
+        throw new Error('Failed to generate unique code after ' + maxAttempts + ' attempts');
       }
 
       // Save the code with template settings
@@ -404,22 +446,50 @@ const TemplateCreation = {
         createdBy: AppState.currentUser.uid
       });
 
-      // Display the code
-      const message = `
-        <div style="padding: 15px; background: #e7f3ff; border-radius: 8px; margin-top: 10px;">
-          <strong>Client Assignment Code Generated:</strong>
-          <div style="font-size: 24px; font-weight: bold; color: #007bff; margin: 10px 0;">${code}</div>
-          <button class="btn btn-secondary" onclick="navigator.clipboard.writeText('${code}').then(() => UI.showMessage('template-status', '✅ Code copied to clipboard!', 'success'))">
-            Copy Code
-          </button>
-        </div>
-      `;
-      UI.showMessage('template-status', message, 'success');
+      // Display the code with proper event handling (no inline handlers)
+      this.displayGeneratedCode(code);
 
     } catch (err) {
       console.error('Error generating code:', err);
       UI.showMessage('template-status', 'Error generating code: ' + err.message, 'error');
     }
+  },
+
+  /**
+   * Display generated code with proper event handling
+   */
+  displayGeneratedCode(code) {
+    const statusEl = document.getElementById('template-status');
+    if (!statusEl) return;
+
+    const messageDiv = document.createElement('div');
+    messageDiv.style.cssText = 'padding: 15px; background: #e7f3ff; border-radius: 8px; margin-top: 10px;';
+    
+    const title = document.createElement('strong');
+    title.textContent = 'Client Assignment Code Generated:';
+    messageDiv.appendChild(title);
+
+    const codeDisplay = document.createElement('div');
+    codeDisplay.style.cssText = 'font-size: 24px; font-weight: bold; color: #007bff; margin: 10px 0;';
+    codeDisplay.textContent = code;
+    messageDiv.appendChild(codeDisplay);
+
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'btn btn-secondary';
+    copyBtn.textContent = 'Copy Code';
+    copyBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(code).then(() => {
+        UI.showMessage('template-status', '✅ Code copied to clipboard!', 'success');
+      }).catch(() => {
+        UI.showMessage('template-status', 'Failed to copy code', 'error');
+      });
+    });
+    messageDiv.appendChild(copyBtn);
+
+    statusEl.innerHTML = '';
+    statusEl.appendChild(messageDiv);
+    statusEl.className = 'message success';
+    statusEl.style.display = 'block';
   }
 };
 
