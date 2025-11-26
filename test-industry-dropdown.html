@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Industry Dropdown Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #333;
+    }
+    select {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      background: white;
+    }
+    .info {
+      background: white;
+      padding: 15px;
+      border-radius: 6px;
+      margin-top: 20px;
+      border-left: 4px solid #007bff;
+    }
+    h1 {
+      color: #333;
+    }
+    .selected-value {
+      margin-top: 10px;
+      padding: 10px;
+      background: #e7f3ff;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Industry Dropdown - Updated Names</h1>
+  <div class="info">
+    <p><strong>Changes Made:</strong></p>
+    <ul>
+      <li>Advertising → F&B (Food and Beverages)</li>
+      <li>E-commerce → E-commerce (unchanged)</li>
+      <li>Entertainment → Retail</li>
+      <li>Healthcare → Beauty</li>
+      <li>Other → Others</li>
+    </ul>
+  </div>
+  
+  <div class="form-group">
+    <label for="industry-name">Industry Name*</label>
+    <select id="industry-name" required onchange="showSelected()">
+      <option value="">Select industry</option>
+      <option value="ecommerce">E-commerce</option>
+      <option value="fnb">F&B</option>
+      <option value="retail">Retail</option>
+      <option value="beauty">Beauty</option>
+      <option value="others">Others</option>
+    </select>
+  </div>
+
+  <div class="selected-value" id="selected-info" style="display: none;">
+    <strong>Selected Value:</strong> <span id="selected-value"></span><br>
+    <strong>Display Text:</strong> <span id="selected-text"></span>
+  </div>
+
+  <script>
+    function showSelected() {
+      const select = document.getElementById('industry-name');
+      const info = document.getElementById('selected-info');
+      const valueSpan = document.getElementById('selected-value');
+      const textSpan = document.getElementById('selected-text');
+      
+      if (select.value) {
+        valueSpan.textContent = select.value;
+        textSpan.textContent = select.options[select.selectedIndex].text;
+        info.style.display = 'block';
+      } else {
+        info.style.display = 'none';
+      }
+    }
+  </script>
+</body>
+</html>
