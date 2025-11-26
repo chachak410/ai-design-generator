@@ -88,5 +88,20 @@ this.showElement('create-account-link');
     } else {
 this.hideElement('create-account-link');
     }
+  },
+showMasterTemplatePage() {
+// Show the template creation page for master users
+if (AppState.userRole !== 'master' && AppState.userRole !== 'admin') {
+this.showMessage('template-status', 'Access denied: Only master/admin accounts can access template creation.', 'error');
+      return;
+    }
+// Use the global showPage function to show template-creation-page
+if (typeof showPage === 'function') {
+showPage('template-creation-page');
+    }
+// Initialize template creation page if needed
+if (window.TemplateCreation && typeof window.TemplateCreation.init === 'function') {
+window.TemplateCreation.init();
+    }
   }
 }; 

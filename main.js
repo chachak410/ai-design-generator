@@ -42,10 +42,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             UI.showMainApp();
             UI.toggleMasterUI(AppState.userRole === 'master' || AppState.userRole === 'admin');
 
+            // Show master navigation links for master and admin users
             const masterNavLink = document.getElementById('master-nav-link');
+            const masterTemplateLink = document.getElementById('master-template-link');
+            const masterSupportLink = document.getElementById('master-support-link');
             if (AppState.userRole === 'master' || AppState.userRole === 'admin') {
               if (masterNavLink) {
                 masterNavLink.style.display = 'inline-block';
+              }
+              if (masterTemplateLink) {
+                masterTemplateLink.style.display = 'inline-block';
+              }
+              if (masterSupportLink) {
+                masterSupportLink.style.display = 'inline-block';
               }
             }
 
