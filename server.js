@@ -15,6 +15,8 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
 // Serve index.html for root
+// NOTE: Role-based redirect is handled on the client side after Firebase auth completes.
+// The client-side main.js will redirect to role-specific homepage after authentication.
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
@@ -22,6 +24,41 @@ app.get('/', (req, res) => {
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });
+});
+
+/**
+ * API endpoint to get current user information.
+ * 
+ * This endpoint provides user role information when called with a valid session.
+ * Since this app uses Firebase Authentication on the client-side, the actual user
+ * role is determined by Firebase Auth state and Firestore user document.
+ * 
+ * For SPAs using this endpoint:
+ * - Call /api/me after obtaining Firebase auth token
+ * - Include authorization header with Firebase ID token
+ * - Returns user role and basic info
+ * 
+ * NOTE: This is a placeholder implementation. In production, you would:
+ * 1. Verify the Firebase ID token from the Authorization header
+ * 2. Fetch the user's role from Firestore
+ * 3. Return the role information
+ * 
+ * Currently, the client-side handles role detection via Firebase onAuthStateChanged.
+ */
+app.get('/api/me', (req, res) => {
+  // In a real implementation, you would:
+  // 1. Get the Firebase ID token from Authorization header
+  // 2. Verify the token using Firebase Admin SDK
+  // 3. Fetch user data from Firestore
+  // 4. Return role and user info
+  
+  // For now, return a placeholder response indicating the client should
+  // use Firebase client-side auth to get user role
+  res.json({
+    authenticated: false,
+    message: 'Use Firebase client-side authentication. Role is determined by Firestore user document.',
+    note: 'This endpoint is a placeholder for future server-side auth integration.'
+  });
 });
 
 // Proxy for Stability AI
