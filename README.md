@@ -49,6 +49,44 @@ The **AI Design Generator** is a lightweight, browser-based tool that transforms
 
 > **Note**: Admin credentials are private. Contact the project maintainers for access or use environment variables for secure setup.
 
+### Configuring Admin Accounts
+
+Admin accounts can access the admin navigation links (Template Creation, Client Management, Support Responses) in addition to standard client functionality. There are two ways to configure admin accounts:
+
+#### Method 1: Environment Variable / Configuration (Recommended)
+
+Configure admin emails without modifying the codebase by injecting them before the app loads:
+
+**Option A: Inject via script tag (for static hosting)**
+```html
+<!-- Add this BEFORE the config.js script in your index.html -->
+<script>
+  window.ADMIN_EMAILS = ['admin@example.com', 'another-admin@example.com'];
+</script>
+```
+
+**Option B: Modify config.js for deployment (not recommended for public repos)**
+```javascript
+// In js/config/config.js
+window.AppConfig.adminEmails = ['admin@example.com'];
+```
+
+**Option C: CI/CD Build-time injection**
+Configure your deployment pipeline to inject admin emails during the build process.
+
+#### Method 2: Firestore Role (Database-based)
+
+Set the user's `role` field to `'admin'` or `'master'` in the Firestore `users` collection:
+- `role: 'admin'` - Shows all client navigation plus admin links
+- `role: 'master'` - Shows only admin links (Template Creation, Client Management, Support Responses, Logout)
+
+**Security Notes:**
+- ⚠️ Never commit actual admin email addresses to the repository
+- ⚠️ Use environment variables or secure secret management in production
+- ⚠️ The admin configuration controls UI visibility; Firestore security rules should also validate permissions
+
+See `.env.example` for detailed configuration instructions.
+
 ### Running Locally (For Developers)
 1. Clone the repository:
    ```bash
