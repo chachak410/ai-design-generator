@@ -1,21 +1,9 @@
-// Configuration for the application
-window.AppConfig = {
-  firebase: {
-    apiKey: "AIzaSyC0P-rmy6ZiKCBnivZQBahKWaPcqg4nDnU",
-    authDomain: "image-generator-c51e2.firebaseapp.com",
-    projectId: "image-generator-c51e2",
-    storageBucket: "image-generator-c51e2.firebasestorage.app",
-    messagingSenderId: "222706847155",
-    appId: "1:222706847155:web:824453eca61077f5f0cfc6",
-    measurementId: "G-JSK1FHFEMT"
-  },
-  emailjs: {
-    serviceId: "service_sq0910p",
-    templateId: "template_6cykjb4",
-    publicKey: "DjaueAhkuIzk5gj2x"
-  },
-  api: {
-    stability: "sk-RwqmAp2Q9nr3RgoLh8g04tgrprjlGhrDMYD8JGv1IxF9WnLQ",
-    huggingface: "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"
-  }
-};
+// DEPRECATED (root-level): This file was moved to js/config/config.js
+// Replaced with a harmless stub to avoid duplicate globals and BOM/parsing issues.
+//
+// If you are seeing this log in the browser console it means the server or a page
+// requested /config.js (root) instead of /js/config/config.js. Please update the
+// server/static hosting to point to the canonical file under /js/config/.
+//
+// No globals are defined here on purpose.
+console.warn('[DEPRECATED] root-level config.js loaded. Use /js/config/config.js instead.');

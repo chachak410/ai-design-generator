@@ -2,6 +2,8 @@
 // This file intentionally defines `window.AppConfig` so pages that load
 // `config.js` (e.g. setup.html) have access to the same configuration.
 
+console.log('[config] js/config/config.js loaded'); // debug: confirm canonical config file
+
 window.AppConfig = {
   firebase: {
     apiKey: "AIzaSyC0P-rmy6ZiKCBnivZQBahKWaPcqg4nDnU",
