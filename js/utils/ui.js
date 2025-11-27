@@ -158,6 +158,19 @@ const UI = {
       this.hideElement('create-account-link');
       
       console.log('[UI] Master navbar applied: showing Template Creation, Client Management, Support Responses, Logout');
+    } else if (isAdmin) {
+      // For admin users (non-master): show both client and admin links
+      clientNavLinks.forEach(id => this.showElement(id));
+      masterNavLinks.forEach(id => this.showElement(id));
+      this.showElement('create-account-link');
+      
+      console.log('[UI] Admin navbar applied: showing all navigation links');
+    } else {
+      // For non-admin users: show client navigation links, hide admin links
+      clientNavLinks.forEach(id => this.showElement(id));
+      
+      // Hide admin-specific links for regular users
+      masterNavLinks.forEach(id => this.hideElement(id));
     } else if (hasAdminPrivileges) {
       // For admin users: show BOTH client and admin navigation links
       // Admin sees: Templates, Account, Past Records, Template Creation, Client Management, Support Responses, Logout
