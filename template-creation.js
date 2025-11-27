@@ -180,7 +180,18 @@ const TemplateCreation = {
       // Sanitize the custom industry name to prevent XSS
       return this.escapeHtml(rawName);
     }
-    return this.industryConfigs[this.currentIndustry]?.name || this.currentIndustry;
+    // Robust fallback for unknown industry keys
+    const config = this.industryConfigs[this.currentIndustry];
+    return config?.name || 'Unknown Industry';
+  },
+
+  /**
+   * Check if custom industry name is valid (for "Other" option)
+   */
+  isValidCustomIndustryName() {
+    if (this.currentIndustry !== 'other') return true;
+    const customName = document.getElementById('custom-industry-name');
+    return customName && customName.value.trim().length > 0;
   },
 
   /**
@@ -584,13 +595,10 @@ const TemplateCreation = {
       return;
     }
 
-    // Validate custom industry name for "Other" option
-    if (this.currentIndustry === 'other') {
-      const customName = document.getElementById('custom-industry-name');
-      if (!customName || !customName.value.trim()) {
-        UI.showMessage('template-status', 'Please enter a custom industry name.', 'error');
-        return;
-      }
+    // Validate custom industry name for "Other" option using helper method
+    if (!this.isValidCustomIndustryName()) {
+      UI.showMessage('template-status', 'Please enter a custom industry name.', 'error');
+      return;
     }
 
     const settings = this.collectTemplateSettings();
