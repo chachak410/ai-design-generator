@@ -1,6 +1,10 @@
 /**
  * UI Utility Module
  * Provides common UI manipulation functions for showing/hiding elements and managing UI state.
+ * 
+ * This module now uses NAV_CONFIG from js/config/nav-config.js for centralized
+ * navigation configuration. The renderNavbar function reads from NAV_CONFIG
+ * to render appropriate navigation links based on user's role.
  */
 
 /**
@@ -144,6 +148,65 @@ var UI = {
     }
   },
 
+  /**
+   * Render the navbar based on user's role using NAV_CONFIG.
+   * This function dynamically shows/hides nav items based on the centralized
+   * navigation configuration.
+   * 
+   * @param {string} role - User role ('master', 'client', 'admin')
+   */
+  renderNavbar: function(role) {
+    var self = this;
+    
+    // Use NavConfig if available, otherwise fall back to legacy behavior
+    if (!window.NavConfig || !window.NAV_CONFIG) {
+      console.warn('[UI] NAV_CONFIG not loaded, using legacy toggleMasterUI');
+      this.toggleMasterUI(role === 'master');
+      return;
+    }
+    
+    // Get nav items for the role from central config
+    var navItems = window.NavConfig.getNavItemsForRole(role);
+    var navItemIds = navItems.map(function(item) { return item.id; });
+    
+    // All possible nav link IDs that might exist in the DOM
+    var allNavLinkIds = [
+      'client-templates-link',
+      'client-account-link', 
+      'client-records-link',
+      'master-template-link',
+      'master-nav-link',
+      'master-support-link',
+      'create-account-link',
+      'logout-btn'
+    ];
+    
+    // Hide all nav links first
+    allNavLinkIds.forEach(function(id) {
+      self.hideElement(id);
+    });
+    
+    // Show only the nav items for this role
+    navItemIds.forEach(function(id) {
+      self.showElement(id);
+    });
+    
+    // Attach click handlers from NAV_CONFIG (for dynamically created elements)
+    navItems.forEach(function(item) {
+      var el = document.getElementById(item.id);
+      if (el && item.onClick) {
+        // Remove old onclick to prevent duplicates
+        el.onclick = function(e) {
+          e.preventDefault();
+          item.onClick();
+          return false;
+        };
+      }
+    });
+    
+    console.log('[UI] Navbar rendered for role:', role, 'Items:', navItemIds);
+  },
+
   toggleMasterUI: function(isMasterUser) {
     var self = this;
     var userRole = (window.AppState && window.AppState.userRole) || null;
@@ -155,7 +218,21 @@ var UI = {
     // Determine if user has admin privileges (either master or admin role)
     var hasAdminPrivileges = isMasterRole || userRole === 'admin' || isAdminFlag;
     
-    // Navigation link IDs for client/regular users
+    // Determine effective role for NAV_CONFIG lookup
+    var effectiveRole = 'client';
+    if (isMasterRole) {
+      effectiveRole = 'master';
+    } else if (hasAdminPrivileges) {
+      effectiveRole = 'admin';
+    }
+    
+    // Use renderNavbar if NAV_CONFIG is available
+    if (window.NavConfig && window.NAV_CONFIG) {
+      this.renderNavbar(effectiveRole);
+      return;
+    }
+    
+    // Legacy fallback: Navigation link IDs for client/regular users
     var clientNavLinks = [
       'client-templates-link',    // Templates link
       'client-account-link',      // Account link  
@@ -231,6 +308,122 @@ var UI = {
     if (window.TemplateCreation && typeof window.TemplateCreation.init === 'function') {
       window.TemplateCreation.init();
     }
+  },
+
+  /**
+   * Get the default/homepage for the current user's role.
+   * Used for role-based redirect from root (/).
+   * 
+   * @param {string} role - User role (optional, uses AppState.userRole if not provided)
+   * @returns {string} Page ID to show as homepage
+   */
+  getDefaultPageForRole: function(role) {
+    var userRole = role || (window.AppState && window.AppState.userRole) || 'client';
+    
+    // Use NavConfig if available
+    if (window.NavConfig && typeof window.NavConfig.getDefaultPageForRole === 'function') {
+      return window.NavConfig.getDefaultPageForRole(userRole);
+    }
+    
+    // Fallback logic
+    switch (userRole) {
+      case 'master':
+        return 'template-creation-page';
+      case 'client':
+        return 'template-page';
+      case 'admin':
+        return 'template-page';
+      default:
+        return 'template-page';
+    }
+  },
+
+  /**
+   * Navigate to the role-specific homepage.
+   * This should be called after authentication to redirect users to their 
+   * appropriate starting page based on their role.
+   * 
+   * @param {string} role - User role (optional, uses AppState.userRole if not provided)
+   */
+  redirectToRoleHomepage: function(role) {
+    var userRole = role || (window.AppState && window.AppState.userRole) || 'client';
+    var defaultPage = this.getDefaultPageForRole(userRole);
+    
+    console.log('[UI] Redirecting to role homepage. Role:', userRole, 'Page:', defaultPage);
+    
+    // Use global showPage function to navigate
+    if (typeof window.showPage === 'function') {
+      window.showPage(defaultPage);
+    }
+    
+    // Special initialization for certain pages
+    if (defaultPage === 'template-creation-page') {
+      if (window.TemplateCreation && typeof window.TemplateCreation.init === 'function') {
+        window.TemplateCreation.init();
+      }
+    }
+  },
+
+  /**
+   * Check if the current user can access a specific page.
+   * Uses NAV_CONFIG for role-based access control.
+   * 
+   * @param {string} pageId - Page ID to check access for
+   * @param {string} role - User role (optional, uses AppState.userRole if not provided)
+   * @returns {boolean} True if user can access the page
+   */
+  canAccessPage: function(pageId, role) {
+    var userRole = role || (window.AppState && window.AppState.userRole) || null;
+    var isAdmin = (window.AppState && window.AppState.isAdmin) || false;
+    
+    // If no role, deny access to protected pages
+    if (!userRole) {
+      return false;
+    }
+    
+    // Use NavConfig if available
+    if (window.NavConfig && typeof window.NavConfig.canAccessPage === 'function') {
+      // Admin users can access all pages
+      if (isAdmin || userRole === 'admin' || userRole === 'master') {
+        return true;
+      }
+      return window.NavConfig.canAccessPage(userRole, pageId);
+    }
+    
+    // Fallback: Master-only pages
+    var masterOnlyPages = ['template-creation-page', 'client-management-section', 'support-response-page', 'create-account-page'];
+    
+    if (masterOnlyPages.includes(pageId)) {
+      return userRole === 'master' || userRole === 'admin' || isAdmin;
+    }
+    
+    // Client-only pages (also accessible to admin)
+    var clientPages = ['records-page', 'account-page', 'template-page'];
+    if (clientPages.includes(pageId)) {
+      return true; // All authenticated users can access these
+    }
+    
+    return true; // Default allow
+  },
+
+  /**
+   * Check page access and redirect to appropriate page if access is denied.
+   * 
+   * @param {string} pageId - Page ID being accessed
+   * @param {string} role - User role
+   * @returns {string} The pageId if accessible, or redirect pageId if not
+   */
+  checkPageAccessAndRedirect: function(pageId, role) {
+    if (this.canAccessPage(pageId, role)) {
+      return pageId;
+    }
+    
+    // Access denied - redirect to role homepage
+    var defaultPage = this.getDefaultPageForRole(role);
+    this.showMessage('template-status', 'Access denied: You do not have permission to access this page.', 'error');
+    console.log('[UI] Access denied to page:', pageId, 'Redirecting to:', defaultPage);
+    
+    return defaultPage;
   }
 };
 
