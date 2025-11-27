@@ -249,6 +249,16 @@ document.addEventListener('DOMContentLoaded', async () => {
               console.log('[main.js] Fallback: Showing', defaultPage, 'for role:', window.AppState.userRole);
               showPage(defaultPage);
             }
+            // Use role-based redirect to show the appropriate homepage
+            // Master users go to Template Creation, Client users go to Templates
+            console.log('Redirecting to role-based homepage...');
+            if (UI.redirectToRoleHomepage) {
+              UI.redirectToRoleHomepage(window.AppState.userRole);
+            } else {
+              // Fallback if redirectToRoleHomepage is not available
+              showPage('template-page');
+            }
+          }
           }
         } catch (err) {
           console.error('Error loading user data:', err);
@@ -431,8 +441,24 @@ function setupEventListeners() {
 function showPage(pageId) {
   console.log('showPage called with:', pageId);
   
+  // Check page access control using NavConfig if available
+  if (window.UI && typeof window.UI.canAccessPage === 'function') {
+    const userRole = window.AppState && window.AppState.userRole;
+    if (!window.UI.canAccessPage(pageId, userRole)) {
+      console.warn('[showPage] Access denied to page:', pageId, 'for role:', userRole);
+      // Redirect to role-appropriate homepage instead
+      if (window.UI.redirectToRoleHomepage) {
+        window.UI.showMessage('template-status', 'Access denied: You do not have permission to access this page.', 'error');
+        window.UI.redirectToRoleHomepage(userRole);
+        return;
+      }
+      // Fallback: show template-page
+      pageId = 'template-page';
+    }
+  }
+  
   // Hide all pages
-  const pages = ['account-page', 'template-page', 'records-page', 'create-account-page', 'client-management-section', 'payment-page', 'support-response-page'];
+  const pages = ['account-page', 'template-page', 'records-page', 'create-account-page', 'client-management-section', 'payment-page', 'support-response-page', 'template-creation-page'];
   pages.forEach(id => {
     const el = document.getElementById(id);
     if (el) {
@@ -482,6 +508,11 @@ function showPage(pageId) {
       case 'support-response-page':
         if (window.SupportResponse && typeof window.SupportResponse.init === 'function') {
           window.SupportResponse.init();
+        }
+        break;
+      case 'template-creation-page':
+        if (window.TemplateCreation && typeof window.TemplateCreation.init === 'function') {
+          window.TemplateCreation.init();
         }
         break;
     }
