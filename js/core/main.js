@@ -223,10 +223,25 @@ document.addEventListener('DOMContentLoaded', async () => {
             // For admin role: show both client and admin links
             // For client role: show only client links
             UI.toggleMasterUI(window.AppState.userRole === 'master');
+            
+            // Also use Navbar component for role-based navigation if available
+            // This provides an additional layer of role-based nav management
+            if (window.Navbar && typeof window.Navbar.updateVisibility === 'function') {
+              window.Navbar.updateVisibility(window.AppState.userRole);
+            }
 
             window.currentUserData = userData;
-            console.log('Showing template page...');
-            showPage('template-page');
+            
+            // Use HomeRedirect to navigate to role-appropriate default page
+            // master -> template-creation-page, client/admin -> template-page
+            if (window.HomeRedirect && typeof window.HomeRedirect.redirect === 'function') {
+              console.log('[main.js] Using HomeRedirect for role-based page navigation');
+              await window.HomeRedirect.redirect();
+            } else {
+              // Fallback to existing behavior
+              console.log('Showing template page...');
+              showPage('template-page');
+            }
           }
         } catch (err) {
           console.error('Error loading user data:', err);
@@ -241,6 +256,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.AppState.generationCount = 0;
         window.AppState.feedbackVector = null;
         window.AppState.badSelections = 0;
+        
+        // Clear cached role from AuthUtils on logout
+        if (window.AuthUtils && typeof window.AuthUtils.clearCachedRole === 'function') {
+          window.AuthUtils.clearCachedRole();
+        }
+        
         UI.showAuth();
         UI.showLogin();
       }

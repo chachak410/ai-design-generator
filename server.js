@@ -24,6 +24,16 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });
 });
 
+// API /me endpoint - Returns the current user's role
+// This endpoint is used by the client-side authUtils.js to determine user role
+// for role-based navigation and homepage redirects.
+// 
+// TODO: Implement authentication middleware to populate req.user
+// The apiMeHandler expects req.user to have: { uid, email, role }
+// For Firebase Auth integration, see server/api/me.js for example middleware
+const apiMeHandler = require('./server/api/me');
+app.get('/api/me', apiMeHandler);
+
 // Proxy for Stability AI
 app.post('/api/generate-image', async (req, res) => {
   try {
