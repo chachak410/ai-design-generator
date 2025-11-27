@@ -82,12 +82,12 @@ this.showElement('product-warning');
     }
   },
 toggleMasterUI(isMaster) {
-// Change this check:
-if (isMaster || AppState.userRole === 'admin') {
-this.showElement('create-account-link');
-    } else {
-this.hideElement('create-account-link');
-    }
+  // Show create-account link only for admin users, not master (master has reduced nav)
+  if (AppState.userRole === 'admin') {
+    this.showElement('create-account-link');
+  } else {
+    this.hideElement('create-account-link');
+  }
   },
 showMasterTemplatePage() {
 // Show the template creation page for master users

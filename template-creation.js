@@ -33,6 +33,12 @@ const TemplateCreation = {
       tones: ['Soft Blush', 'Luxe Gold & Rose', 'Cool Neutrals', 'Bold & Dramatic', 'Natural Beige'],
       styles: ['Luxe', 'Minimalist', 'Feminine', 'Bold', 'Sophisticated'],
       sizes: ['IG Post (1:1)', 'IG Story (9:16)', 'Product Card (1:1)', 'Banner (16:9)', 'Portrait (4:5)']
+    },
+    other: {
+      name: 'Other',
+      tones: ['Neutral', 'Warm', 'Cool', 'Vibrant', 'Muted'],
+      styles: ['Modern', 'Classic', 'Minimalist', 'Bold', 'Elegant'],
+      sizes: ['IG Post (1:1)', 'IG Story (9:16)', 'Banner (16:9)', 'Square (1:1)', 'Portrait (4:5)']
     }
   },
   
@@ -100,17 +106,92 @@ const TemplateCreation = {
   async onIndustryChange(industryKey) {
     if (!industryKey) {
       document.getElementById('template-editor').innerHTML = '';
+      this.hideCustomIndustryInput();
       return;
     }
 
     this.currentIndustry = industryKey;
     const config = this.industryConfigs[industryKey];
     
+    // Show/hide custom industry name input for "Other" option
+    if (industryKey === 'other') {
+      this.showCustomIndustryInput();
+    } else {
+      this.hideCustomIndustryInput();
+    }
+    
     // Load existing templates for this industry if any
     await this.loadIndustryTemplates(industryKey);
     
     // Render the template editor
     this.renderTemplateEditor(config);
+  },
+
+  /**
+   * Show the custom industry name input field
+   */
+  showCustomIndustryInput() {
+    let customInput = document.getElementById('custom-industry-container');
+    if (!customInput) {
+      const selector = document.getElementById('industry-selector');
+      if (selector && selector.parentNode) {
+        customInput = document.createElement('div');
+        customInput.id = 'custom-industry-container';
+        customInput.className = 'form-group';
+        customInput.style.marginTop = '10px';
+        
+        // Create elements programmatically to avoid XSS
+        const label = document.createElement('label');
+        label.setAttribute('for', 'custom-industry-name');
+        label.textContent = 'Custom Industry Name';
+        
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.id = 'custom-industry-name';
+        input.className = 'form-input';
+        input.placeholder = 'Enter custom industry name';
+        
+        customInput.appendChild(label);
+        customInput.appendChild(input);
+        selector.parentNode.appendChild(customInput);
+      }
+    } else {
+      customInput.style.display = 'block';
+    }
+  },
+
+  /**
+   * Hide the custom industry name input field
+   */
+  hideCustomIndustryInput() {
+    const customInput = document.getElementById('custom-industry-container');
+    if (customInput) {
+      customInput.style.display = 'none';
+    }
+  },
+
+  /**
+   * Get the industry name (custom or predefined), sanitized for safe use
+   */
+  getIndustryName() {
+    if (this.currentIndustry === 'other') {
+      const customName = document.getElementById('custom-industry-name');
+      const rawName = customName && customName.value.trim() ? customName.value.trim() : 'Other';
+      // Sanitize the custom industry name to prevent XSS
+      return this.escapeHtml(rawName);
+    }
+    // Robust fallback for unknown industry keys
+    const config = this.industryConfigs[this.currentIndustry];
+    return config?.name || 'Unknown Industry';
+  },
+
+  /**
+   * Check if custom industry name is valid (for "Other" option)
+   */
+  isValidCustomIndustryName() {
+    if (this.currentIndustry !== 'other') return true;
+    const customName = document.getElementById('custom-industry-name');
+    return customName && customName.value.trim().length > 0;
   },
 
   /**
@@ -141,9 +222,12 @@ const TemplateCreation = {
     this.customSpecCount = 0;
     this.productCount = 1;
 
+    // Use custom industry name for "Other" option
+    const displayName = this.currentIndustry === 'other' ? 'Custom' : config.name;
+
     editor.innerHTML = `
       <div class="template-editor-container">
-        <h3>${config.name} Industry Configuration</h3>
+        <h3>${this.escapeHtml(displayName)} Industry Configuration</h3>
         
         <!-- Section 1: Generic Specifications (Tone, Size, Style) -->
         <div class="settings-section">
@@ -511,6 +595,12 @@ const TemplateCreation = {
       return;
     }
 
+    // Validate custom industry name for "Other" option using helper method
+    if (!this.isValidCustomIndustryName()) {
+      UI.showMessage('template-status', 'Please enter a custom industry name.', 'error');
+      return;
+    }
+
     const settings = this.collectTemplateSettings();
     
     if (!this.validateSettings(settings)) {
@@ -546,9 +636,12 @@ const TemplateCreation = {
         throw new Error('Failed to generate unique code after ' + maxAttempts + ' attempts');
       }
 
+      // Get the industry name (custom or predefined)
+      const industryName = this.getIndustryName();
+
       // Save the code with all settings
       await AppState.db.collection('industryCodes').doc(code).set({
-        industryName: this.industryConfigs[this.currentIndustry].name,
+        industryName: industryName,
         industryKey: this.currentIndustry,
         specifications: specifications,
         products: settings.products,

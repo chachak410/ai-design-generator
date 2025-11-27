@@ -42,20 +42,30 @@ document.addEventListener('DOMContentLoaded', async () => {
             UI.showMainApp();
             UI.toggleMasterUI(AppState.userRole === 'master' || AppState.userRole === 'admin');
 
-            // Show master navigation links for master and admin users
+            // Show/hide navigation links based on user role
             const masterNavLink = document.getElementById('master-nav-link');
             const masterTemplateLink = document.getElementById('master-template-link');
             const masterSupportLink = document.getElementById('master-support-link');
-            if (AppState.userRole === 'master' || AppState.userRole === 'admin') {
-              if (masterNavLink) {
-                masterNavLink.style.display = 'inline-block';
-              }
-              if (masterTemplateLink) {
-                masterTemplateLink.style.display = 'inline-block';
-              }
-              if (masterSupportLink) {
-                masterSupportLink.style.display = 'inline-block';
-              }
+            const clientTemplatesLink = document.getElementById('client-templates-link');
+            const clientAccountLink = document.getElementById('client-account-link');
+            const clientRecordsLink = document.getElementById('client-records-link');
+            const createAccountLink = document.getElementById('create-account-link');
+            
+            if (AppState.userRole === 'master') {
+              // Master accounts: show only Template Creation, Client Management, Support Responses, Logout
+              if (masterNavLink) masterNavLink.style.display = 'inline-block';
+              if (masterTemplateLink) masterTemplateLink.style.display = 'inline-block';
+              if (masterSupportLink) masterSupportLink.style.display = 'inline-block';
+              // Hide client-only links for master
+              if (clientTemplatesLink) clientTemplatesLink.style.display = 'none';
+              if (clientAccountLink) clientAccountLink.style.display = 'none';
+              if (clientRecordsLink) clientRecordsLink.style.display = 'none';
+              if (createAccountLink) createAccountLink.style.display = 'none';
+            } else if (AppState.userRole === 'admin') {
+              // Admin accounts: show master links in addition to client links
+              if (masterNavLink) masterNavLink.style.display = 'inline-block';
+              if (masterTemplateLink) masterTemplateLink.style.display = 'inline-block';
+              if (masterSupportLink) masterSupportLink.style.display = 'inline-block';
             }
 
             window.currentUserData = userData;

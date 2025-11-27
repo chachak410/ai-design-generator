@@ -196,9 +196,9 @@
         <button data-lang="zh" onclick="setLang('zh')" class="lang-inline-btn">简体</button>
       </div>
       <div class="nav-links">
-        <a href="#" onclick="showPage('template-page'); return false;" data-i18n="templates" class="active">Templates</a>
-        <a href="#" onclick="showPage('account-page'); return false;" data-i18n="account">Account</a>
-  <a href="#" onclick="showPage('records-page'); return false;" data-i18n="pastRecords">Past Records</a>
+        <a href="#" id="client-templates-link" onclick="showPage('template-page'); return false;" data-i18n="templates" class="active">Templates</a>
+        <a href="#" id="client-account-link" onclick="showPage('account-page'); return false;" data-i18n="account">Account</a>
+        <a href="#" id="client-records-link" onclick="showPage('records-page'); return false;" data-i18n="pastRecords">Past Records</a>
         <a href="#" id="create-account-link" onclick="showPage('create-account-page'); return false;" data-i18n="createAccount" style="display: none;">Create Account</a>
         <a href="#" id="master-nav-link" onclick="showPage('client-management-section'); return false;" data-i18n="clientManagement" style="display: none;">Client Management</a>
         <a href="#" id="master-template-link" onclick="UI.showMasterTemplatePage()" data-i18n="templateCreation" style="display: none;">Template Creation</a>
