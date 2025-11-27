@@ -251,16 +251,14 @@
   background: #28a745;
   color: white;
   border: none;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  font-size: 18px;
+  border-radius: 4px;
+  font-size: 14px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: background 0.2s;
-  padding: 0;
+  padding: 6px 12px;
   line-height: 1;
 }
 
@@ -349,6 +347,34 @@
   background: #f8d7da;
   color: #721c24;
   border: 1px solid #f5c6cb;
+}
+
+/* Custom industry input styling */
+#custom-industry-container {
+  margin-top: 10px;
+}
+
+#custom-industry-container label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: #444;
+}
+
+#custom-industry-name {
+  width: 100%;
+  max-width: 300px;
+  padding: 10px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+#custom-industry-name:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
 }
 
 /* Responsive adjustments */
