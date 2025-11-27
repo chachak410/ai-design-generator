@@ -20,11 +20,12 @@ describe('NAV_CONFIG', () => {
     };
 
     // Load the nav-config module by executing the IIFE
+    // Using Function constructor as a safer alternative to eval for module loading in tests
     const fs = require('fs');
     const path = require('path');
     const configPath = path.join(__dirname, '../../../js/config/nav-config.js');
     const configCode = fs.readFileSync(configPath, 'utf8');
-    eval(configCode);
+    new Function(configCode)();
 
     NAV_CONFIG = global.window.NAV_CONFIG;
     NavConfig = global.window.NavConfig;
@@ -265,56 +266,43 @@ describe('NAV_CONFIG', () => {
 });
 
 describe('Role-based redirect', () => {
-  test('master users should be redirected to template-creation-page', () => {
-    // Simulate the logic from getDefaultPageForRole
-    const getDefaultPageForRole = (role) => {
-      switch (role) {
-        case 'master':
-          return 'template-creation-page';
-        case 'client':
-          return 'template-page';
-        case 'admin':
-          return 'template-page';
-        default:
-          return 'template-page';
-      }
+  let NavConfig;
+
+  beforeEach(() => {
+    // Load the nav-config module
+    global.window = {
+      NAV_CONFIG: null,
+      NavConfig: null,
+      UI: null,
+      showPage: jest.fn(),
+      handleLogout: jest.fn(),
+      SupportResponse: { init: jest.fn() },
+      TemplateCreation: { init: jest.fn() }
     };
 
-    expect(getDefaultPageForRole('master')).toBe('template-creation-page');
+    const fs = require('fs');
+    const path = require('path');
+    const configPath = path.join(__dirname, '../../../js/config/nav-config.js');
+    const configCode = fs.readFileSync(configPath, 'utf8');
+    // Using Function constructor as a safer alternative to eval for module loading in tests
+    new Function(configCode)();
+    NavConfig = global.window.NavConfig;
+  });
+
+  afterEach(() => {
+    delete global.window;
+  });
+
+  test('master users should be redirected to template-creation-page', () => {
+    expect(NavConfig.getDefaultPageForRole('master')).toBe('template-creation-page');
   });
 
   test('client users should be redirected to template-page', () => {
-    const getDefaultPageForRole = (role) => {
-      switch (role) {
-        case 'master':
-          return 'template-creation-page';
-        case 'client':
-          return 'template-page';
-        case 'admin':
-          return 'template-page';
-        default:
-          return 'template-page';
-      }
-    };
-
-    expect(getDefaultPageForRole('client')).toBe('template-page');
+    expect(NavConfig.getDefaultPageForRole('client')).toBe('template-page');
   });
 
   test('unauthenticated users should fallback to template-page', () => {
-    const getDefaultPageForRole = (role) => {
-      switch (role) {
-        case 'master':
-          return 'template-creation-page';
-        case 'client':
-          return 'template-page';
-        case 'admin':
-          return 'template-page';
-        default:
-          return 'template-page';
-      }
-    };
-
-    expect(getDefaultPageForRole(null)).toBe('template-page');
-    expect(getDefaultPageForRole(undefined)).toBe('template-page');
+    expect(NavConfig.getDefaultPageForRole(null)).toBe('template-page');
+    expect(NavConfig.getDefaultPageForRole(undefined)).toBe('template-page');
   });
 });
