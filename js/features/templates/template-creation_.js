@@ -9,6 +9,39 @@ const TemplateCreation = {
   currentTemplates: [],
 
   /**
+   * Known Firestore permission-related error codes
+   */
+  PERMISSION_ERROR_CODES: ['permission-denied', 'PERMISSION_DENIED'],
+  AUTH_ERROR_CODES: ['unauthenticated', 'UNAUTHENTICATED'],
+
+  /**
+   * Check if an error is a permission-denied error
+   * @param {Error} err - The error object
+   * @returns {boolean}
+   */
+  isPermissionError(err) {
+    const errorCode = err.code || '';
+    const errorMessage = err.message || '';
+    
+    return this.PERMISSION_ERROR_CODES.includes(errorCode) ||
+           errorMessage.includes('permission-denied') ||
+           errorMessage.includes('Missing or insufficient permissions');
+  },
+
+  /**
+   * Check if an error is an authentication error
+   * @param {Error} err - The error object
+   * @returns {boolean}
+   */
+  isAuthError(err) {
+    const errorCode = err.code || '';
+    const errorMessage = err.message || '';
+    
+    return this.AUTH_ERROR_CODES.includes(errorCode) ||
+           errorMessage.includes('unauthenticated');
+  },
+
+  /**
    * Handle Firestore errors with user-friendly messages
    * @param {Error} err - The error object
    * @param {string} context - Context where the error occurred (e.g., 'loading templates', 'saving settings')
@@ -16,15 +49,12 @@ const TemplateCreation = {
   handleFirestoreError(err, context = 'operation') {
     console.error(`[TemplateCreation] Firestore error during ${context}:`, err);
     
-    const errorCode = err.code || '';
-    const errorMessage = err.message || '';
-    
-    if (errorCode === 'permission-denied' || errorMessage.includes('permission-denied') || errorMessage.includes('Missing or insufficient permissions')) {
+    if (this.isPermissionError(err)) {
       UI.showMessage('template-status', 
         `Access denied: You do not have permission to perform this ${context}. Please check that you are logged in with the correct account and have the required role (Master or Admin).`, 
         'error'
       );
-    } else if (errorCode === 'unauthenticated' || errorMessage.includes('unauthenticated')) {
+    } else if (this.isAuthError(err)) {
       UI.showMessage('template-status', 
         'Authentication required: Please log in again to continue.', 
         'error'
@@ -35,6 +65,16 @@ const TemplateCreation = {
         'error'
       );
     }
+  },
+
+  /**
+   * Helper to check if click target matches a selector
+   * @param {Element} target - The click target
+   * @param {string} selector - CSS selector to match
+   * @returns {boolean}
+   */
+  matchesSelector(target, selector) {
+    return target.matches(selector) || target.closest(selector) !== null;
   },
   
   // Industry-specific configurations with color tones
@@ -371,43 +411,46 @@ const TemplateCreation = {
       const target = e.target;
       
       // Add product button (delegated)
-      if (target.matches('#add-product-btn') || target.closest('#add-product-btn')) {
+      if (this.matchesSelector(target, '#add-product-btn')) {
         console.log('[TemplateCreation] Add Product button clicked (delegated handler)');
         e.preventDefault();
+        e.stopPropagation();
         this.addProduct();
         return;
       }
       
       // Save and generate button (delegated)
-      if (target.matches('#save-and-generate-btn') || target.closest('#save-and-generate-btn')) {
+      if (this.matchesSelector(target, '#save-and-generate-btn')) {
         console.log('[TemplateCreation] Save & Generate button clicked (delegated handler)');
         e.preventDefault();
+        e.stopPropagation();
         this.saveAndGenerateCode();
         return;
       }
       
       // Add custom spec button (delegated)
-      if (target.matches('#add-custom-spec-btn') || target.closest('#add-custom-spec-btn')) {
+      if (this.matchesSelector(target, '#add-custom-spec-btn')) {
         console.log('[TemplateCreation] Add Custom Spec button clicked (delegated handler)');
         e.preventDefault();
+        e.stopPropagation();
         this.addCustomSpecification();
         return;
       }
       
       // Remove product button
-      if (target.matches('.btn-remove-product') || target.closest('.btn-remove-product')) {
+      if (this.matchesSelector(target, '.btn-remove-product')) {
         const btn = target.matches('.btn-remove-product') ? target : target.closest('.btn-remove-product');
         this.removeProduct(btn);
       }
       
       // Remove custom spec button
-      if (target.matches('.btn-remove-custom-spec') || target.closest('.btn-remove-custom-spec')) {
+      if (this.matchesSelector(target, '.btn-remove-custom-spec')) {
         const btn = target.matches('.btn-remove-custom-spec') ? target : target.closest('.btn-remove-custom-spec');
         this.removeCustomSpec(btn);
       }
       
       // Add custom spec value button
-      if (target.matches('.btn-add-value') || target.closest('.btn-add-value')) {
+      if (this.matchesSelector(target, '.btn-add-value')) {
         const btn = target.matches('.btn-add-value') ? target : target.closest('.btn-add-value');
         const specId = btn.dataset.specId;
         if (specId) {
@@ -416,41 +459,11 @@ const TemplateCreation = {
       }
       
       // Remove custom spec value button
-      if (target.matches('.btn-remove-value') || target.closest('.btn-remove-value')) {
+      if (this.matchesSelector(target, '.btn-remove-value')) {
         const btn = target.matches('.btn-remove-value') ? target : target.closest('.btn-remove-value');
         this.removeCustomSpecValue(btn);
       }
     });
-
-    // Keep direct bindings for backward compatibility
-    const addProductBtn = document.getElementById('add-product-btn');
-    if (addProductBtn) {
-      addProductBtn.addEventListener('click', (e) => {
-        console.debug('[TemplateCreation] Add Product button clicked (direct handler)');
-        e.preventDefault();
-        this.addProduct();
-      });
-    }
-
-    // Add custom specification button - direct binding for backward compatibility
-    const addCustomSpecBtn = document.getElementById('add-custom-spec-btn');
-    if (addCustomSpecBtn) {
-      addCustomSpecBtn.addEventListener('click', (e) => {
-        console.debug('[TemplateCreation] Add Custom Spec button clicked (direct handler)');
-        e.preventDefault();
-        this.addCustomSpecification();
-      });
-    }
-
-    // Save and generate code button - direct binding for backward compatibility
-    const saveAndGenBtn = document.getElementById('save-and-generate-btn');
-    if (saveAndGenBtn) {
-      saveAndGenBtn.addEventListener('click', (e) => {
-        console.debug('[TemplateCreation] Save & Generate button clicked (direct handler)');
-        e.preventDefault();
-        this.saveAndGenerateCode();
-      });
-    }
   },
 
   /**
@@ -677,7 +690,7 @@ const TemplateCreation = {
     }
 
     const settings = this.collectTemplateSettings();
-    console.log('[TemplateCreation] saveAndGenerateCode collected settings:', {
+    console.debug('[TemplateCreation] saveAndGenerateCode collected settings:', {
       tonesCount: settings.tones.length,
       sizesCount: settings.sizes.length,
       stylesCount: settings.styles.length,
