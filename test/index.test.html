@@ -1,6 +1,283 @@
-<!-- Replace the single Reference Image Upload block in the Template Page with the block below -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title data-i18n="title">AI Design Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-analytics-compat.js"></script>
+  <!-- EmailJS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <!-- App Configuration -->
+  <script src="./js/config/config.js"></script>
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/account.css">
+  <link rel="stylesheet" href="css/client-management.css">
+  <link rel="stylesheet" href="css/payment.css">
+  <link rel="stylesheet" href="css/support.css">
+  <link rel="stylesheet" href="css/template-creation.css">
+  <link rel="stylesheet" href="css/records.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><text y=%2214%22 font-size=%2214%22>puzzle</text></svg>">
+  <!-- Language Switcher and Navigation Styles -->
+  <style>
+    .lang-inline-btn {
+      background: #f0f0f0;
+      border: 1px solid #ddd;
+      padding: 6px 12px;
+      margin-right: 8px;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: normal;
+    }
+    .lang-inline-btn:hover {
+      background: #007bff;
+      color: white;
+      border-color: #007bff;
+    }
+    .lang-inline-btn.active {
+      background: #007bff;
+      color: white;
+      font-weight: bold;
+      border-color: #007bff;
+    }
+    .nav-links {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      gap: 15px;
+    }
+    .nav-links a {
+      text-decoration: none;
+      color: #333;
+      font-size: 16px;
+    }
+    .nav-links a.active {
+      font-weight: bold;
+      color: #007bff;
+    }
+    #image-pair img {
+      max-width: 300px;
+      height: auto;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    #image-upload {
+      margin: 20px 0;
+    }
+    /* ---------- NEW: 4-button feedback row ---------- */
+    .feedback-row {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    .feedback-row button {
+      min-width: 130px;
+    }
+    .hidden { display: none !important; }
+    /* ------------------------------------------------ */
+  </style>
+</head>
+<body>
+  <!-- Authentication Container -->
+  <div id="auth-container" class="auth-container">
+    <div class="auth-header">
+      <h1 data-i18n="title">AI Design Generator</h1>
+      <div id="lang-switcher-auth" style="margin: 12px 0; text-align: center;">
+        <button data-lang="en" onclick="setLang('en')" class="lang-inline-btn">English</button>
+        <button data-lang="yue" onclick="setLang('yue')" class="lang-inline-btn">繁體中文</button>
+        <button data-lang="zh" onclick="setLang('zh')" class="lang-inline-btn">简体</button>
+      </div>
+      <p data-i18n="createImages">Create stunning images with AI</p>
+    </div>
+    <div class="auth-content">
+      <!-- Login Form -->
+      <form id="login-form">
+        <div class="form-group">
+          <label for="login-email" data-i18n="email">Email Address</label>
+          <input id="login-email" type="email" required autocomplete="username"
+                 data-i18n-ph="email" placeholder="Enter your email">
+        </div>
+        <div class="form-group">
+          <label for="login-password" data-i18n="password">Password</label>
+          <input id="login-password" type="password" required autocomplete="current-password"
+                 data-i18n-ph="password" placeholder="Enter your password">
+        </div>
+        <div class="form-group">
+          <a href="#" id="reset-password-link" onclick="resetPassword(); return false;"
+             data-i18n="forgotPassword">Forgot password?</a>
+        </div>
+        <button type="submit" class="btn" data-i18n="signIn">Sign In</button>
+        <div id="login-msg" class="message" style="display: none;"></div>
+      </form>
 
-        <!-- Reference Image Upload -->
+      <!-- Registration Form -->
+      <form id="register-form" class="hidden">
+        <!-- Step 1 -->
+        <div id="register-step1">
+          <div class="form-group">
+            <label for="register-email" data-i18n="email">Email Address</label>
+            <input id="register-email" type="email" required autocomplete="username"
+                   data-i18n-ph="email" placeholder="Enter your email">
+          </div>
+          <div class="form-group">
+            <label for="register-industry-code" data-i18n="industryCode">Industry Code</label>
+            <input id="register-industry-code" type="text" required
+                   data-i18n-ph="industryCode" placeholder="Enter industry code">
+          </div>
+          <div class="code-input-group">
+            <button type="button" id="send-code-btn" class="btn btn-code"
+                    data-i18n="sendCode">Send Verification Code</button>
+          </div>
+          <div id="register-msg-step1" class="message" style="display: none;"></div>
+        </div>
+
+        <!-- Step 2 -->
+        <div id="register-step2" class="hidden">
+          <div class="form-group">
+            <label for="register-code" data-i18n="verifyCode">Verification Code</label>
+            <input id="register-code" type="text" required
+                   data-i18n-ph="verifyCode" placeholder="Enter 6-digit code">
+          </div>
+          <button type="button" id="verify-code-btn" class="btn"
+                  data-i18n="verifyCode">Verify Code</button>
+          <button type="button" id="back-to-step1" class="btn btn-secondary"
+                  data-i18n="back">Back</button>
+          <div id="register-msg-step2" class="message" style="display: none;"></div>
+        </div>
+
+        <!-- Step 3 -->
+        <div id="register-step3" class="hidden">
+          <div class="form-group">
+            <label for="register-password" data-i18n="password">Password</label>
+            <input id="register-password" type="password" required autocomplete="new-password"
+                   data-i18n-ph="password" placeholder="Create a password">
+          </div>
+          <div class="form-group">
+            <label for="register-password2" data-i18n="confirmPassword">Confirm Password</label>
+            <input id="register-password2" type="password" required autocomplete="new-password"
+                   data-i18n-ph="confirmPassword" placeholder="Confirm your password">
+          </div>
+          <div class="form-group">
+            <label for="register-name" data-i18n="fullName">Full Name</label>
+            <input id="register-name" type="text" required
+                   data-i18n-ph="fullName" placeholder="Enter your full name">
+          </div>
+          <button type="submit" class="btn" data-i18n="register">Create Account</button>
+          <button type="button" id="back-to-step2" class="btn btn-secondary"
+                  data-i18n="back">Back</button>
+          <div id="register-msg-step3" class="message" style="display: none;"></div>
+        </div>
+      </form>
+
+      <div class="switch-link">
+        <span id="switch-to-register">
+          <span data-i18n="noAccountText">Don't have an account?</span>
+          <a href="#" onclick="showRegister(); return false;" data-i18n="signUp">Sign up</a>
+        </span>
+        <span id="switch-to-login" class="hidden">
+          <span data-i18n="haveAccount">Already have an account?</span>
+          <a href="#" onclick="showLogin(); return false;" data-i18n="signIn">Sign in</a>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Application -->
+  <div id="main-app" class="main-app">
+    <div class="app-header">
+      <h1 data-i18n="title">AI Design Generator</h1>
+      <div id="lang-switcher-inline" style="margin: 12px 0; text-align: left;">
+        <button data-lang="en" onclick="setLang('en')" class="lang-inline-btn">English</button>
+        <button data-lang="yue" onclick="setLang('yue')" class="lang-inline-btn">繁體中文</button>
+        <button data-lang="zh" onclick="setLang('zh')" class="lang-inline-btn">简体</button>
+      </div>
+
+      <div class="nav-links">
+        <a href="#" id="client-templates-link" onclick="showPage('template-page'); return false;" data-i18n="templates" class="active">Templates</a>
+        <a href="#" id="client-account-link" onclick="showPage('account-page'); return false;" data-i18n="account">Account</a>
+        <a href="#" id="client-records-link" onclick="showPage('records-page'); if (window.initRecordsPage) window.initRecordsPage(); return false;" data-i18n="pastRecords">Past Records</a>
+        <a href="#" id="create-account-link" onclick="showPage('create-account-page'); return false;" data-i18n="createAccount" style="display: none;">Create Account</a>
+        <a href="#" id="master-nav-link" onclick="showPage('client-management-section'); return false;" data-i18n="clientManagement" style="display: none;">Client Management</a>
+        <a href="#" id="master-template-link" onclick="UI.showMasterTemplatePage()" data-i18n="templateCreation" style="display: none;">Template Creation</a>
+        <a href="#" id="master-support-link" onclick="showPage('support-response-page'); SupportResponse && SupportResponse.init && SupportResponse.init(); return false;" data-i18n="supportResponses" style="display: none;">Support Responses</a>
+        <a href="#" id="logout-btn" onclick="handleLogout(); return false;" data-i18n="logout">Logout</a>
+      </div>
+    </div>
+
+    <div class="app-content">
+      <!-- Account Page -->
+      <div id="account-page" class="controls hidden">
+        <h2 data-i18n="yourAccount">Your Account</h2>
+        <div id="account-info"></div>
+        <div id="credit-section" style="display: none;"></div>
+
+        <form id="account-form" class="hidden">
+          <h3>Edit Profile</h3>
+          <div class="form-group">
+            <label for="account-name" data-i18n="name">Name</label>
+            <input id="account-name" type="text" required
+                   data-i18n-ph="fullName" placeholder="Enter your full name">
+          </div>
+          <div class="form-group hidden" id="account-industry-group">
+            <label for="account-industry" data-i18n="industry">Industry</label>
+            <input id="account-industry" type="text"
+                   data-i18n-ph="industry" placeholder="Enter your industry (optional)">
+          </div>
+          <div class="form-group">
+            <label for="account-product" data-i18n="productName">Product Name(s)</label>
+            <p style="font-size: 12px; color: #666; margin: 5px 0;">Multiple products separated by comma will be displayed as dropdown in Template page</p>
+            <input id="account-product" type="text" required
+                   data-i18n-ph="productName" placeholder="e.g., Product 1, Product 2, Product 3">
+          </div>
+          <div class="form-group">
+            <label for="account-email" data-i18n="emailLabel">Email</label>
+            <input id="account-email" type="email" required disabled>
+          </div>
+          <button type="submit" class="btn" data-i18n="updateProfile">Update Profile</button>
+          <button type="button" id="cancel-edit" class="btn btn-secondary"
+                  data-i18n="cancel">Cancel</button>
+          <div id="account-msg" class="message" style="display: none;"></div>
+        </form>
+      </div>
+
+      <!-- Template Page -->
+      <div id="template-page" class="controls hidden">
+        <h2 data-i18n="generateImages">Generate Images</h2>
+
+        <!-- Product Selection Dropdown -->
+        <div id="product-display" class="form-group" style="display: none;">
+          <label for="product-selector" data-i18n="selectProduct">Select Product</label>
+          <select id="product-selector" required>
+            <option value="" data-i18n="selectProductPlaceholder">-- Select a product --</option>
+          </select>
+          <div id="selected-product-info" style="margin-top: 8px; padding: 8px; background: #f0f8ff; border-radius: 4px; display: none;">
+            <small><span data-i18n="selectedProduct">Selected Product:</span> <strong id="selected-product-name"></strong></small>
+          </div>
+        </div>
+
+        <!-- Template Selection -->
+        <div class="form-group">
+          <label data-i18n="selectTemplate">Please select at least one template.</label>
+          <div id="template-checkboxes" class="checkbox-group"></div>
+          <div id="master-template-controls" class="hidden" style="margin-top: 10px;">
+            <input type="text" id="new-template" data-i18n-ph="newTemplate" placeholder="Add new template">
+            <button id="add-template" class="btn" data-i18n="addTemplate">Add</button>
+          </div>
+        </div>
+
+        <!-- Specifications (if any) -->
+        <div id="spec-selections"></div>
+
+        <!-- Reference Image Upload (two inputs) -->
         <div id="image-upload" class="form-group">
           <label for="reference-image-1" data-i18n="uploadReference">Upload Reference Images (optional)</label>
           <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
@@ -21,3 +298,426 @@
           <h4 style="margin:0 0 8px 0; color:#333;">Combined description</h4>
           <div id="combined-description-content" style="white-space:pre-wrap; color:#222;"></div>
         </div>
+
+        <!-- Prompt Display -->
+        <div id="prompt-display" class="info-box" style="display: none;"></div>
+
+        <!-- Generation Counter -->
+        <div id="generation-counter" style="text-align: right; margin-bottom: 10px; font-weight: bold; color: #666;">
+          Generations: 0/20
+        </div>
+
+        <!-- Generation controls / status -->
+        <div class="controls" style="margin-top: 8px;">
+          <div id="template-status" class="message info" style="display:none;"></div>
+
+          <div class="form-group" style="margin-top:8px;">
+            <label>Templates</label>
+            <!-- Note: JS will populate #template-checkboxes above; static placeholders are not necessary -->
+          </div>
+
+          <div style="display:flex;gap:12px;align-items:center;">
+            <button id="generate-images-btn" class="btn btn-primary">Generate Images</button>
+            <div id="learning-indicator" class="hidden" aria-hidden="true" style="margin-left:8px;">Learning…</div>
+          </div>
+        </div>
+
+        <!-- Generated image pair -->
+        <section id="results" class="page" aria-live="polite" style="margin-top:18px;">
+          <div id="image-pair">
+            <div class="image-card" data-index="0">
+              <img src="" alt="Generated design left" />
+              <div class="feedback-buttons">
+                <button class="btn btn-success" data-choice="0">Select</button>
+                <button class="btn btn-secondary" data-choice="tie">Tie</button>
+              </div>
+            </div>
+
+            <div class="image-card" data-index="1">
+              <img src="" alt="Generated design right" />
+              <div class="feedback-buttons">
+                <button class="btn btn-success" data-choice="1">Select</button>
+                <button class="btn btn-secondary" data-choice="tie">Tie</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feedback / action row -->
+          <div id="image-feedback-row" class="feedback-row hidden" style="margin-top:16px;">
+            <button id="left-better" class="btn btn-primary" data-i18n="leftBetter">Left is better</button>
+            <button id="right-better" class="btn btn-primary" data-i18n="rightBetter">Right is better</button>
+            <button id="download-all" class="btn btn-success" data-i18n="downloadAll">Download all</button>
+            <button id="both-bad" class="btn btn-danger" data-i18n="bothBad">Both bad</button>
+          </div>
+
+          <div id="learning-indicator-fallback" class="hidden" style="text-align:center; margin-top:8px; font-size:0.9em; color:#007bff;" data-i18n="aiLearning">
+            AI learning from your taste…
+          </div>
+        </section>
+      </div>
+
+      <!-- Past Records Page -->
+      <div id="records-page" class="controls hidden">
+        <h2 data-i18n="pastRecords">Past Generation Records</h2>
+        <div class="records-container">
+          <!-- The new history.js will inject the last 3 runs here -->
+          <div id="records-last-runs"></div>
+        </div>
+        <div id="records-msg" class="message" style="display: none;"></div>
+      </div>
+
+      <!-- Support / Past Submissions Page -->
+      <div id="support-records-page" class="controls hidden" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+          <h2 data-i18n="supportRequests">Support Requests</h2>
+          <button id="support-back-btn" class="btn btn-secondary">&larr; Back to Account</button>
+        </div>
+        <p style="color:#666;">History of resolved or cancelled support requests and responses from the team.</p>
+        <div id="support-records-list" style="margin-top: 12px; display: grid; gap: 10px;"></div>
+        <div id="support-records-msg" class="message" style="display: none; margin-top: 12px;"></div>
+      </div>
+
+      <!-- Payment Page -->
+      <div id="payment-page" class="controls hidden">
+        <h2 data-i18n="addCredits">Purchase Credits</h2>
+        <div style="max-width: 600px; margin: 0 auto;">
+          <div style="background: #f0f8ff; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+            <h3 data-i18n="creditPackages">Credit Packages</h3>
+            <p data-i18n="creditsInfo" style="color: #666; margin: 10px 0;">Each generation uses 2 credits. Select a package below:</p>
+          </div>
+
+          <div id="payment-options" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px;">
+            <!-- Payment options will be generated here -->
+          </div>
+
+          <div id="payment-summary" style="background: #fff; border: 1px solid #ddd; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: none;">
+            <h3 data-i18n="orderSummary">Order Summary</h3>
+            <p><strong data-i18n="package">Package</strong>: <span id="summary-package"></span></p>
+            <p><strong data-i18n="price">Price</strong>: <span id="summary-price" style="font-size: 20px; color: #007bff; font-weight: bold;"></span> <span data-i18n="hkd">HKD</span></p>
+            <button id="checkout-btn" class="btn btn-primary" style="width: 100%; margin-top: 15px;" data-i18n="proceedToPayment">Proceed to Payment</button>
+            <button onclick="cancelPayment()" class="btn btn-secondary" style="width: 100%; margin-top: 10px;" data-i18n="cancel">Cancel</button>
+          </div>
+
+          <div id="payment-msg" class="message" style="display: none;"></div>
+        </div>
+      </div>
+
+      <!-- Create Account Page (Master Only) -->
+      <div id="create-account-page" class="controls hidden">
+        <h2 data-i18n="createAccount">Create Industry Account</h2>
+        <form id="create-account-form">
+          <div class="form-group">
+            <label for="industry-name" data-i18n="industryNameLabel">Industry Name*</label>
+            <select id="industry-name" required>
+              <option value="" data-i18n="selectIndustry">Select industry</option>
+              <option value="ecommerce">E-commerce</option>
+              <option value="fnb">F&amp;B</option>
+              <option value="retail">Retail</option>
+              <option value="beauty">Beauty</option>
+              <option value="others" data-i18n="otherIndustry">Others</option>
+            </select>
+          </div>
+
+          <div class="form-group hidden" id="custom-industry-group">
+            <label for="custom-industry-name" data-i18n="customIndustryName">Custom Industry Name</label>
+            <input id="custom-industry-name" type="text"
+                   data-i18n-ph="customIndustryPlaceholder" placeholder="Enter custom industry name">
+          </div>
+
+          <div id="spec-container">
+            <div class="spec-group" data-spec-id="1">
+              <div class="form-group">
+                <label for="spec-1-type" data-i18n-dynamic="specificationLabel" data-spec-n="1">Specification 1*</label>
+                <select id="spec-1-type" required>
+                  <option value="" data-i18n="selectSpecification">Select specification</option>
+                  <option value="size" data-i18n="size">Size</option>
+                  <option value="colorScheme" data-i18n="colorScheme">Color Scheme</option>
+                  <option value="style" data-i18n="style">Style</option>
+                  <option value="tone" data-i18n="tone">Tone</option>
+                  <option value="dimensions" data-i18n="dimensions">Dimensions</option>
+                  <option value="other" data-i18n="other">Other</option>
+                </select>
+              </div>
+
+              <div class="form-group hidden" id="spec-1-custom-group">
+                <label for="spec-1-custom-name" data-i18n="customSpecName">Custom Specification Name</label>
+                <input id="spec-1-custom-name" type="text"
+                       data-i18n-ph="customSpecPlaceholder" placeholder="Enter specification name (e.g., Font)">
+              </div>
+
+              <div class="value-group" id="spec-1-values">
+                <div class="form-group">
+                  <label for="spec-1-value-1" data-i18n-dynamic="valueLabel" data-spec-n="1">Value 1</label>
+                  <input id="spec-1-value-1" type="text" required
+                         data-i18n-ph="valuePlaceholder" placeholder="Enter value (e.g., 1:1)">
+                </div>
+              </div>
+
+              <button type="button" class="btn btn-add-value" onclick="addValue(1)"
+                      data-i18n="addValueBtn">Add Value</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label data-i18n="productNameLabel">Product Names* (Add multiple products)</label>
+            <div id="products-container" style="margin-bottom: 15px;">
+              <div class="product-group" data-product-id="1" style="margin-bottom: 15px; padding: 10px; background: #f9f9f9; border-radius: 6px; border-left: 3px solid #667eea;">
+                <div class="form-group">
+                  <label for="product-1" data-i18n="product">Product 1</label>
+                  <div style="display: flex; gap: 10px;">
+                    <input id="product-1" type="text" required placeholder="Enter product name" style="flex: 1;">
+                  </div>
+                </div>
+              </div>
+            </div>
+            <button type="button" class="btn btn-add-product" id="add-product-btn" style="margin-bottom: 15px;" data-i18n="addProduct">+ Add Product</button>
+          </div>
+
+          <button type="button" id="add-spec-btn" class="btn btn-add-spec" data-i18n="addSpecification">Add Specification</button>
+          <button type="submit" class="btn" data-i18n="generateIndustryCode">Generate Industry Code</button>
+          <button type="button" id="reset-specs" class="btn btn-secondary" data-i18n="reset">Reset</button>
+          <div id="create-account-msg" class="message" style="display: none;"></div>
+        </form>
+
+        <div id="generated-code" class="code-display hidden">
+          <span data-i18n="industryCodeLabel">Industry Code:</span> <span id="industry-code"></span>
+          <button onclick="copyCode()" data-i18n="copy">Copy</button>
+        </div>
+      </div>
+
+      <!-- Client Management Section (Master Only) -->
+      <section id="client-management-section" class="page-section hidden" style="display: none;">
+        <div class="client-management-container">
+          <div class="filters-section">
+            <div class="search-bar">
+              <input type="text" id="search-client" placeholder="Search by name or email..." data-i18n-ph="searchClient">
+              <button id="search-btn" class="btn btn-primary" data-i18n="search">Search</button>
+              <button id="reset-filters-btn" class="btn btn-secondary" data-i18n="reset">Reset</button>
+            </div>
+            <div class="filters">
+              <select id="filter-industry">
+                <option value="" data-i18n="allIndustries">All Industries</option>
+              </select>
+              <select id="filter-template">
+                <option value="" data-i18n="allTemplates">All Templates</option>
+              </select>
+              <select id="filter-status">
+                <option value="" data-i18n="allStatus">All Status</option>
+                <option value="active" data-i18n="active">Active</option>
+                <option value="locked" data-i18n="locked">Locked</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="clients-table-section">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th data-i18n="name">Name</th>
+                  <th data-i18n="emailLabel">Email</th>
+                  <th data-i18n="industry">Industry</th>
+                  <th data-i18n="template">Template</th>
+                  <th data-i18n="credits">Credits</th>
+                  <th data-i18n="status">Status</th>
+                  <th data-i18n="lastActive">Last Active</th>
+                  <th data-i18n="actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="clients-table-body">
+                <tr><td colspan="8" style="text-align: center; padding: 20px;" data-i18n="loadingClients">Loading...</td></tr>
+              </tbody>
+            </table>
+            <div id="no-results" class="no-results" style="display: none;" data-i18n="noClientsFound">No clients found</div>
+          </div>
+
+          <div class="pagination-section">
+            <button id="prev-page" class="btn btn-secondary" data-i18n="previous">Previous</button>
+            <span id="page-info">Page 1 of 1</span>
+            <button id="next-page" class="btn btn-secondary" data-i18n="next">Next</button>
+          </div>
+
+          <div id="client-status" style="margin-top: 15px;"></div>
+        </div>
+      </section>
+
+      <!-- Client Details Modal (simplified) -->
+      <div id="client-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+          <span class="close">&times;</span>
+          <h2 data-i18n="clientDetails">Client Details</h2>
+          <div class="modal-body">
+            <section>
+              <h3 data-i18n="accountInformation">Account Information</h3>
+              <div class="info-grid">
+                <div class="info-item">
+                  <label data-i18n="name">Name</label>
+                  <span id="modal-client-name">N/A</span>
+                </div>
+                <div class="info-item">
+                  <label data-i18n="emailLabel">Email</label>
+                  <span id="modal-client-email">N/A</span>
+                </div>
+                <div class="info-item">
+                  <label data-i18n="industry">Industry</label>
+                  <span id="modal-client-industry">N/A</span>
+                </div>
+                <div class="info-item">
+                  <label data-i18n="created">Created</label>
+                  <span id="modal-client-created">N/A</span>
+                </div>
+                <div class="info-item">
+                  <label data-i18n="lastActive">Last Active</label>
+                  <span id="modal-client-lastactive">N/A</span>
+                </div>
+                <div class="info-item">
+                  <label data-i18n="status">Status</label>
+                  <span id="modal-client-status">Active</span>
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <h3 data-i18n="templateSettings">Template Settings</h3>
+              <div class="template-controls">
+                <div class="form-group">
+                  <label for="modal-template-select" data-i18n="assignedTemplate">Current Template</label>
+                  <select id="modal-template-select">
+                    <option value="" data-i18n="noneValue">None</option>
+                  </select>
+                  <button id="update-template-btn" class="btn btn-primary" data-i18n="updateTemplate">Update Template</button>
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <h3 data-i18n="creditManagement">Credit Management</h3>
+              <div class="credit-controls">
+                <div class="current-balance">
+                  <span data-i18n="currentBalance">Balance</span>: <span class="credit-amount" id="modal-credit-balance">0</span> <span data-i18n="credits">credits</span>
+                </div>
+                <div class="credit-actions">
+                  <input type="number" id="credit-adjustment" placeholder="Amount" min="1" data-i18n-ph="creditAmount">
+                  <button id="add-credits-btn" class="btn btn-success" data-i18n="addCredits">Add Credits</button>
+                  <button id="deduct-credits-btn" class="btn btn-warning" data-i18n="deductCredits">Deduct Credits</button>
+                  <button id="reset-credits-btn" class="btn btn-secondary" data-i18n="reset">Reset</button>
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <h3 data-i18n="generationHistory">Generation History</h3>
+              <div class="history-stats">
+                <div class="stat-item">
+                  <label data-i18n="totalGenerations">Total</label>
+                  <span id="total-generations">0</span>
+                </div>
+                <div class="stat-item">
+                  <label data-i18n="thisMonth">This Month</label>
+                  <span id="month-generations">0</span>
+                </div>
+                <div class="stat-item">
+                  <label data-i18n="creditsUsed">Credits Used</label>
+                  <span id="credits-used">0</span>
+                </div>
+              </div>
+              <table class="history-table data-table">
+                <thead>
+                  <tr>
+                    <th data-i18n="date">Date</th>
+                    <th data-i18n="prompt">Prompt</th>
+                    <th data-i18n="template">Template</th>
+                    <th data-i18n="credits">Credits</th>
+                    <th data-i18n="status">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="history-table-body">
+                  <tr><td colspan="5" style="text-align: center;" data-i18n="noHistory">No history</td></tr>
+                </tbody>
+              </table>
+            </section>
+
+            <section>
+              <h3 data-i18n="accountManagement">Account Management</h3>
+              <div class="action-buttons">
+                <button id="toggle-lock-btn" class="btn btn-warning" data-i18n="lockAccount">Lock Account</button>
+                <button id="reset-password-btn" class="btn btn-secondary" data-i18n="resetPassword">Reset Password</button>
+                <button id="delete-account-btn" class="btn btn-danger" data-i18n="deleteAccount">Delete Account</button>
+              </div>
+            </section>
+          </div>
+
+          <div id="modal-message" class="message" style="display: none; margin-top: 15px;"></div>
+        </div>
+      </div>
+
+      <!-- Product Warning -->
+      <div id="product-warning" class="product-warning">
+        <strong data-i18n="warningProduct">Warning: Product name not set.</strong>
+        <a href="setup.html" data-i18n="updateNow">Update now</a>
+      </div>
+
+      <!-- MASTER: TEMPLATE CREATION PAGE -->
+      <div class="page" id="template-creation-page" style="display:none;">
+        <div class="controls">
+          <h2 data-i18n="templateCreation">Template Creation (Master)</h2>
+          <div class="form-group">
+            <label for="industry-selector" data-i18n="selectIndustry">Select Industry</label>
+            <select id="industry-selector" class="form-input"></select>
+          </div>
+          <div id="template-editor" class="mt-3"></div>
+          <div id="template-status"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript helpers -->
+  <script>
+    // Show new feedback row + learning indicator
+    function showGeneratedContent() {
+      const container = document.getElementById('results');
+      const row = document.getElementById('image-feedback-row');
+      const learning = document.getElementById('learning-indicator');
+      if (container) container.classList.remove('hidden');
+      if (row) row.classList.remove('hidden');
+      if (learning) learning.classList.remove('hidden');
+      if (window.i18n && typeof window.i18n.renderAll === 'function') window.i18n.renderAll();
+    }
+  </script>
+
+  <!-- Core Modules (order matters!) -->
+  <script src="js/core/state.js"></script>
+  <script src="js/core/i18n.js"></script>
+  <script src="js/utils/ui.js"></script>
+  <script src="js/utils/helpers.js"></script>
+  <script src="js/utils/sanitizer.js"></script>
+  <script src="js/utils/validation.js"></script>
+  <script src="js/utils/firebase.js"></script>
+  <script src="js/utils/translator.js"></script>
+  <script src="js/utils/product-translator.js"></script>
+
+  <!-- Feature Modules -->
+  <script src="js/features/auth/auth.js"></script>
+  <script src="js/features/auth/password.js"></script>
+  <script src="js/features/auth/registration.js"></script>
+  <script src="js/features/account/profile.js"></script>
+  <script src="js/features/payment/payment.js"></script>
+  <script src="js/features/generation/pollinations.js"></script>
+  <script src="js/features/generation/stability.js"></script>
+  <script src="js/features/generation/renderer.js"></script>
+  <script src="js/features/generation/generator.js"></script>
+  <script src="js/features/templates/template.js"></script>
+  <script src="js/features/records/history.js"></script>
+  <script src="js/features/admin/client-management.js"></script>
+  <script src="js/features/admin/support-response.js"></script>
+  <script src="js/features/admin/industry-codes.js"></script>
+  <script src="template-creation.js"></script>
+
+  <!-- Admin Utilities (for testing/management) -->
+  <script src="js/utils/admin-utils.js"></script>
+  <script src="js/utils/migration-utils.js"></script>
+
+  <!-- Main Entry Point -->
+  <script src="js/core/main.js"></script>
+</body>
+</html>
