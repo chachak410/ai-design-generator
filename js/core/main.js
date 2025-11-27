@@ -168,14 +168,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Setup is complete — show the main app UI
             console.log('Showing main app...');
             UI.showMainApp();
-            UI.toggleMasterUI(AppState.userRole === 'master' || AppState.userRole === 'admin');
-
-            const masterNavLink = document.getElementById('master-nav-link');
-            if (AppState.userRole === 'master' || AppState.userRole === 'admin') {
-              if (masterNavLink) {
-                masterNavLink.style.display = 'inline-block';
-              }
-            }
+            // Toggle navbar based on master role - only 'master' role gets restricted nav
+            UI.toggleMasterUI(AppState.userRole === 'master');
 
             window.currentUserData = userData;
             console.log('Showing template page...');

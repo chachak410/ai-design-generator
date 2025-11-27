@@ -40,6 +40,11 @@ The **AI Design Generator** is a lightweight, browser-based tool that transforms
 3. Set up the Master Account:
    - Create templates for different industries (e.g., e-commerce, education).
    - Assign industry codes to users.
+   - **Master Navbar**: When logged in as a master user (role: 'master'), the navigation bar displays only:
+     - **Template Creation** - Create and manage templates for industries
+     - **Client Management** - View and manage client accounts
+     - **Support Responses** - View and respond to support requests
+     - **Logout** - Sign out of the application
 4. Manage the tool via the admin dashboard (contact the team for access).
 
 > **Note**: Admin credentials are private. Contact the project maintainers for access or use environment variables for secure setup.
