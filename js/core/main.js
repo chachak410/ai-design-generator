@@ -81,10 +81,25 @@ document.addEventListener('DOMContentLoaded', async () => {
           
           // Now process userData for both new and existing users
           if (userData) {
-            const userRole = userData.role || 'client';
-            console.log('[AUTH STATE] Final user role:', userRole, 'Email:', userData.email);
+            let userRole = userData.role || 'client';
+            console.log('[AUTH STATE] Final user role from Firestore:', userRole, 'Email:', userData.email);
+            
+            // Check if this user's email is configured as an admin via AdminConfig
+            // This allows configuring admins without modifying Firestore
+            const userEmail = user.email || userData.email || '';
+            if (window.AdminConfig && typeof window.AdminConfig.isAdminByEmail === 'function') {
+              const isConfiguredAdmin = window.AdminConfig.isAdminByEmail(userEmail);
+              if (isConfiguredAdmin && userRole !== 'master') {
+                // Upgrade role to admin if email is in admin list and not already master
+                console.log('[AUTH STATE] ✓ User email is in admin config list, upgrading role to admin');
+                userRole = 'admin';
+              }
+            }
             
             AppState.userRole = userRole;
+            // Store admin flag for easy checking throughout the app
+            AppState.isAdmin = (userRole === 'admin' || userRole === 'master');
+            console.log('[AUTH STATE] Final computed role:', userRole, 'isAdmin:', AppState.isAdmin);
             
             // Master/Admin 用户不需要setup重定向
             if (AppState.userRole === 'master' || AppState.userRole === 'admin') {
@@ -154,11 +169,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.log('Deciding whether to show main app or redirect to setup...');
 
             // If the client account is not fully setup, force them to complete the
-            // initial questionnaire/setup before they can use the app. Exception: allow
-            // the special email 'langtechgroup5@gmail.com' to bypass the redirect.
-            const exemptEmail = 'langtechgroup5@gmail.com';
+            // initial questionnaire/setup before they can use the app.
+            // Exception: Admin users (configured via ADMIN_EMAILS or Firestore role) bypass setup
             const currentEmail = (AppState.currentUser && AppState.currentUser.email) || user.email || '';
-            if (AppState.clientNeedsSetup && currentEmail.toLowerCase() !== exemptEmail.toLowerCase()) {
+            const isAdminUser = AppState.isAdmin || 
+              (window.AdminConfig && window.AdminConfig.isAdminByEmail(currentEmail));
+            
+            if (AppState.clientNeedsSetup && !isAdminUser) {
               console.log('[SETUP REDIRECT] Client needs to complete setup, redirecting to setup.html for', currentEmail);
               // Use replace so the back button doesn't easily navigate back to the app without completing setup
               window.location.replace('setup.html');
@@ -168,7 +185,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Setup is complete — show the main app UI
             console.log('Showing main app...');
             UI.showMainApp();
-            // Toggle navbar based on master role - only 'master' role gets restricted nav
+            // Toggle navbar based on user role
+            // For master role: show only admin links (Template Creation, Client Management, Support Responses)
+            // For admin role: show both client and admin links
+            // For client role: show only client links
             UI.toggleMasterUI(AppState.userRole === 'master');
 
             window.currentUserData = userData;
@@ -183,6 +203,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log('User signed out');
         AppState.currentUser = null;
         AppState.userRole = null;
+        AppState.isAdmin = false;
         AppState.userProductName = null;
         AppState.generationCount = 0;
         AppState.feedbackVector = null;
