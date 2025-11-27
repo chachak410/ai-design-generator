@@ -20,5 +20,8 @@
   "homepage": "https://github.com/chachak410/ai-design-generator#readme",
   "dependencies": {
     "firebase": "^12.5.0"
+  },
+  "devDependencies": {
+    "jest-environment-jsdom": "^30.2.0"
   }
 }
