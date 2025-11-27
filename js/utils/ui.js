@@ -121,12 +121,9 @@ const UI = {
     }
   },
   toggleMasterUI(isMasterUser) {
-    const masterEmail = 'langtechgroup5@gmail.com';
-    const currentEmail = (AppState.currentUser?.email || '').toLowerCase();
-    const isMasterAccount = currentEmail === masterEmail.toLowerCase();
     const userRole = AppState.userRole;
     
-    // Determine if the user is a master role (via role property or email check)
+    // Determine if the user is a master role (via role property or boolean flag)
     const isMasterRole = userRole === 'master' || isMasterUser === true;
     
     // Navigation link IDs for client/regular users
@@ -173,8 +170,9 @@ const UI = {
     }
   },
   /**
-   * Show the Template Creation page for master users.
+   * Show the Template Creation page for privileged users (master and admin).
    * This handles the navigation click for the Template Creation link.
+   * Note: Both master and admin users are allowed access to template creation.
    */
   showMasterTemplatePage() {
     // Only allow master or admin users to access template creation
