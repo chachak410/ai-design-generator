@@ -308,13 +308,40 @@ ${values.map((value) => `<option value="${value}">${value}</option>`).join('')}
   },
 
   setupNavigation() {
+    // Defensive navigation handler: prefer explicit onclick page, then href (#page), then data-page
     document.querySelectorAll('.nav-links a').forEach((link) => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
-        const page = link.getAttribute('onclick').match(/'([^']+)'/)[1];
+
+        // Try onclick attribute first
+        const onclickAttr = link.getAttribute('onclick') || '';
+        const m = onclickAttr.match(/'([^']+)'/);
+        let page = m ? m[1] : null;
+
+        // Fallback to href (support anchors like href="#template-page")
+        if (!page) {
+          const href = link.getAttribute('href') || '';
+          if (href.startsWith('#')) {
+            page = href.slice(1);
+          }
+        }
+
+        // Fallback to data-page attribute
+        if (!page) {
+          page = link.dataset.page || null;
+        }
+
+        // If we still don't have a page, do nothing (prevents the TypeError)
+        if (!page) return;
+
         document.querySelectorAll('.nav-links a').forEach((l) => l.classList.remove('active'));
         link.classList.add('active');
-        showPage(page);
+
+        if (typeof showPage === 'function') {
+          showPage(page);
+        } else {
+          console.warn('[TemplateManager] showPage is not defined; cannot navigate to', page);
+        }
       });
     });
   },
