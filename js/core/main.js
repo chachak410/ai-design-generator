@@ -1,12 +1,19 @@
-﻿// js/core/main.js
+// js/core/main.js
 
 // AppState is now initialized in state.js — just use it
 document.addEventListener('DOMContentLoaded', async () => {
-  console.log('DOM loaded, initializing app...');
+  console.log('[main.js] DOM loaded, initializing app...');
   try {
-    // Firebase already initialized in state.js
-    emailjs.init(AppConfig.emailjs.publicKey);
-    console.log('EmailJS initialized');
+    // Guard EmailJS initialization - only if config is available
+    if (typeof emailjs !== 'undefined' && 
+        window.AppConfig && 
+        window.AppConfig.emailjs && 
+        window.AppConfig.emailjs.publicKey) {
+      emailjs.init(window.AppConfig.emailjs.publicKey);
+      console.log('[main.js] EmailJS initialized');
+    } else {
+      console.warn('[main.js] EmailJS SDK or config not available, skipping initialization');
+    }
 
     // Hide main app by default until auth state is verified
     const mainApp = document.getElementById('main-app');
@@ -14,20 +21,37 @@ document.addEventListener('DOMContentLoaded', async () => {
       mainApp.style.display = 'none';
     }
 
+    // Guard AppState.auth usage
+    if (!window.AppState || !window.AppState.auth) {
+      console.error('[main.js] AppState.auth not available. Firebase may not be initialized.');
+      UI.showAuth();
+      UI.showLogin();
+      return;
+    }
+
     // Now safe to use AppState.auth
-    AppState.auth.onAuthStateChanged(async (user) => {
-      console.log('onAuthStateChanged fired, user:', user ? user.email : 'null');
+    window.AppState.auth.onAuthStateChanged(async (user) => {
+      console.log('[main.js] onAuthStateChanged fired, user:', user ? user.email : 'null');
       console.log('[AUTH STATE] User exists:', !!user);
       console.log('[AUTH STATE] User email:', user?.email);
       console.log('[AUTH STATE] User UID:', user?.uid);
       
       if (user) {
-        console.log('User signed in:', user.email);
-        AppState.currentUser = user;
+        console.log('[main.js] User signed in:', user.email);
+        window.AppState.currentUser = user;
 
         try {
           let userData = null;
-          const doc = await AppState.db.collection('users').doc(user.uid).get();
+          
+          // Guard db usage
+          if (!window.AppState.db) {
+            console.error('[main.js] AppState.db not available');
+            UI.showAuth();
+            UI.showLogin();
+            return;
+          }
+          
+          const doc = await window.AppState.db.collection('users').doc(user.uid).get();
           console.log('[AUTH STATE] Firestore doc exists:', doc.exists);
           
           if (!doc.exists) {
@@ -41,18 +65,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 questionnaireCompleted: false,
                 credits: 20
               };
-              await AppState.db.collection('users').doc(user.uid).set(newUserData);
+              await window.AppState.db.collection('users').doc(user.uid).set(newUserData);
               console.log('[AUTH STATE] ✓ Initial user document created');
               userData = newUserData;
               // 设置标记，新用户需要setup
-              AppState.clientNeedsSetup = true;
+              window.AppState.clientNeedsSetup = true;
             } catch (createErr) {
               console.error('[AUTH STATE] Error creating user document:', createErr);
               userData = {
                 role: 'client',
                 questionnaireCompleted: false
               };
-              AppState.clientNeedsSetup = true;
+              window.AppState.clientNeedsSetup = true;
             }
           } else {
             userData = doc.data();
@@ -61,7 +85,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             // 关键修复：如果role字段不存在或为空，强制更新为'client'
             if (!userData.role) {
               console.warn('[AUTH STATE] ⚠️  User document missing role field. Auto-fixing...');
-              await AppState.db.collection('users').doc(user.uid).update({
+              await window.AppState.db.collection('users').doc(user.uid).update({
                 role: 'client'
               });
               userData.role = 'client';
@@ -71,7 +95,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             // 确保email字段存在
             if (!userData.email) {
               console.warn('[AUTH STATE] ⚠️  User document missing email field. Auto-fixing...');
-              await AppState.db.collection('users').doc(user.uid).update({
+              await window.AppState.db.collection('users').doc(user.uid).update({
                 email: user.email
               });
               userData.email = user.email;
@@ -86,9 +110,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             // Check if this user's email is configured as an admin via AdminConfig
             // This allows configuring admins without modifying Firestore
-            const userEmail = user.email || userData.email || '';
+            // Use a different variable name to avoid redeclaration
+            const computedUserEmail = user.email || userData.email || '';
             if (window.AdminConfig && typeof window.AdminConfig.isAdminByEmail === 'function') {
-              const isConfiguredAdmin = window.AdminConfig.isAdminByEmail(userEmail);
+              const isConfiguredAdmin = window.AdminConfig.isAdminByEmail(computedUserEmail);
               // Only upgrade client users to admin - don't downgrade master or admin users
               if (isConfiguredAdmin && userRole === 'client') {
                 console.log('[AUTH STATE] ✓ User email is in admin config list, upgrading role to admin');
@@ -96,15 +121,15 @@ document.addEventListener('DOMContentLoaded', async () => {
               }
             }
             
-            AppState.userRole = userRole;
+            window.AppState.userRole = userRole;
             // Store admin flag for easy checking throughout the app
-            AppState.isAdmin = (userRole === 'admin' || userRole === 'master');
-            console.log('[AUTH STATE] Final computed role:', userRole, 'isAdmin:', AppState.isAdmin);
+            window.AppState.isAdmin = (userRole === 'admin' || userRole === 'master');
+            console.log('[AUTH STATE] Final computed role:', userRole, 'isAdmin:', window.AppState.isAdmin);
             
             // Master/Admin 用户不需要setup重定向
-            if (AppState.userRole === 'master' || AppState.userRole === 'admin') {
+            if (window.AppState.userRole === 'master' || window.AppState.userRole === 'admin') {
               console.log('[DEBUG] User is master/admin, skipping setup checks');
-            } else if (AppState.userRole === 'client') {
+            } else if (window.AppState.userRole === 'client') {
               // 检查用户是否需要完成问卷（只有 client 账户需要）
               console.log('[DEBUG] Checking if client needs setup...');
               try {
@@ -139,7 +164,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 if (setupComplete) {
                   console.log('[SETUP COMPLETE] ✓ Client account is fully setup');
-                  AppState.clientNeedsSetup = false;
+                  window.AppState.clientNeedsSetup = false;
                 } else {
                   console.log('[SETUP INCOMPLETE] ✗ Client account needs to complete setup', {
                     missing: {
@@ -148,7 +173,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                       noProduct: !hasProduct
                     }
                   });
-                  AppState.clientNeedsSetup = true;
+                  window.AppState.clientNeedsSetup = true;
                 }
               } catch (e) {
                 console.warn('Error while evaluating setup status:', e);
@@ -160,19 +185,19 @@ document.addEventListener('DOMContentLoaded', async () => {
               role: userData.role
             });
 
-            AppState.userProductName = userData.productName || '';
-            AppState.userTemplates = userData.template ? [userData.template] : [];
-            AppState.userSpecs = userData.specifications || {};
-            AppState.feedbackVector = userData.feedbackVector || null;
-            AppState.badSelections = userData.badSelections || 0;
+            window.AppState.userProductName = userData.productName || '';
+            window.AppState.userTemplates = userData.template ? [userData.template] : [];
+            window.AppState.userSpecs = userData.specifications || {};
+            window.AppState.feedbackVector = userData.feedbackVector || null;
+            window.AppState.badSelections = userData.badSelections || 0;
 
             console.log('Deciding whether to show main app or redirect to setup...');
 
             // If the client account is not fully setup, force them to complete the
             // initial questionnaire/setup before they can use the app.
             // Exception: Admin users (AppState.isAdmin already includes config check) bypass setup
-            if (AppState.clientNeedsSetup && !AppState.isAdmin) {
-              const currentEmail = (AppState.currentUser && AppState.currentUser.email) || user.email || '';
+            if (window.AppState.clientNeedsSetup && !window.AppState.isAdmin) {
+              const currentEmail = (window.AppState.currentUser && window.AppState.currentUser.email) || user.email || '';
               console.log('[SETUP REDIRECT] Client needs to complete setup, redirecting to setup.html for', currentEmail);
               // Use replace so the back button doesn't easily navigate back to the app without completing setup
               window.location.replace('setup.html');
@@ -184,12 +209,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             UI.showMainApp();
             
             // Determine admin status using AdminConfig (email-based) or role-based
-            const userEmail = userData.email || user.email || '';
-            const isAdmin = (window.AdminConfig && window.AdminConfig.isAdminByEmail(userEmail, userData)) ||
-                           AppState.userRole === 'master' || 
-                           AppState.userRole === 'admin';
-            AppState.isAdmin = isAdmin;
-            console.log('[AUTH STATE] isAdmin:', isAdmin, 'for email:', userEmail);
+            const emailForAdminCheck = userData.email || user.email || '';
+            const isAdmin = (window.AdminConfig && window.AdminConfig.isAdminByEmail(emailForAdminCheck, userData)) ||
+                           window.AppState.userRole === 'master' || 
+                           window.AppState.userRole === 'admin';
+            window.AppState.isAdmin = isAdmin;
+            console.log('[AUTH STATE] isAdmin:', isAdmin, 'for email:', emailForAdminCheck);
             
             // Toggle navbar based on role - toggleMasterUI handles all navigation visibility
             // based on AppState.userRole and AppState.isAdmin
@@ -197,7 +222,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             // For master role: show only admin links (Template Creation, Client Management, Support Responses)
             // For admin role: show both client and admin links
             // For client role: show only client links
-            UI.toggleMasterUI(AppState.userRole === 'master');
+            UI.toggleMasterUI(window.AppState.userRole === 'master');
 
             window.currentUserData = userData;
             console.log('Showing template page...');
@@ -209,22 +234,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       } else {
         console.log('User signed out');
-        AppState.currentUser = null;
-        AppState.userRole = null;
-        AppState.isAdmin = false;
-        AppState.userProductName = null;
-        AppState.generationCount = 0;
-        AppState.feedbackVector = null;
-        AppState.badSelections = 0;
+        window.AppState.currentUser = null;
+        window.AppState.userRole = null;
+        window.AppState.isAdmin = false;
+        window.AppState.userProductName = null;
+        window.AppState.generationCount = 0;
+        window.AppState.feedbackVector = null;
+        window.AppState.badSelections = 0;
         UI.showAuth();
         UI.showLogin();
       }
     });
 
     setupEventListeners();
-    console.log('App initialization complete');
+    console.log('[main.js] App initialization complete');
   } catch (err) {
-    console.error('Initialization error:', err);
+    console.error('[main.js] Initialization error:', err);
     alert('Failed to initialize app: ' + err.message);
   }
 });

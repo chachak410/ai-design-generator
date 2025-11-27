@@ -27,20 +27,13 @@ window.AppConfig = {
   // Admin Configuration
   // List of admin email addresses. Users with these emails will have admin privileges.
   // Admin users can access: Template Creation, Client Management, Support Responses
-  // Add emails as an array: ["admin1@example.com", "admin2@example.com"]
-  // Or as comma-separated string: "admin1@example.com,admin2@example.com"
-  adminEmails: [
-    "langtechgroup5@gmail.com"
-  ]
-  // List of email addresses that should have admin privileges.
-  // These users will see Template Creation, Client Management, and Support Responses in the navbar.
   // 
   // For production deployments, configure admin emails by:
   // 1. Setting window.ADMIN_EMAILS before loading the app (recommended)
   // 2. Using server-side injection to populate this array
   // 
   // Example: adminEmails: ['admin@example.com', 'master@example.com']
-  // 
-  // DO NOT commit production email addresses here - use environment variables or server config.
-  adminEmails: []
+  adminEmails: [
+    "langtechgroup5@gmail.com"
+  ]
 };
