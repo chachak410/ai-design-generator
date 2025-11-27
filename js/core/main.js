@@ -238,9 +238,16 @@ document.addEventListener('DOMContentLoaded', async () => {
               console.log('[main.js] Using HomeRedirect for role-based page navigation');
               await window.HomeRedirect.redirect();
             } else {
-              // Fallback to existing behavior
-              console.log('Showing template page...');
-              showPage('template-page');
+              // Fallback to existing behavior - consider role when determining default page
+              // Use getDefaultPageForRole if available, otherwise use role-based logic
+              var defaultPage = 'template-page';
+              if (window.getDefaultPageForRole) {
+                defaultPage = window.getDefaultPageForRole(window.AppState.userRole) || 'template-page';
+              } else if (window.AppState.userRole === 'master') {
+                defaultPage = 'template-creation-page';
+              }
+              console.log('[main.js] Fallback: Showing', defaultPage, 'for role:', window.AppState.userRole);
+              showPage(defaultPage);
             }
           }
         } catch (err) {

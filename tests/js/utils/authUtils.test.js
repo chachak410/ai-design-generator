@@ -5,12 +5,17 @@ describe('AuthUtils Module', () => {
   let originalFetch;
 
   beforeEach(() => {
-    // Store original window properties
+    // Store original window properties (handle undefined gracefully)
     originalWindow = {
-      AppState: global.window.AppState,
-      __USER__: global.window.__USER__
+      AppState: global.window ? global.window.AppState : undefined,
+      __USER__: global.window ? global.window.__USER__ : undefined
     };
     originalFetch = global.fetch;
+
+    // Ensure global.window exists
+    if (!global.window) {
+      global.window = {};
+    }
 
     // Reset window properties
     global.window.AppState = { userRole: null };
@@ -19,8 +24,10 @@ describe('AuthUtils Module', () => {
 
   afterEach(() => {
     // Restore original window properties
-    global.window.AppState = originalWindow.AppState;
-    global.window.__USER__ = originalWindow.__USER__;
+    if (global.window) {
+      global.window.AppState = originalWindow.AppState;
+      global.window.__USER__ = originalWindow.__USER__;
+    }
     global.fetch = originalFetch;
   });
 

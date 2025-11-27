@@ -139,7 +139,8 @@
       if (mainApp) mainApp.style.display = 'block';
 
       // Hide all pages, show target
-      var pages = document.querySelectorAll('#main-app .controls, #main-app .page-section');
+      // Use multiple selectors to cover all page types in the codebase
+      var pages = document.querySelectorAll('#main-app .controls, #main-app .page-section, #main-app .page');
       pages.forEach(function(page) {
         page.style.display = 'none';
       });

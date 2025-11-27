@@ -55,8 +55,11 @@ function apiMeHandler(req, res) {
 
     // Return user info with role
     // Only include safe, non-sensitive fields
+    // Note: If user.role is not set, we return null to indicate the role needs to be
+    // explicitly set rather than defaulting to any role. This prevents unauthorized access
+    // if a user somehow bypasses authentication but req.user is set without a role.
     return res.json({
-      role: user.role || 'client', // Default to 'client' if role not set
+      role: user.role || null,
       email: user.email || null,
       uid: user.uid || user.id || null,
       // Include display name if available

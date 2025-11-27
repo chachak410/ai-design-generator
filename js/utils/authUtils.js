@@ -27,15 +27,22 @@
    * 3. Cached role from previous fetch
    * 4. Fetch from /api/me endpoint
    * 
+   * SECURITY NOTE: window.__USER__ and window.AppState can be manipulated client-side.
+   * For security-sensitive operations, always verify permissions on the server.
+   * This client-side role is used for UI rendering purposes only.
+   * All protected actions should be validated by the server.
+   * 
    * @returns {Promise<string|null>} The user's role ('master', 'client', 'admin') or null if unauthenticated
    */
   async function getUserRole() {
     // 1. Check window.__USER__ (SSR injection)
+    // Note: This is trusted when set by server-side rendering
     if (typeof window !== 'undefined' && window.__USER__ && window.__USER__.role) {
       return window.__USER__.role;
     }
 
     // 2. Check AppState.userRole (existing app state)
+    // Note: This is set after Firebase auth verification in main.js
     if (typeof window !== 'undefined' && window.AppState && window.AppState.userRole) {
       return window.AppState.userRole;
     }
