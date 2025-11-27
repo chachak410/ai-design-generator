@@ -89,8 +89,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             const userEmail = user.email || userData.email || '';
             if (window.AdminConfig && typeof window.AdminConfig.isAdminByEmail === 'function') {
               const isConfiguredAdmin = window.AdminConfig.isAdminByEmail(userEmail);
-              if (isConfiguredAdmin && userRole !== 'master') {
-                // Upgrade role to admin if email is in admin list and not already master
+              // Only upgrade client users to admin - don't downgrade master or admin users
+              if (isConfiguredAdmin && userRole === 'client') {
                 console.log('[AUTH STATE] ✓ User email is in admin config list, upgrading role to admin');
                 userRole = 'admin';
               }
@@ -170,12 +170,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // If the client account is not fully setup, force them to complete the
             // initial questionnaire/setup before they can use the app.
-            // Exception: Admin users (configured via ADMIN_EMAILS or Firestore role) bypass setup
-            const currentEmail = (AppState.currentUser && AppState.currentUser.email) || user.email || '';
-            const isAdminUser = AppState.isAdmin || 
-              (window.AdminConfig && window.AdminConfig.isAdminByEmail(currentEmail));
-            
-            if (AppState.clientNeedsSetup && !isAdminUser) {
+            // Exception: Admin users (AppState.isAdmin already includes config check) bypass setup
+            if (AppState.clientNeedsSetup && !AppState.isAdmin) {
+              const currentEmail = (AppState.currentUser && AppState.currentUser.email) || user.email || '';
               console.log('[SETUP REDIRECT] Client needs to complete setup, redirecting to setup.html for', currentEmail);
               // Use replace so the back button doesn't easily navigate back to the app without completing setup
               window.location.replace('setup.html');

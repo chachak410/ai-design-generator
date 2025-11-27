@@ -57,8 +57,37 @@
     return adminEmails.map(email => (email || '').toLowerCase().trim()).filter(Boolean);
   }
 
+  // Cache for admin email Set - invalidated when source changes
+  let _cachedAdminEmailSet = null;
+  let _cachedSource = null;
+
+  /**
+   * Get a Set of admin emails for O(1) lookups.
+   * Uses caching to avoid repeated array operations.
+   * @returns {Set<string>} Set of normalized admin email addresses
+   */
+  function getAdminEmailSet() {
+    // Determine current source to detect cache invalidation
+    const currentSource = typeof window.ADMIN_EMAILS !== 'undefined' ? 'window' :
+                          (typeof window.AppConfig !== 'undefined' && Array.isArray(window.AppConfig.adminEmails)) ? 'config' :
+                          'localStorage';
+    
+    // Return cached set if source hasn't changed
+    if (_cachedAdminEmailSet && _cachedSource === currentSource) {
+      return _cachedAdminEmailSet;
+    }
+    
+    // Rebuild cache
+    const adminEmails = getAdminEmails();
+    _cachedAdminEmailSet = new Set(adminEmails);
+    _cachedSource = currentSource;
+    
+    return _cachedAdminEmailSet;
+  }
+
   /**
    * Check if a given email is an admin email.
+   * Uses Set for O(1) lookup performance.
    * @param {string} email - The email address to check
    * @returns {boolean} True if the email is in the admin list
    */
@@ -68,9 +97,9 @@
     }
     
     const normalizedEmail = email.toLowerCase().trim();
-    const adminEmails = getAdminEmails();
+    const adminEmailSet = getAdminEmailSet();
     
-    const isAdmin = adminEmails.includes(normalizedEmail);
+    const isAdmin = adminEmailSet.has(normalizedEmail);
     
     if (isAdmin) {
       console.log('[AdminConfig] ✓ Admin user detected:', normalizedEmail);
