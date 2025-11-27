@@ -1,4 +1,6 @@
-﻿// js/features/templates/template.js
+// legacy/template-legacy.js (moved from root template.js)
+// This file is preserved for reference but no longer actively used.
+// The active template manager is at js/features/templates/template.js
 const TemplateManager = {
   // -------------------------------------------------
   //  FEEDBACK LEARNING – CONSTANTS
