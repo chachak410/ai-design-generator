@@ -7,6 +7,35 @@ const TemplateCreation = {
   initialized: false,
   currentIndustry: null,
   currentTemplates: [],
+
+  /**
+   * Handle Firestore errors with user-friendly messages
+   * @param {Error} err - The error object
+   * @param {string} context - Context where the error occurred (e.g., 'loading templates', 'saving settings')
+   */
+  handleFirestoreError(err, context = 'operation') {
+    console.error(`[TemplateCreation] Firestore error during ${context}:`, err);
+    
+    const errorCode = err.code || '';
+    const errorMessage = err.message || '';
+    
+    if (errorCode === 'permission-denied' || errorMessage.includes('permission-denied') || errorMessage.includes('Missing or insufficient permissions')) {
+      UI.showMessage('template-status', 
+        `Access denied: You do not have permission to perform this ${context}. Please check that you are logged in with the correct account and have the required role (Master or Admin).`, 
+        'error'
+      );
+    } else if (errorCode === 'unauthenticated' || errorMessage.includes('unauthenticated')) {
+      UI.showMessage('template-status', 
+        'Authentication required: Please log in again to continue.', 
+        'error'
+      );
+    } else {
+      UI.showMessage('template-status', 
+        `Error during ${context}: ${err.message}`, 
+        'error'
+      );
+    }
+  },
   
   // Industry-specific configurations with color tones
   industryConfigs: {
@@ -207,7 +236,8 @@ const TemplateCreation = {
         this.currentTemplates = [];
       }
     } catch (err) {
-      console.error('Error loading industry templates:', err);
+      console.error('[TemplateCreation] Error loading industry templates:', err);
+      this.handleFirestoreError(err, 'loading templates');
       this.currentTemplates = [];
     }
   },
@@ -336,9 +366,33 @@ const TemplateCreation = {
     const editor = document.getElementById('template-editor');
     if (!editor) return;
 
-    // Event delegation for all buttons
+    // Event delegation for all buttons - ensures clicks work even if DOM is replaced
     editor.addEventListener('click', (e) => {
       const target = e.target;
+      
+      // Add product button (delegated)
+      if (target.matches('#add-product-btn') || target.closest('#add-product-btn')) {
+        console.log('[TemplateCreation] Add Product button clicked (delegated handler)');
+        e.preventDefault();
+        this.addProduct();
+        return;
+      }
+      
+      // Save and generate button (delegated)
+      if (target.matches('#save-and-generate-btn') || target.closest('#save-and-generate-btn')) {
+        console.log('[TemplateCreation] Save & Generate button clicked (delegated handler)');
+        e.preventDefault();
+        this.saveAndGenerateCode();
+        return;
+      }
+      
+      // Add custom spec button (delegated)
+      if (target.matches('#add-custom-spec-btn') || target.closest('#add-custom-spec-btn')) {
+        console.log('[TemplateCreation] Add Custom Spec button clicked (delegated handler)');
+        e.preventDefault();
+        this.addCustomSpecification();
+        return;
+      }
       
       // Remove product button
       if (target.matches('.btn-remove-product') || target.closest('.btn-remove-product')) {
@@ -368,22 +422,34 @@ const TemplateCreation = {
       }
     });
 
-    // Add product button
+    // Keep direct bindings for backward compatibility
     const addProductBtn = document.getElementById('add-product-btn');
     if (addProductBtn) {
-      addProductBtn.addEventListener('click', () => this.addProduct());
+      addProductBtn.addEventListener('click', (e) => {
+        console.debug('[TemplateCreation] Add Product button clicked (direct handler)');
+        e.preventDefault();
+        this.addProduct();
+      });
     }
 
-    // Add custom specification button
+    // Add custom specification button - direct binding for backward compatibility
     const addCustomSpecBtn = document.getElementById('add-custom-spec-btn');
     if (addCustomSpecBtn) {
-      addCustomSpecBtn.addEventListener('click', () => this.addCustomSpecification());
+      addCustomSpecBtn.addEventListener('click', (e) => {
+        console.debug('[TemplateCreation] Add Custom Spec button clicked (direct handler)');
+        e.preventDefault();
+        this.addCustomSpecification();
+      });
     }
 
-    // Save and generate code button
+    // Save and generate code button - direct binding for backward compatibility
     const saveAndGenBtn = document.getElementById('save-and-generate-btn');
     if (saveAndGenBtn) {
-      saveAndGenBtn.addEventListener('click', () => this.saveAndGenerateCode());
+      saveAndGenBtn.addEventListener('click', (e) => {
+        console.debug('[TemplateCreation] Save & Generate button clicked (direct handler)');
+        e.preventDefault();
+        this.saveAndGenerateCode();
+      });
     }
   },
 
@@ -400,8 +466,13 @@ const TemplateCreation = {
    * Add a new product input
    */
   addProduct() {
+    console.log('[TemplateCreation] addProduct called, productCount before:', this.productCount);
+    
     const container = document.getElementById('products-container');
-    if (!container) return;
+    if (!container) {
+      console.warn('[TemplateCreation] addProduct: products-container not found');
+      return;
+    }
 
     this.productCount++;
     const newItem = document.createElement('div');
@@ -412,6 +483,8 @@ const TemplateCreation = {
       <button class="btn-remove-product" data-action="remove-product">×</button>
     `;
     container.appendChild(newItem);
+    
+    console.log('[TemplateCreation] addProduct completed, productCount after:', this.productCount);
   },
 
   /**
@@ -590,6 +663,8 @@ const TemplateCreation = {
    * Save template settings and generate industry code
    */
   async saveAndGenerateCode() {
+    console.log('[TemplateCreation] saveAndGenerateCode called, currentIndustry:', this.currentIndustry);
+    
     if (!this.currentIndustry) {
       UI.showMessage('template-status', 'Please select an industry first.', 'error');
       return;
@@ -602,6 +677,13 @@ const TemplateCreation = {
     }
 
     const settings = this.collectTemplateSettings();
+    console.log('[TemplateCreation] saveAndGenerateCode collected settings:', {
+      tonesCount: settings.tones.length,
+      sizesCount: settings.sizes.length,
+      stylesCount: settings.styles.length,
+      productsCount: settings.products.length,
+      isUniversal: settings.isUniversal
+    });
     
     if (!this.validateSettings(settings)) {
       return;
@@ -639,6 +721,8 @@ const TemplateCreation = {
       // Get the industry name (custom or predefined)
       const industryName = this.getIndustryName();
 
+      console.log('[TemplateCreation] saveAndGenerateCode saving to Firestore, code:', code);
+      
       // Save the code with all settings
       await AppState.db.collection('industryCodes').doc(code).set({
         industryName: industryName,
@@ -661,12 +745,14 @@ const TemplateCreation = {
         updatedBy: AppState.currentUser.uid
       }, { merge: true });
 
+      console.log('[TemplateCreation] saveAndGenerateCode completed successfully, code:', code);
+      
       // Display the generated code
       this.displayGeneratedCode(code);
 
     } catch (err) {
-      console.error('Error saving settings:', err);
-      UI.showMessage('template-status', 'Error: ' + err.message, 'error');
+      console.error('[TemplateCreation] Error in saveAndGenerateCode:', err);
+      this.handleFirestoreError(err, 'saving settings');
     }
   },
 
