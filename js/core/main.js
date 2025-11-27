@@ -1,6 +1,23 @@
 // js/core/main.js
 
 // AppState is now initialized in state.js — just use it
+
+/**
+ * Helper function to check if a role is an admin/master role.
+ * In this application, 'admin' and 'master' are equivalent - both have
+ * the same permissions and see the same navbar (Template Creation,
+ * Client Management, Support Responses, Logout).
+ * 
+ * @param {string} role - The user role to check
+ * @returns {boolean} - True if the role is admin or master
+ */
+function isAdminRole(role) {
+  return role === 'admin' || role === 'master';
+}
+
+// Export to global scope for use in other modules
+window.isAdminRole = isAdminRole;
+
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('[main.js] DOM loaded, initializing app...');
   try {
@@ -123,12 +140,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             window.AppState.userRole = userRole;
             // Store admin flag for easy checking throughout the app
-            window.AppState.isAdmin = (userRole === 'admin' || userRole === 'master');
+            // Note: 'admin' and 'master' are equivalent roles in this application
+            window.AppState.isAdmin = isAdminRole(userRole);
             console.log('[AUTH STATE] Final computed role:', userRole, 'isAdmin:', window.AppState.isAdmin);
             
-            // Master/Admin 用户不需要setup重定向
-            if (window.AppState.userRole === 'master' || window.AppState.userRole === 'admin') {
-              console.log('[DEBUG] User is master/admin, skipping setup checks');
+            // Admin users (admin/master) don't need setup redirect
+            if (isAdminRole(window.AppState.userRole)) {
+              console.log('[DEBUG] User is admin (admin/master role), skipping setup checks');
             } else if (window.AppState.userRole === 'client') {
               // 检查用户是否需要完成问卷（只有 client 账户需要）
               console.log('[DEBUG] Checking if client needs setup...');
@@ -209,20 +227,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             UI.showMainApp();
             
             // Determine admin status using AdminConfig (email-based) or role-based
+            // Note: 'admin' and 'master' are equivalent roles
             const emailForAdminCheck = userData.email || user.email || '';
             const isAdmin = (window.AdminConfig && window.AdminConfig.isAdminByEmail(emailForAdminCheck, userData)) ||
-                           window.AppState.userRole === 'master' || 
-                           window.AppState.userRole === 'admin';
+                           isAdminRole(window.AppState.userRole);
             window.AppState.isAdmin = isAdmin;
             console.log('[AUTH STATE] isAdmin:', isAdmin, 'for email:', emailForAdminCheck);
             
             // Toggle navbar based on role - toggleMasterUI handles all navigation visibility
             // based on AppState.userRole and AppState.isAdmin
-            // Toggle navbar based on user role
-            // For master role: show only admin links (Template Creation, Client Management, Support Responses)
-            // For admin role: show both client and admin links
+            // For admin roles (admin/master are equivalent): show admin links (Template Creation, Client Management, Support Responses)
             // For client role: show only client links
-            UI.toggleMasterUI(window.AppState.userRole === 'master');
+            UI.toggleMasterUI(isAdminRole(window.AppState.userRole));
             
             // Also use Navbar component for role-based navigation if available
             // This provides an additional layer of role-based nav management
@@ -230,13 +246,13 @@ document.addEventListener('DOMContentLoaded', async () => {
               window.Navbar.updateVisibility(window.AppState.userRole);
             }
 
-            // Safety net: For master/admin roles, explicitly hide client-only nav elements
+            // Safety net: For admin roles (admin/master), explicitly hide client-only nav elements
             // This prevents mixed nav states caused by multiple renderers running in different orders
-            // Note: master and admin roles have the same navbar (Template Creation, Client Management, Support Responses, Logout)
-            if (window.AppState.userRole === 'master' || window.AppState.userRole === 'admin') {
-              console.log('[main.js] Master/admin role detected - applying navbar safety net');
+            // Note: 'admin' and 'master' are equivalent roles - both see the same navbar
+            if (isAdminRole(window.AppState.userRole)) {
+              console.log('[main.js] Admin role detected (admin/master are equivalent) - applying navbar safety net');
               
-              // Client-only nav elements that should be hidden for master/admin users
+              // Client-only nav elements that should be hidden for admin users
               var clientOnlyLinks = ['client-templates-link', 'client-account-link', 'client-records-link', 'create-account-link'];
               clientOnlyLinks.forEach(function(id) {
                 var el = document.getElementById(id);
@@ -247,18 +263,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
               });
               
-              // Master/admin nav elements that should be visible
-              var masterLinks = ['master-template-link', 'master-nav-link', 'master-support-link', 'logout-btn'];
-              masterLinks.forEach(function(id) {
+              // Admin nav elements that should be visible (Template Creation, Client Management, Support Responses, Logout)
+              var adminLinks = ['master-template-link', 'master-nav-link', 'master-support-link', 'logout-btn'];
+              adminLinks.forEach(function(id) {
                 var el = document.getElementById(id);
                 if (el) {
                   el.style.display = 'inline-block';
                   el.classList.remove('hidden');
-                  console.log('[main.js] Showed master/admin nav element:', id);
+                  console.log('[main.js] Showed admin nav element:', id);
                 }
               });
               
-              console.log('[main.js] Navbar safety net applied for', window.AppState.userRole, 'role');
+              console.log('[main.js] Navbar safety net applied for admin role');
             }
 
             window.currentUserData = userData;
@@ -274,14 +290,15 @@ document.addEventListener('DOMContentLoaded', async () => {
               var defaultPage = 'template-page';
               if (window.getDefaultPageForRole) {
                 defaultPage = window.getDefaultPageForRole(window.AppState.userRole) || 'template-page';
-              } else if (window.AppState.userRole === 'master') {
+              } else if (isAdminRole(window.AppState.userRole)) {
+                // Admin users (admin/master) go to template-creation-page
                 defaultPage = 'template-creation-page';
               }
               console.log('[main.js] Fallback: Showing', defaultPage, 'for role:', window.AppState.userRole);
               showPage(defaultPage);
             }
             // Use role-based redirect to show the appropriate homepage
-            // Master users go to Template Creation, Client users go to Templates
+            // Admin users (admin/master) go to Template Creation, Client users go to Templates
             console.log('Redirecting to role-based homepage...');
             if (UI.redirectToRoleHomepage) {
               UI.redirectToRoleHomepage(window.AppState.userRole);
