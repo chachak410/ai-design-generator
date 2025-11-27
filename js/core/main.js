@@ -259,7 +259,6 @@ document.addEventListener('DOMContentLoaded', async () => {
               showPage('template-page');
             }
           }
-          }
         } catch (err) {
           console.error('Error loading user data:', err);
           UI.showMessage('template-status', 'Error loading user data: ' + err.message, 'error');
