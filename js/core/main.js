@@ -230,12 +230,13 @@ document.addEventListener('DOMContentLoaded', async () => {
               window.Navbar.updateVisibility(window.AppState.userRole);
             }
 
-            // Safety net: For master role, explicitly hide client-only nav elements
+            // Safety net: For master/admin roles, explicitly hide client-only nav elements
             // This prevents mixed nav states caused by multiple renderers running in different orders
-            if (window.AppState.userRole === 'master') {
-              console.log('[main.js] Master role detected - applying navbar safety net');
+            // Note: master and admin roles have the same navbar (Template Creation, Client Management, Support Responses, Logout)
+            if (window.AppState.userRole === 'master' || window.AppState.userRole === 'admin') {
+              console.log('[main.js] Master/admin role detected - applying navbar safety net');
               
-              // Client-only nav elements that should be hidden for master users
+              // Client-only nav elements that should be hidden for master/admin users
               var clientOnlyLinks = ['client-templates-link', 'client-account-link', 'client-records-link', 'create-account-link'];
               clientOnlyLinks.forEach(function(id) {
                 var el = document.getElementById(id);
@@ -246,18 +247,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
               });
               
-              // Master nav elements that should be visible for master users
+              // Master/admin nav elements that should be visible
               var masterLinks = ['master-template-link', 'master-nav-link', 'master-support-link', 'logout-btn'];
               masterLinks.forEach(function(id) {
                 var el = document.getElementById(id);
                 if (el) {
                   el.style.display = 'inline-block';
                   el.classList.remove('hidden');
-                  console.log('[main.js] Showed master nav element:', id);
+                  console.log('[main.js] Showed master/admin nav element:', id);
                 }
               });
               
-              console.log('[main.js] Navbar safety net applied for master role');
+              console.log('[main.js] Navbar safety net applied for', window.AppState.userRole, 'role');
             }
 
             window.currentUserData = userData;
