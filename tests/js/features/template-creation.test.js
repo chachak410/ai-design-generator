@@ -41,7 +41,6 @@ describe('TemplateCreation Module', () => {
     // Create a fresh TemplateCreation instance for each test
     TemplateCreation = {
       MAX_PRODUCTS: 20,
-      productCount: 1,
       
       addProduct() {
         const container = document.getElementById('products-container');
@@ -56,10 +55,10 @@ describe('TemplateCreation Module', () => {
           return;
         }
 
-        this.productCount++;
+        const newProductId = existingProducts + 1;
         const newItem = document.createElement('div');
         newItem.className = 'product-item';
-        newItem.dataset.productId = this.productCount;
+        newItem.dataset.productId = newProductId;
         newItem.innerHTML = `
           <input type="text" placeholder="Product name (e.g., T-shirt, Handbag)" class="product-name-input">
           <button class="btn-remove-product" data-action="remove-product">×</button>
@@ -165,12 +164,14 @@ describe('TemplateCreation Module', () => {
       expect(newCount).toBe(initialCount + 1);
     });
 
-    test('should increment productCount when adding a product', () => {
-      const initialCount = TemplateCreation.productCount;
+    test('should set correct data-product-id based on DOM count', () => {
+      const container = document.getElementById('products-container');
+      const initialCount = container.querySelectorAll('.product-item').length;
       
       TemplateCreation.addProduct();
       
-      expect(TemplateCreation.productCount).toBe(initialCount + 1);
+      const newItem = container.querySelectorAll('.product-item')[initialCount];
+      expect(newItem.dataset.productId).toBe(String(initialCount + 1));
     });
 
     test('should create product item with correct class and input', () => {
@@ -213,10 +214,8 @@ describe('TemplateCreation Module', () => {
     test('should not add product when container is missing', () => {
       document.getElementById('products-container').remove();
       
-      const initialCount = TemplateCreation.productCount;
-      TemplateCreation.addProduct();
-      
-      expect(TemplateCreation.productCount).toBe(initialCount);
+      // Should not throw
+      expect(() => TemplateCreation.addProduct()).not.toThrow();
     });
   });
 

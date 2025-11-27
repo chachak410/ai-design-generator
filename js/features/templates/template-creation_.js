@@ -487,25 +487,24 @@ const TemplateCreation = {
    * Add a new product input
    */
   addProduct() {
-    console.debug('[TemplateCreation] addProduct called, productCount before:', this.productCount);
-    
     const container = document.getElementById('products-container');
     if (!container) {
       console.warn('[TemplateCreation] addProduct: products-container not found');
       return;
     }
 
-    // Check max product limit
+    // Check max product limit using actual DOM count
     const existingProducts = container.querySelectorAll('.product-item').length;
     if (existingProducts >= this.MAX_PRODUCTS) {
       UI.showMessage('template-status', `Maximum ${this.MAX_PRODUCTS} products allowed.`, 'error');
       return;
     }
 
-    this.productCount++;
+    // Use DOM count + 1 for new product ID to avoid mismatches
+    const newProductId = existingProducts + 1;
     const newItem = document.createElement('div');
     newItem.className = 'product-item';
-    newItem.dataset.productId = this.productCount;
+    newItem.dataset.productId = newProductId;
     newItem.innerHTML = `
       <input type="text" placeholder="Product name (e.g., T-shirt, Handbag)" class="product-name-input">
       <button class="btn-remove-product" data-action="remove-product">×</button>
@@ -518,7 +517,7 @@ const TemplateCreation = {
       newInput.focus();
     }
     
-    console.debug('[TemplateCreation] addProduct completed, productCount after:', this.productCount);
+    console.debug('[TemplateCreation] addProduct completed, new product count:', existingProducts + 1);
   },
 
   /**
