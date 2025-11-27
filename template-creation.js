@@ -139,10 +139,20 @@ const TemplateCreation = {
         customInput.id = 'custom-industry-container';
         customInput.className = 'form-group';
         customInput.style.marginTop = '10px';
-        customInput.innerHTML = `
-          <label for="custom-industry-name">Custom Industry Name</label>
-          <input type="text" id="custom-industry-name" class="form-input" placeholder="Enter custom industry name">
-        `;
+        
+        // Create elements programmatically to avoid XSS
+        const label = document.createElement('label');
+        label.setAttribute('for', 'custom-industry-name');
+        label.textContent = 'Custom Industry Name';
+        
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.id = 'custom-industry-name';
+        input.className = 'form-input';
+        input.placeholder = 'Enter custom industry name';
+        
+        customInput.appendChild(label);
+        customInput.appendChild(input);
         selector.parentNode.appendChild(customInput);
       }
     } else {
@@ -161,12 +171,14 @@ const TemplateCreation = {
   },
 
   /**
-   * Get the industry name (custom or predefined)
+   * Get the industry name (custom or predefined), sanitized for safe use
    */
   getIndustryName() {
     if (this.currentIndustry === 'other') {
       const customName = document.getElementById('custom-industry-name');
-      return customName && customName.value.trim() ? customName.value.trim() : 'Other';
+      const rawName = customName && customName.value.trim() ? customName.value.trim() : 'Other';
+      // Sanitize the custom industry name to prevent XSS
+      return this.escapeHtml(rawName);
     }
     return this.industryConfigs[this.currentIndustry]?.name || this.currentIndustry;
   },
