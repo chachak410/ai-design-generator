@@ -377,6 +377,109 @@
   box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
 }
 
+/* Industry Code Readout Box */
+.industry-code-box {
+  padding: 20px;
+  background: linear-gradient(135deg, #e7f3ff 0%, #f0f8ff 100%);
+  border: 2px solid #007bff;
+  border-radius: 12px;
+  margin-top: 15px;
+  text-align: center;
+}
+
+.industry-code-title {
+  font-weight: 600;
+  color: #333;
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+
+.industry-code-display-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.industry-code-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: #007bff;
+  letter-spacing: 4px;
+  font-family: 'Courier New', Courier, monospace;
+  padding: 10px 20px;
+  background: white;
+  border-radius: 8px;
+  border: 2px dashed #007bff;
+  user-select: all;
+}
+
+.btn-copy-code {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-copy-code:hover {
+  background: #0056b3;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+}
+
+.btn-copy-code:active {
+  transform: translateY(0);
+}
+
+.copy-icon {
+  font-size: 16px;
+}
+
+.copy-feedback {
+  display: inline-block;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #155724;
+  background: #d4edda;
+  border-radius: 4px;
+  margin-left: 8px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.auto-copy-notice {
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #155724;
+  background: #d4edda;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.industry-code-instruction {
+  color: #666;
+  font-size: 13px;
+  margin: 0;
+  font-style: italic;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .options-container {
@@ -389,5 +492,15 @@
   
   .form-actions button {
     width: 100%;
+  }
+  
+  .industry-code-value {
+    font-size: 24px;
+    letter-spacing: 2px;
+  }
+  
+  .industry-code-display-container {
+    flex-direction: column;
+    gap: 10px;
   }
 }

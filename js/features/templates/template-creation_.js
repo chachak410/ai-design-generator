@@ -479,6 +479,11 @@ const TemplateCreation = {
   },
 
   /**
+   * Maximum number of products allowed
+   */
+  MAX_PRODUCTS: 20,
+
+  /**
    * Add a new product input
    */
   addProduct() {
@@ -487,6 +492,13 @@ const TemplateCreation = {
     const container = document.getElementById('products-container');
     if (!container) {
       console.warn('[TemplateCreation] addProduct: products-container not found');
+      return;
+    }
+
+    // Check max product limit
+    const existingProducts = container.querySelectorAll('.product-item').length;
+    if (existingProducts >= this.MAX_PRODUCTS) {
+      UI.showMessage('template-status', `Maximum ${this.MAX_PRODUCTS} products allowed.`, 'error');
       return;
     }
 
@@ -499,6 +511,12 @@ const TemplateCreation = {
       <button class="btn-remove-product" data-action="remove-product">×</button>
     `;
     container.appendChild(newItem);
+    
+    // Focus on the newly added input
+    const newInput = newItem.querySelector('.product-name-input');
+    if (newInput) {
+      newInput.focus();
+    }
     
     console.debug('[TemplateCreation] addProduct completed, productCount after:', this.productCount);
   },
@@ -773,40 +791,138 @@ const TemplateCreation = {
   },
 
   /**
-   * Display generated code with proper event handling
+   * Copy text to clipboard with fallback for older browsers
+   * @param {string} text - Text to copy
+   * @returns {Promise<boolean>} - Promise resolving to true if copy succeeded
    */
-  displayGeneratedCode(code) {
-    const statusEl = document.getElementById('template-status');
-    if (!statusEl) return;
-
-    const messageDiv = document.createElement('div');
-    messageDiv.style.cssText = 'padding: 15px; background: #e7f3ff; border-radius: 8px; margin-top: 10px;';
+  async copyToClipboard(text) {
+    // Try modern clipboard API first
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (err) {
+        console.warn('[TemplateCreation] Clipboard API failed, trying fallback:', err);
+      }
+    }
     
-    const title = document.createElement('strong');
+    // Fallback for older browsers using temporary textarea
+    try {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.left = '-9999px';
+      textarea.style.top = '-9999px';
+      textarea.setAttribute('readonly', '');
+      document.body.appendChild(textarea);
+      textarea.select();
+      const success = document.execCommand('copy');
+      document.body.removeChild(textarea);
+      return success;
+    } catch (err) {
+      console.error('[TemplateCreation] Clipboard fallback failed:', err);
+      return false;
+    }
+  },
+
+  /**
+   * Show copy success feedback
+   * @param {HTMLElement} feedbackEl - Element to show feedback in
+   * @param {boolean} success - Whether copy was successful
+   */
+  showCopyFeedback(feedbackEl, success) {
+    if (!feedbackEl) return;
+    
+    feedbackEl.textContent = success ? '✅ Copied!' : '❌ Copy failed';
+    feedbackEl.style.display = 'inline-block';
+    feedbackEl.setAttribute('role', 'alert');
+    feedbackEl.setAttribute('aria-live', 'polite');
+    
+    // Hide feedback after 2 seconds
+    setTimeout(() => {
+      feedbackEl.style.display = 'none';
+    }, 2000);
+  },
+
+  /**
+   * Display generated code with proper event handling and auto-copy
+   */
+  async displayGeneratedCode(code) {
+    const statusEl = document.getElementById('template-status');
+    if (!statusEl) {
+      console.warn('[TemplateCreation] displayGeneratedCode: template-status element not found');
+      return;
+    }
+
+    // Create the industry code readout box
+    const codeBox = document.createElement('div');
+    codeBox.id = 'generated-industry-code-box';
+    codeBox.className = 'industry-code-box';
+    
+    const title = document.createElement('div');
+    title.className = 'industry-code-title';
     title.textContent = 'Client Assignment Code Generated:';
-    messageDiv.appendChild(title);
+    codeBox.appendChild(title);
 
+    const codeContainer = document.createElement('div');
+    codeContainer.className = 'industry-code-display-container';
+    
     const codeDisplay = document.createElement('div');
-    codeDisplay.style.cssText = 'font-size: 24px; font-weight: bold; color: #007bff; margin: 10px 0;';
+    codeDisplay.className = 'industry-code-value';
     codeDisplay.textContent = code;
-    messageDiv.appendChild(codeDisplay);
+    codeContainer.appendChild(codeDisplay);
 
+    // Copy button with icon
     const copyBtn = document.createElement('button');
-    copyBtn.className = 'btn btn-secondary';
-    copyBtn.textContent = 'Copy Code';
-    copyBtn.addEventListener('click', () => {
-      navigator.clipboard.writeText(code).then(() => {
-        UI.showMessage('template-status', '✅ Code copied to clipboard!', 'success');
-      }).catch(() => {
-        UI.showMessage('template-status', 'Failed to copy code', 'error');
-      });
+    copyBtn.className = 'btn btn-copy-code';
+    copyBtn.setAttribute('aria-label', 'Copy code to clipboard');
+    copyBtn.innerHTML = `<span class="copy-icon">📋</span> Copy`;
+    
+    // Copy feedback element
+    const copyFeedback = document.createElement('span');
+    copyFeedback.className = 'copy-feedback';
+    copyFeedback.style.display = 'none';
+    copyFeedback.setAttribute('aria-live', 'polite');
+    
+    copyBtn.addEventListener('click', async () => {
+      const success = await this.copyToClipboard(code);
+      this.showCopyFeedback(copyFeedback, success);
     });
-    messageDiv.appendChild(copyBtn);
+    
+    codeContainer.appendChild(copyBtn);
+    codeContainer.appendChild(copyFeedback);
+    codeBox.appendChild(codeContainer);
 
+    const instruction = document.createElement('p');
+    instruction.className = 'industry-code-instruction';
+    instruction.textContent = 'Share this code with clients to assign them to this industry template.';
+    codeBox.appendChild(instruction);
+
+    // Clear status and add the code box
     statusEl.innerHTML = '';
-    statusEl.appendChild(messageDiv);
+    statusEl.appendChild(codeBox);
     statusEl.className = 'message success';
     statusEl.style.display = 'block';
+
+    // Auto-copy to clipboard immediately
+    const autoCopySuccess = await this.copyToClipboard(code);
+    
+    // Show auto-copy notification
+    const autoCopyNotice = document.createElement('div');
+    autoCopyNotice.className = 'auto-copy-notice';
+    autoCopyNotice.setAttribute('role', 'alert');
+    autoCopyNotice.setAttribute('aria-live', 'assertive');
+    autoCopyNotice.textContent = autoCopySuccess 
+      ? '✅ Code automatically copied to clipboard!' 
+      : '📋 Click the Copy button to copy the code.';
+    codeBox.insertBefore(autoCopyNotice, instruction);
+    
+    // Fade out auto-copy notice after 3 seconds if successful
+    if (autoCopySuccess) {
+      setTimeout(() => {
+        autoCopyNotice.style.opacity = '0.5';
+      }, 3000);
+    }
   }
 };
 
