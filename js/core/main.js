@@ -230,6 +230,36 @@ document.addEventListener('DOMContentLoaded', async () => {
               window.Navbar.updateVisibility(window.AppState.userRole);
             }
 
+            // Safety net: For master role, explicitly hide client-only nav elements
+            // This prevents mixed nav states caused by multiple renderers running in different orders
+            if (window.AppState.userRole === 'master') {
+              console.log('[main.js] Master role detected - applying navbar safety net');
+              
+              // Client-only nav elements that should be hidden for master users
+              var clientOnlyLinks = ['client-templates-link', 'client-account-link', 'client-records-link', 'create-account-link'];
+              clientOnlyLinks.forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el) {
+                  el.style.display = 'none';
+                  el.classList.add('hidden');
+                  console.log('[main.js] Hid client-only nav element:', id);
+                }
+              });
+              
+              // Master nav elements that should be visible for master users
+              var masterLinks = ['master-template-link', 'master-nav-link', 'master-support-link', 'logout-btn'];
+              masterLinks.forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el) {
+                  el.style.display = 'inline-block';
+                  el.classList.remove('hidden');
+                  console.log('[main.js] Showed master nav element:', id);
+                }
+              });
+              
+              console.log('[main.js] Navbar safety net applied for master role');
+            }
+
             window.currentUserData = userData;
             
             // Use HomeRedirect to navigate to role-appropriate default page
