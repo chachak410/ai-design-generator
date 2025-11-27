@@ -1,0 +1,23 @@
+<!-- Replace the single Reference Image Upload block in the Template Page with the block below -->
+
+        <!-- Reference Image Upload -->
+        <div id="image-upload" class="form-group">
+          <label for="reference-image-1" data-i18n="uploadReference">Upload Reference Images (optional)</label>
+          <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+            <div style="flex:1; min-width:220px;">
+              <input id="reference-image-1" type="file" accept="image/*">
+              <small style="display:block; color:#666; margin-top:6px;">Reference image 1</small>
+            </div>
+            <div style="flex:1; min-width:220px;">
+              <input id="reference-image-2" type="file" accept="image/*">
+              <small style="display:block; color:#666; margin-top:6px;">Reference image 2</small>
+            </div>
+            <div id="reference-images-loading" style="display:none; align-self:center; color:#007bff; font-size:0.95em;">Combining images…</div>
+          </div>
+        </div>
+
+        <!-- Combined description (returned from backend) -->
+        <div id="combined-description-box" class="info-box hidden" style="margin-top:12px; display:none;">
+          <h4 style="margin:0 0 8px 0; color:#333;">Combined description</h4>
+          <div id="combined-description-content" style="white-space:pre-wrap; color:#222;"></div>
+        </div>

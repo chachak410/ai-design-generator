@@ -1,0 +1,23 @@
+/* Add this near the other message / info-box styles in template-creation.css */
+
+#combined-description-box {
+  background: linear-gradient(135deg, #f7fbff 0%, #f4f6fb 100%);
+  border-left: 4px solid #667eea;
+  padding: 16px 18px;
+  border-radius: 8px;
+  margin-top: 10px;
+  color: #222;
+  box-shadow: 0 3px 10px rgba(102,126,234,0.06);
+}
+
+#combined-description-box h4 {
+  margin: 0 0 8px 0;
+  font-size: 15px;
+  color: #333;
+}
+
+#combined-description-content {
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
