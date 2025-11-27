@@ -12,6 +12,7 @@ window.AppState = {
   db: firebase.firestore(),
   currentUser: null,
   userRole: null,
+  isAdmin: false, // Admin flag - set based on email or role
   // isAdmin flag indicates if current user has admin privileges (role is 'admin' or 'master', or email is in admin list)
   isAdmin: false,
   userProductName: null,

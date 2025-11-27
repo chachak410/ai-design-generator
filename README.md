@@ -49,6 +49,70 @@ The **AI Design Generator** is a lightweight, browser-based tool that transforms
 
 > **Note**: Admin credentials are private. Contact the project maintainers for access or use environment variables for secure setup.
 
+## 🔐 Admin Account Configuration
+
+Admin accounts have special privileges including access to Template Creation, Client Management, and Support Responses pages. There are two ways to configure admin accounts:
+
+### Method 1: Email-Based Admin (Recommended)
+
+Configure admin accounts by email address. Users with matching emails will automatically receive admin privileges.
+
+#### Frontend Configuration (js/config/config.js)
+
+Add admin emails to the `adminEmails` array:
+
+```javascript
+window.AppConfig = {
+  // ... other config ...
+  adminEmails: [
+    "admin@example.com",
+    "langtechgroup5@gmail.com"
+  ]
+};
+```
+
+#### Server Configuration (.env)
+
+For server-side admin checks, set the `ADMIN_EMAILS` environment variable:
+
+```bash
+# .env file (do NOT commit this file)
+ADMIN_EMAILS="admin@example.com,langtechgroup5@gmail.com"
+```
+
+### Method 2: Role-Based Admin
+
+Set the user's `role` field to `admin` or `master` in Firestore:
+- `master` - Full admin access with restricted navigation (admin pages only)
+- `admin` - Full admin access with complete navigation
+
+### Seed Admin Script
+
+For initial setup or development, use the seed admin script:
+
+```bash
+# Set password securely via environment variable (NEVER commit passwords!)
+export ADMIN_EMAIL="langtechgroup5@gmail.com"
+export ADMIN_SEED_PASSWORD="your-secure-password"
+
+# Run the seed script
+node server/scripts/seedAdmin.js
+```
+
+**Security Best Practices:**
+- Never commit passwords or secrets to the repository
+- Use environment variables or secrets management for sensitive data
+- In production, use proper secrets management (AWS Secrets Manager, GCP Secret Manager, Azure Key Vault, etc.)
+- Set `ADMIN_SEED_PASSWORD` via CI/CD secrets or deployment platform environment variables
+
+### Verification Steps
+
+1. Sign in with an admin email configured in `adminEmails`
+2. Verify that admin navigation links appear:
+   - Template Creation
+   - Client Management
+   - Support Responses
+3. Verify that non-admin users cannot see these links
 ### Configuring Admin Accounts
 
 Admin accounts can access the admin navigation links (Template Creation, Client Management, Support Responses) in addition to standard client functionality. There are two ways to configure admin accounts:

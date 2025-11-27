@@ -97,9 +97,11 @@ const UI = {
   },
   showPage(pageId, userRole = null) {
   const pages = ['setup-page', 'account-page', 'template-page', 'records-page', 'create-account-page'];
-    // Change this check:
-    if (pageId === 'create-account-page' && userRole !== 'master' && userRole !== 'admin') {
-      this.showMessage('template-status', 'Access denied: Only master/admin accounts can create industry codes.', 'error');
+    // Check for admin access - use isAdmin flag or role
+    const isAdmin = AppState.isAdmin || userRole === 'master' || userRole === 'admin';
+    
+    if (pageId === 'create-account-page' && !isAdmin) {
+      this.showMessage('template-status', 'Access denied: Only admin accounts can create industry codes.', 'error');
       pageId = 'template-page';
     }
     pages.forEach(id => this.hideElement(id));
@@ -122,6 +124,7 @@ const UI = {
   },
   toggleMasterUI(isMasterUser) {
     const userRole = AppState.userRole;
+    const isAdmin = AppState.isAdmin || false;
     
     // Determine if the user is a master role (via role property or boolean flag)
     const isMasterRole = userRole === 'master' || isMasterUser === true;
@@ -155,6 +158,19 @@ const UI = {
       this.hideElement('create-account-link');
       
       console.log('[UI] Master navbar applied: showing Template Creation, Client Management, Support Responses, Logout');
+    } else if (isAdmin) {
+      // For admin users (non-master): show both client and admin links
+      clientNavLinks.forEach(id => this.showElement(id));
+      masterNavLinks.forEach(id => this.showElement(id));
+      this.showElement('create-account-link');
+      
+      console.log('[UI] Admin navbar applied: showing all navigation links');
+    } else {
+      // For non-admin users: show client navigation links, hide admin links
+      clientNavLinks.forEach(id => this.showElement(id));
+      
+      // Hide admin-specific links for regular users
+      masterNavLinks.forEach(id => this.hideElement(id));
     } else if (hasAdminPrivileges) {
       // For admin users: show BOTH client and admin navigation links
       // Admin sees: Templates, Account, Past Records, Template Creation, Client Management, Support Responses, Logout
@@ -182,14 +198,16 @@ const UI = {
     }
   },
   /**
-   * Show the Template Creation page for privileged users (master and admin).
+   * Show the Template Creation page for privileged users (master, admin, or isAdmin flag).
    * This handles the navigation click for the Template Creation link.
    * Note: Both master and admin users are allowed access to template creation.
    */
   showMasterTemplatePage() {
-    // Only allow master or admin users to access template creation
-    if (AppState.userRole !== 'master' && AppState.userRole !== 'admin') {
-      this.showMessage('template-status', 'Access denied: Only master/admin accounts can access template creation.', 'error');
+    // Allow access if user has admin privileges (via role or isAdmin flag)
+    const isAdmin = AppState.isAdmin || AppState.userRole === 'master' || AppState.userRole === 'admin';
+    
+    if (!isAdmin) {
+      this.showMessage('template-status', 'Access denied: Only admin accounts can access template creation.', 'error');
       return;
     }
     // Use the global showPage function to show template-creation-page

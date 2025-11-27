@@ -182,6 +182,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Setup is complete — show the main app UI
             console.log('Showing main app...');
             UI.showMainApp();
+            
+            // Determine admin status using AdminConfig (email-based) or role-based
+            const userEmail = userData.email || user.email || '';
+            const isAdmin = (window.AdminConfig && window.AdminConfig.isAdminByEmail(userEmail, userData)) ||
+                           AppState.userRole === 'master' || 
+                           AppState.userRole === 'admin';
+            AppState.isAdmin = isAdmin;
+            console.log('[AUTH STATE] isAdmin:', isAdmin, 'for email:', userEmail);
+            
+            // Toggle navbar based on role - toggleMasterUI handles all navigation visibility
+            // based on AppState.userRole and AppState.isAdmin
             // Toggle navbar based on user role
             // For master role: show only admin links (Template Creation, Client Management, Support Responses)
             // For admin role: show both client and admin links
