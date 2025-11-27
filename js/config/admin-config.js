@@ -32,9 +32,14 @@ window.AdminConfig = (function() {
       }
     }
     
-    // Normalize to lowercase and filter valid emails
+    // Email validation regex pattern
+    var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    // Normalize to lowercase and filter valid emails using proper regex
     const normalized = adminEmails
-      .filter(email => typeof email === 'string' && email.includes('@'))
+      .filter(function(email) {
+        return typeof email === 'string' && emailRegex.test(email);
+      })
       .map(email => email.toLowerCase().trim());
     
     return new Set(normalized);

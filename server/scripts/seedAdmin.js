@@ -34,7 +34,7 @@ try {
   require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 } catch (e) {
   // dotenv not installed or .env doesn't exist, continue with process.env
-  console.log('[Seed] dotenv not available, using existing environment variables');
+  console.log('[Seed] dotenv not available:', e.message || 'unknown error');
 }
 
 /**
@@ -51,9 +51,10 @@ function validateEnvironment() {
     errors.push('ADMIN_SEED_PASSWORD is required (set via secrets, not in .env)');
   }
   
-  // Validate email format
+  // Validate email format with a proper regex pattern
   const email = process.env.ADMIN_EMAIL || '';
-  if (email && !email.includes('@')) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (email && !emailRegex.test(email)) {
     errors.push('ADMIN_EMAIL must be a valid email address');
   }
   

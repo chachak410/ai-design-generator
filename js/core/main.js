@@ -177,37 +177,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             AppState.isAdmin = isAdmin;
             console.log('[AUTH STATE] isAdmin:', isAdmin, 'for email:', userEmail);
             
-            // Show/hide admin navigation links based on isAdmin flag
-            const masterNavLink = document.getElementById('master-nav-link');
-            const masterTemplateLink = document.getElementById('master-template-link');
-            const masterSupportLink = document.getElementById('master-support-link');
-            const createAccountLink = document.getElementById('create-account-link');
-            const clientTemplatesLink = document.getElementById('client-templates-link');
-            const clientAccountLink = document.getElementById('client-account-link');
-            const clientRecordsLink = document.getElementById('client-records-link');
-            
-            if (isAdmin) {
-              // Admin users: show admin-only links
-              if (masterNavLink) masterNavLink.style.display = 'inline-block';
-              if (masterTemplateLink) masterTemplateLink.style.display = 'inline-block';
-              if (masterSupportLink) masterSupportLink.style.display = 'inline-block';
-              if (createAccountLink) createAccountLink.style.display = 'inline-block';
-              
-              // For master role specifically, hide client links (restricted nav)
-              if (AppState.userRole === 'master') {
-                if (clientTemplatesLink) clientTemplatesLink.style.display = 'none';
-                if (clientAccountLink) clientAccountLink.style.display = 'none';
-                if (clientRecordsLink) clientRecordsLink.style.display = 'none';
-              }
-            } else {
-              // Regular users: hide admin-only links
-              if (masterNavLink) masterNavLink.style.display = 'none';
-              if (masterTemplateLink) masterTemplateLink.style.display = 'none';
-              if (masterSupportLink) masterSupportLink.style.display = 'none';
-              if (createAccountLink) createAccountLink.style.display = 'none';
-            }
-            
-            // Toggle navbar based on master role - only 'master' role gets restricted nav
+            // Toggle navbar based on role - toggleMasterUI handles all navigation visibility
+            // based on AppState.userRole and AppState.isAdmin
             UI.toggleMasterUI(AppState.userRole === 'master');
 
             window.currentUserData = userData;
