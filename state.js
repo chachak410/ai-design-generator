@@ -42,7 +42,7 @@
     db: firebaseDb,
     currentUser: null,
     userRole: null,
-    isAdmin: false, // Admin flag - set based on email or role
+    isAdmin: false, // Initial value; will be updated during authentication (see main.js) based on email or role
     userProductName: null,
     userTemplates: [],
     userSpecs: {},
