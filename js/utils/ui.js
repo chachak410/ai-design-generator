@@ -129,6 +129,9 @@ const UI = {
     // Determine if the user is a master role (via role property or boolean flag)
     const isMasterRole = userRole === 'master' || isMasterUser === true;
     
+    // Determine if user has admin privileges (either master or admin role)
+    const hasAdminPrivileges = isMasterRole || userRole === 'admin' || AppState.isAdmin === true;
+    
     // Navigation link IDs for client/regular users
     const clientNavLinks = [
       'client-templates-link',    // Templates link
@@ -136,24 +139,24 @@ const UI = {
       'client-records-link'       // Past Records link
     ];
     
-    // Navigation link IDs for master users
-    const masterNavLinks = [
-      'master-template-link',     // Template Creation (route: /templates or onclick handler)
-      'master-nav-link',          // Client Management (route: /clients or onclick handler)
-      'master-support-link'       // Support Responses (route: /support or onclick handler)
+    // Navigation link IDs for admin users (Template Creation, Client Management, Support Responses)
+    const adminNavLinks = [
+      'master-template-link',     // Template Creation
+      'master-nav-link',          // Client Management
+      'master-support-link'       // Support Responses
     ];
     
     if (isMasterRole) {
-      // For master users: hide client navigation links, show master links
+      // For master users: hide client navigation links, show only admin links
+      // Master sees: Template Creation, Client Management, Support Responses, Logout
       clientNavLinks.forEach(id => this.hideElement(id));
       
-      // Show master-specific links
-      masterNavLinks.forEach(id => this.showElement(id));
+      // Show admin-specific links
+      adminNavLinks.forEach(id => this.showElement(id));
       
-      // Also hide the "Create Account" link since Template Creation handles this for master
+      // Hide the "Create Account" link since Template Creation handles this for master
       this.hideElement('create-account-link');
       
-      // Logout is always visible, no action needed
       console.log('[UI] Master navbar applied: showing Template Creation, Client Management, Support Responses, Logout');
     } else if (isAdmin) {
       // For admin users (non-master): show both client and admin links
@@ -168,6 +171,27 @@ const UI = {
       
       // Hide admin-specific links for regular users
       masterNavLinks.forEach(id => this.hideElement(id));
+    } else if (hasAdminPrivileges) {
+      // For admin users: show BOTH client and admin navigation links
+      // Admin sees: Templates, Account, Past Records, Template Creation, Client Management, Support Responses, Logout
+      clientNavLinks.forEach(id => this.showElement(id));
+      
+      // Show admin-specific links for admin users
+      adminNavLinks.forEach(id => this.showElement(id));
+      
+      // Show create account link for admin
+      this.showElement('create-account-link');
+      
+      console.log('[UI] Admin navbar applied: showing all client links + Template Creation, Client Management, Support Responses, Logout');
+    } else {
+      // For regular client users: show only client navigation links
+      // Client sees: Templates, Account, Past Records, Logout
+      clientNavLinks.forEach(id => this.showElement(id));
+      
+      // Hide admin-specific links for client users
+      adminNavLinks.forEach(id => this.hideElement(id));
+      
+      // Hide create account link for clients
       this.hideElement('create-account-link');
       
       console.log('[UI] Client navbar applied: showing Templates, Account, Past Records, Logout');

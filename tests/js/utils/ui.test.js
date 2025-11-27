@@ -78,7 +78,8 @@ describe('UI Module', () => {
       // Mock AppState
       mockAppState = {
         currentUser: null,
-        userRole: null
+        userRole: null,
+        isAdmin: false
       };
       global.AppState = mockAppState;
     });
@@ -88,9 +89,14 @@ describe('UI Module', () => {
     });
 
     // Simulate the UI module's toggleMasterUI logic
+    // This reflects the updated logic where:
+    // - Master users: see only admin links (Template Creation, Client Management, Support Responses)
+    // - Admin users: see BOTH client links AND admin links
+    // - Client users: see only client links
     const toggleMasterUI = (isMasterUser, elements, appState) => {
       const userRole = appState.userRole;
       const isMasterRole = userRole === 'master' || isMasterUser === true;
+      const hasAdminPrivileges = isMasterRole || userRole === 'admin' || appState.isAdmin === true;
       
       const clientNavLinks = [
         'client-templates-link',
@@ -98,14 +104,14 @@ describe('UI Module', () => {
         'client-records-link'
       ];
       
-      const masterNavLinks = [
+      const adminNavLinks = [
         'master-template-link',
         'master-nav-link',
         'master-support-link'
       ];
       
       if (isMasterRole) {
-        // Hide client links
+        // Master role: hide client links, show only admin links
         clientNavLinks.forEach(id => {
           const el = elements[id];
           if (el) {
@@ -114,8 +120,7 @@ describe('UI Module', () => {
           }
         });
         
-        // Show master links
-        masterNavLinks.forEach(id => {
+        adminNavLinks.forEach(id => {
           const el = elements[id];
           if (el) {
             el.classList.remove('hidden');
@@ -123,14 +128,13 @@ describe('UI Module', () => {
           }
         });
         
-        // Hide create account
         const createAccountEl = elements['create-account-link'];
         if (createAccountEl) {
           createAccountEl.classList.add('hidden');
           createAccountEl.style.display = 'none';
         }
-      } else {
-        // Show client links
+      } else if (hasAdminPrivileges) {
+        // Admin role: show BOTH client and admin links
         clientNavLinks.forEach(id => {
           const el = elements[id];
           if (el) {
@@ -139,8 +143,30 @@ describe('UI Module', () => {
           }
         });
         
-        // Hide master links
-        masterNavLinks.forEach(id => {
+        adminNavLinks.forEach(id => {
+          const el = elements[id];
+          if (el) {
+            el.classList.remove('hidden');
+            el.style.display = 'block';
+          }
+        });
+        
+        const createAccountEl = elements['create-account-link'];
+        if (createAccountEl) {
+          createAccountEl.classList.remove('hidden');
+          createAccountEl.style.display = 'block';
+        }
+      } else {
+        // Client role: show only client links
+        clientNavLinks.forEach(id => {
+          const el = elements[id];
+          if (el) {
+            el.classList.remove('hidden');
+            el.style.display = 'block';
+          }
+        });
+        
+        adminNavLinks.forEach(id => {
           const el = elements[id];
           if (el) {
             el.classList.add('hidden');
@@ -148,16 +174,10 @@ describe('UI Module', () => {
           }
         });
         
-        // Show create account only for admin
         const createAccountEl = elements['create-account-link'];
         if (createAccountEl) {
-          if (userRole === 'admin') {
-            createAccountEl.classList.remove('hidden');
-            createAccountEl.style.display = 'block';
-          } else {
-            createAccountEl.classList.add('hidden');
-            createAccountEl.style.display = 'none';
-          }
+          createAccountEl.classList.add('hidden');
+          createAccountEl.style.display = 'none';
         }
       }
     };
@@ -236,6 +256,42 @@ describe('UI Module', () => {
       
       expect(mockElements['create-account-link'].classList.add).toHaveBeenCalledWith('hidden');
       expect(mockElements['create-account-link'].style.display).toBe('none');
+    });
+    
+    // NEW: Tests for admin role showing both client AND admin links
+    test('should show BOTH client and admin nav links for admin user', () => {
+      mockAppState.userRole = 'admin';
+      toggleMasterUI(false, mockElements, mockAppState);
+      
+      // Admin users should see client links
+      expect(mockElements['client-templates-link'].classList.remove).toHaveBeenCalledWith('hidden');
+      expect(mockElements['client-account-link'].classList.remove).toHaveBeenCalledWith('hidden');
+      expect(mockElements['client-records-link'].classList.remove).toHaveBeenCalledWith('hidden');
+      expect(mockElements['client-templates-link'].style.display).toBe('block');
+      expect(mockElements['client-account-link'].style.display).toBe('block');
+      expect(mockElements['client-records-link'].style.display).toBe('block');
+      
+      // Admin users should also see admin links
+      expect(mockElements['master-template-link'].classList.remove).toHaveBeenCalledWith('hidden');
+      expect(mockElements['master-nav-link'].classList.remove).toHaveBeenCalledWith('hidden');
+      expect(mockElements['master-support-link'].classList.remove).toHaveBeenCalledWith('hidden');
+      expect(mockElements['master-template-link'].style.display).toBe('block');
+      expect(mockElements['master-nav-link'].style.display).toBe('block');
+      expect(mockElements['master-support-link'].style.display).toBe('block');
+    });
+    
+    test('should show admin links when isAdmin flag is true', () => {
+      mockAppState.userRole = 'client';
+      mockAppState.isAdmin = true;
+      toggleMasterUI(false, mockElements, mockAppState);
+      
+      // User with isAdmin=true should see admin links even if role is 'client'
+      expect(mockElements['master-template-link'].classList.remove).toHaveBeenCalledWith('hidden');
+      expect(mockElements['master-nav-link'].classList.remove).toHaveBeenCalledWith('hidden');
+      expect(mockElements['master-support-link'].classList.remove).toHaveBeenCalledWith('hidden');
+      expect(mockElements['master-template-link'].style.display).toBe('block');
+      expect(mockElements['master-nav-link'].style.display).toBe('block');
+      expect(mockElements['master-support-link'].style.display).toBe('block');
     });
   });
 
