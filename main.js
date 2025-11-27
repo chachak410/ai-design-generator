@@ -1,46 +1,69 @@
-﻿// js/core/main.js
+// js/core/main.js
 
 // AppState is now initialized in state.js — just use it
 document.addEventListener('DOMContentLoaded', async () => {
-  console.log('DOM loaded, initializing app...');
+  console.log('[main.js] DOM loaded, initializing app...');
   try {
-    // Firebase already initialized in state.js
-    emailjs.init(AppConfig.emailjs.publicKey);
-    console.log('EmailJS initialized');
+    // Guard EmailJS initialization - only if config is available
+    if (typeof emailjs !== 'undefined' && 
+        window.AppConfig && 
+        window.AppConfig.emailjs && 
+        window.AppConfig.emailjs.publicKey) {
+      emailjs.init(window.AppConfig.emailjs.publicKey);
+      console.log('[main.js] EmailJS initialized');
+    } else {
+      console.warn('[main.js] EmailJS SDK or config not available, skipping initialization');
+    }
+
+    // Guard AppState.auth usage
+    if (!window.AppState || !window.AppState.auth) {
+      console.error('[main.js] AppState.auth not available. Firebase may not be initialized.');
+      UI.showAuth();
+      UI.showLogin();
+      return;
+    }
 
     // Now safe to use AppState.auth
-    AppState.auth.onAuthStateChanged(async (user) => {
+    window.AppState.auth.onAuthStateChanged(async (user) => {
       if (user) {
-        console.log('User signed in:', user.email);
-        AppState.currentUser = user;
+        console.log('[main.js] User signed in:', user.email);
+        window.AppState.currentUser = user;
 
         try {
-          const doc = await AppState.db.collection('users').doc(user.uid).get();
+          // Guard db usage
+          if (!window.AppState.db) {
+            console.error('[main.js] AppState.db not available');
+            UI.showAuth();
+            UI.showLogin();
+            return;
+          }
+          
+          const doc = await window.AppState.db.collection('users').doc(user.uid).get();
           if (!doc.exists) {
-            await AppState.db.collection('users').doc(user.uid).set({
+            await window.AppState.db.collection('users').doc(user.uid).set({
               email: user.email,
               role: 'client',
               createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-            console.log('New user created');
+            console.log('[main.js] New user created');
             UI.showMainApp();
             UI.showPage('template-page');
           } else {
             const userData = doc.data();
-            console.log('User data loaded:', {
+            console.log('[main.js] User data loaded:', {
               productName: userData.productName,
               role: userData.role
             });
 
-            AppState.userRole = userData.role || 'client';
-            AppState.userProductName = userData.productName || '';
-            AppState.userTemplates = userData.template ? [userData.template] : [];
-            AppState.userSpecs = userData.specifications || {};
-            AppState.feedbackVector = userData.feedbackVector || null;
-            AppState.badSelections = userData.badSelections || 0;
+            window.AppState.userRole = userData.role || 'client';
+            window.AppState.userProductName = userData.productName || '';
+            window.AppState.userTemplates = userData.template ? [userData.template] : [];
+            window.AppState.userSpecs = userData.specifications || {};
+            window.AppState.feedbackVector = userData.feedbackVector || null;
+            window.AppState.badSelections = userData.badSelections || 0;
 
             UI.showMainApp();
-            UI.toggleMasterUI(AppState.userRole === 'master' || AppState.userRole === 'admin');
+            UI.toggleMasterUI(window.AppState.userRole === 'master' || window.AppState.userRole === 'admin');
 
             // Show/hide navigation links based on user role
             const masterNavLink = document.getElementById('master-nav-link');
@@ -51,7 +74,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const clientRecordsLink = document.getElementById('client-records-link');
             const createAccountLink = document.getElementById('create-account-link');
             
-            if (AppState.userRole === 'master') {
+            if (window.AppState.userRole === 'master') {
               // Master accounts: show only Template Creation, Client Management, Support Responses, Logout
               if (masterNavLink) masterNavLink.style.display = 'inline-block';
               if (masterTemplateLink) masterTemplateLink.style.display = 'inline-block';
@@ -61,7 +84,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               if (clientAccountLink) clientAccountLink.style.display = 'none';
               if (clientRecordsLink) clientRecordsLink.style.display = 'none';
               if (createAccountLink) createAccountLink.style.display = 'none';
-            } else if (AppState.userRole === 'admin') {
+            } else if (window.AppState.userRole === 'admin') {
               // Admin accounts: show master links in addition to client links
               if (masterNavLink) masterNavLink.style.display = 'inline-block';
               if (masterTemplateLink) masterTemplateLink.style.display = 'inline-block';
@@ -69,30 +92,32 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             window.currentUserData = userData;
-            UI.showPage('template-page', AppState.userRole);
-            await TemplateManager.loadTemplates();
+            UI.showPage('template-page', window.AppState.userRole);
+            if (window.TemplateManager && typeof window.TemplateManager.loadTemplates === 'function') {
+              await window.TemplateManager.loadTemplates();
+            }
           }
         } catch (err) {
-          console.error('Error loading user data:', err);
+          console.error('[main.js] Error loading user data:', err);
           UI.showMessage('template-status', 'Error loading user data: ' + err.message, 'error');
         }
       } else {
-        console.log('User signed out');
-        AppState.currentUser = null;
-        AppState.userRole = null;
-        AppState.userProductName = null;
-        AppState.generationCount = 0;
-        AppState.feedbackVector = null;
-        AppState.badSelections = 0;
+        console.log('[main.js] User signed out');
+        window.AppState.currentUser = null;
+        window.AppState.userRole = null;
+        window.AppState.userProductName = null;
+        window.AppState.generationCount = 0;
+        window.AppState.feedbackVector = null;
+        window.AppState.badSelections = 0;
         UI.showAuth();
         UI.showLogin();
       }
     });
 
     setupEventListeners();
-    console.log('App initialization complete');
+    console.log('[main.js] App initialization complete');
   } catch (err) {
-    console.error('Initialization error:', err);
+    console.error('[main.js] Initialization error:', err);
     alert('Failed to initialize app: ' + err.message);
   }
 });
@@ -124,17 +149,23 @@ function setupEventListeners() {
 
   const sendCodeBtn = document.getElementById('send-code-btn');
   if (sendCodeBtn) {
-    sendCodeBtn.addEventListener('click', () => Registration.sendVerificationCode());
+    sendCodeBtn.addEventListener('click', () => {
+      if (window.Registration) Registration.sendVerificationCode();
+    });
   }
 
   const verifyCodeBtn = document.getElementById('verify-code-btn');
   if (verifyCodeBtn) {
-    verifyCodeBtn.addEventListener('click', () => Registration.verifyCode());
+    verifyCodeBtn.addEventListener('click', () => {
+      if (window.Registration) Registration.verifyCode();
+    });
   }
 
   const completeRegBtn = document.getElementById('complete-registration-btn');
   if (completeRegBtn) {
-    completeRegBtn.addEventListener('click', () => Registration.completeRegistration());
+    completeRegBtn.addEventListener('click', () => {
+      if (window.Registration) Registration.completeRegistration();
+    });
   }
 
   const logoutBtn = document.getElementById('logout-btn');
@@ -152,40 +183,54 @@ function setupEventListeners() {
 
   const editAccountBtn = document.getElementById('edit-account-btn');
   if (editAccountBtn) {
-    editAccountBtn.addEventListener('click', () => Profile.showEditAccount());
+    editAccountBtn.addEventListener('click', () => {
+      if (window.Profile) Profile.showEditAccount();
+    });
   }
 
   const updateAccountBtn = document.getElementById('update-account-btn');
   if (updateAccountBtn) {
-    updateAccountBtn.addEventListener('click', () => Profile.updateAccount());
+    updateAccountBtn.addEventListener('click', () => {
+      if (window.Profile) Profile.updateAccount();
+    });
   }
 
   const cancelEditBtn = document.getElementById('cancel-edit-btn');
   if (cancelEditBtn) {
-    cancelEditBtn.addEventListener('click', () => Profile.cancelEdit());
+    cancelEditBtn.addEventListener('click', () => {
+      if (window.Profile) Profile.cancelEdit();
+    });
   }
 
   const generateBtn = document.getElementById('generate-images-btn');
   if (generateBtn) {
-    generateBtn.addEventListener('click', () => TemplateManager.generateImages(null));
+    generateBtn.addEventListener('click', () => {
+      if (window.TemplateManager) TemplateManager.generateImages(null);
+    });
   }
 
   const createCodeBtn = document.getElementById('create-code-btn');
   if (createCodeBtn) {
-    createCodeBtn.addEventListener('click', () => IndustryCodeManager.createIndustryCode());
+    createCodeBtn.addEventListener('click', () => {
+      if (window.IndustryCodeManager) IndustryCodeManager.createIndustryCode();
+    });
   }
 
   const addSpecBtn = document.getElementById('add-spec-btn');
   if (addSpecBtn) {
-    addSpecBtn.addEventListener('click', () => IndustryCodeManager.addSpecification());
+    addSpecBtn.addEventListener('click', () => {
+      if (window.IndustryCodeManager) IndustryCodeManager.addSpecification();
+    });
   }
 
   const copyCodeBtn = document.getElementById('copy-code-btn');
   if (copyCodeBtn) {
-    copyCodeBtn.addEventListener('click', () => IndustryCodeManager.copyCode());
+    copyCodeBtn.addEventListener('click', () => {
+      if (window.IndustryCodeManager) IndustryCodeManager.copyCode();
+    });
   }
 
-  console.log('Event listeners setup complete');
+  console.log('[main.js] Event listeners setup complete');
 }
 
 function showPage(pageId) {
@@ -199,24 +244,26 @@ function showPage(pageId) {
       window.ClientManagement.init();
     }
   } else {
-    console.error(`Section ${pageId} not found`);
+    console.error('[main.js] Section ' + pageId + ' not found');
   }
 }
 window.showPage = showPage;
 
 window.addValue = function (specId) {
-  IndustryCodeManager.addValue(specId);
+  if (window.IndustryCodeManager) IndustryCodeManager.addValue(specId);
 };
 window.removeSpecification = function (specId) {
-  IndustryCodeManager.removeSpecification(specId);
+  if (window.IndustryCodeManager) IndustryCodeManager.removeSpecification(specId);
 };
 
 window.handleLogout = async function () {
   try {
-    await AppState.auth.signOut();
+    if (window.AppState && window.AppState.auth) {
+      await window.AppState.auth.signOut();
+    }
     location.reload();
   } catch (e) {
-    console.error('Logout failed', e);
+    console.error('[main.js] Logout failed', e);
     alert('Logout failed. Please try again.');
   }
 };
@@ -261,10 +308,13 @@ window.resetPassword = async function () {
     const email = (document.getElementById('login-email')?.value || '').trim() ||
       prompt('Enter your email to receive a password reset link:') || '';
     if (!email) return;
-    await AppState.auth.sendPasswordResetEmail(email);
-    alert('Password reset email sent.');
+    
+    if (window.AppState && window.AppState.auth) {
+      await window.AppState.auth.sendPasswordResetEmail(email);
+      alert('Password reset email sent.');
+    }
   } catch (e) {
-    console.error('resetPassword error', e);
+    console.error('[main.js] resetPassword error', e);
     alert('Failed to send reset email. Please try again.');
   }
 };
