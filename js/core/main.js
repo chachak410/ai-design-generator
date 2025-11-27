@@ -184,7 +184,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             UI.showMainApp();
             
             // Determine admin status using AdminConfig (email-based) or role-based
-            const userEmail = userData.email || user.email || '';
+            // userEmail was already declared above, so we just use the existing variable
             const isAdmin = (window.AdminConfig && window.AdminConfig.isAdminByEmail(userEmail, userData)) ||
                            AppState.userRole === 'master' || 
                            AppState.userRole === 'admin';
@@ -200,8 +200,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             UI.toggleMasterUI(AppState.userRole === 'master');
 
             window.currentUserData = userData;
-            console.log('Showing template page...');
-            showPage('template-page');
+            
+            // For master accounts, show Template Creation page as homepage
+            // For other accounts, show the template page
+            if (AppState.userRole === 'master') {
+              console.log('Master account - showing Template Creation page as homepage...');
+              showPage('template-creation-page');
+              // Initialize template creation
+              if (window.TemplateCreation && typeof window.TemplateCreation.init === 'function') {
+                window.TemplateCreation.init();
+              }
+            } else {
+              console.log('Showing template page...');
+              showPage('template-page');
+            }
           }
         } catch (err) {
           console.error('Error loading user data:', err);
@@ -379,7 +391,7 @@ function showPage(pageId) {
   console.log('showPage called with:', pageId);
   
   // Hide all pages
-  const pages = ['account-page', 'template-page', 'records-page', 'create-account-page', 'client-management-section', 'payment-page', 'support-response-page'];
+  const pages = ['account-page', 'template-page', 'records-page', 'create-account-page', 'client-management-section', 'payment-page', 'support-response-page', 'template-creation-page'];
   pages.forEach(id => {
     const el = document.getElementById(id);
     if (el) {
@@ -429,6 +441,11 @@ function showPage(pageId) {
       case 'support-response-page':
         if (window.SupportResponse && typeof window.SupportResponse.init === 'function') {
           window.SupportResponse.init();
+        }
+        break;
+      case 'template-creation-page':
+        if (window.TemplateCreation && typeof window.TemplateCreation.init === 'function') {
+          window.TemplateCreation.init();
         }
         break;
     }
