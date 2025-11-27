@@ -22,5 +22,14 @@ window.AppConfig = {
   api: {
     stability: "sk-RwqmAp2Q9nr3RgoLh8g04tgrprjlGhrDMYD8JGv1IxF9WnLQ",
     huggingface: "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"
-  }
+  },
+
+  // Admin Configuration
+  // List of admin email addresses. Users with these emails will have admin privileges.
+  // Admin users can access: Template Creation, Client Management, Support Responses
+  // Add emails as an array: ["admin1@example.com", "admin2@example.com"]
+  // Or as comma-separated string: "admin1@example.com,admin2@example.com"
+  adminEmails: [
+    "langtechgroup5@gmail.com"
+  ]
 };

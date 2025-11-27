@@ -16,5 +16,12 @@ const AppConfig = {
 
   api: {
     stability: "YOUR_STABILITY_AI_API_KEY"
-  }
+  },
+
+  // Admin Configuration
+  // List of admin email addresses. Users with these emails will have admin privileges.
+  // Admin users can access: Template Creation, Client Management, Support Responses
+  adminEmails: [
+    // Add admin emails here, e.g.: "admin@example.com"
+  ]
 };
