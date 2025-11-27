@@ -190,7 +190,6 @@
     getAdminEmails: getAdminEmails,
     isAdminByEmail: isAdminByEmail,
     isAdmin: isAdmin,
-    isConfigured: isConfigured,
     getAdminConfigStatus: getAdminConfigStatus
   };
 
