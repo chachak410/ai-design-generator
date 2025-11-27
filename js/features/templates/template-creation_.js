@@ -74,6 +74,9 @@ const TemplateCreation = {
    * @returns {boolean}
    */
   matchesSelector(target, selector) {
+    if (!target || typeof target.matches !== 'function') {
+      return false;
+    }
     return target.matches(selector) || target.closest(selector) !== null;
   },
   
@@ -412,7 +415,7 @@ const TemplateCreation = {
       
       // Add product button (delegated)
       if (this.matchesSelector(target, '#add-product-btn')) {
-        console.log('[TemplateCreation] Add Product button clicked (delegated handler)');
+        console.debug('[TemplateCreation] Add Product button clicked (delegated handler)');
         e.preventDefault();
         e.stopPropagation();
         this.addProduct();
@@ -421,7 +424,7 @@ const TemplateCreation = {
       
       // Save and generate button (delegated)
       if (this.matchesSelector(target, '#save-and-generate-btn')) {
-        console.log('[TemplateCreation] Save & Generate button clicked (delegated handler)');
+        console.debug('[TemplateCreation] Save & Generate button clicked (delegated handler)');
         e.preventDefault();
         e.stopPropagation();
         this.saveAndGenerateCode();
@@ -430,7 +433,7 @@ const TemplateCreation = {
       
       // Add custom spec button (delegated)
       if (this.matchesSelector(target, '#add-custom-spec-btn')) {
-        console.log('[TemplateCreation] Add Custom Spec button clicked (delegated handler)');
+        console.debug('[TemplateCreation] Add Custom Spec button clicked (delegated handler)');
         e.preventDefault();
         e.stopPropagation();
         this.addCustomSpecification();
@@ -479,7 +482,7 @@ const TemplateCreation = {
    * Add a new product input
    */
   addProduct() {
-    console.log('[TemplateCreation] addProduct called, productCount before:', this.productCount);
+    console.debug('[TemplateCreation] addProduct called, productCount before:', this.productCount);
     
     const container = document.getElementById('products-container');
     if (!container) {
@@ -497,7 +500,7 @@ const TemplateCreation = {
     `;
     container.appendChild(newItem);
     
-    console.log('[TemplateCreation] addProduct completed, productCount after:', this.productCount);
+    console.debug('[TemplateCreation] addProduct completed, productCount after:', this.productCount);
   },
 
   /**
@@ -676,7 +679,7 @@ const TemplateCreation = {
    * Save template settings and generate industry code
    */
   async saveAndGenerateCode() {
-    console.log('[TemplateCreation] saveAndGenerateCode called, currentIndustry:', this.currentIndustry);
+    console.debug('[TemplateCreation] saveAndGenerateCode called, currentIndustry:', this.currentIndustry);
     
     if (!this.currentIndustry) {
       UI.showMessage('template-status', 'Please select an industry first.', 'error');
@@ -758,7 +761,7 @@ const TemplateCreation = {
         updatedBy: AppState.currentUser.uid
       }, { merge: true });
 
-      console.log('[TemplateCreation] saveAndGenerateCode completed successfully, code:', code);
+      console.debug('[TemplateCreation] saveAndGenerateCode completed successfully, code:', code);
       
       // Display the generated code
       this.displayGeneratedCode(code);
