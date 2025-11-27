@@ -184,7 +184,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             UI.showMainApp();
             
             // Determine admin status using AdminConfig (email-based) or role-based
-            // userEmail was already declared above, so we just use the existing variable
+            // Note: userEmail variable was declared earlier at line 89 in the same scope
             const isAdmin = (window.AdminConfig && window.AdminConfig.isAdminByEmail(userEmail, userData)) ||
                            AppState.userRole === 'master' || 
                            AppState.userRole === 'admin';
