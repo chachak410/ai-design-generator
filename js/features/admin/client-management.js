@@ -261,7 +261,6 @@ const ClientManagement = {
     }
     
     this.isEditMode = editMode;
-    const c = this.allClients.find(x => x.id === id);
     if (!c) return alert(window.i18n?.t('clientNotFound') || 'Client not found');
 
     // Store current client specs
