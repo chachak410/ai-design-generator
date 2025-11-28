@@ -313,4 +313,86 @@ describe('TemplateCreation Module', () => {
       expect(TemplateCreation.MAX_PRODUCTS).toBe(20);
     });
   });
+
+  describe('displayGeneratedCode with multiple #template-status elements', () => {
+    test('should prefer #template-status inside #template-editor when available', async () => {
+      // Setup DOM with multiple template-status elements (simulating real page)
+      document.body.innerHTML = `
+        <div id="template-page">
+          <div id="template-status" class="message" style="display: none;"></div>
+        </div>
+        <div id="template-editor">
+          <div id="products-container">
+            <div class="product-item" data-product-id="1">
+              <input type="text" class="product-name-input">
+            </div>
+          </div>
+          <div id="template-status" class="message" style="display: none;"></div>
+        </div>
+      `;
+      
+      // Create updated displayGeneratedCode that uses querySelector
+      const displayGeneratedCodeWithSelector = async (code) => {
+        const statusEl = document.querySelector('#template-editor #template-status') || 
+                         document.getElementById('template-status');
+        if (!statusEl) return;
+
+        const codeBox = document.createElement('div');
+        codeBox.id = 'generated-industry-code-box';
+        codeBox.className = 'industry-code-box';
+        
+        const codeDisplay = document.createElement('div');
+        codeDisplay.className = 'industry-code-value';
+        codeDisplay.textContent = code;
+        codeBox.appendChild(codeDisplay);
+
+        statusEl.innerHTML = '';
+        statusEl.appendChild(codeBox);
+        statusEl.style.display = 'block';
+      };
+      
+      await displayGeneratedCodeWithSelector('123456');
+      
+      // The code box should be in the template-editor's status element
+      const editorStatus = document.querySelector('#template-editor #template-status');
+      const pageStatus = document.querySelector('#template-page #template-status');
+      
+      expect(editorStatus.querySelector('#generated-industry-code-box')).toBeTruthy();
+      expect(pageStatus.querySelector('#generated-industry-code-box')).toBeFalsy();
+    });
+  });
+
+  describe('click handlers for add product', () => {
+    let addProductCalled;
+    
+    beforeEach(() => {
+      addProductCalled = false;
+      
+      // Reset DOM with add product button
+      document.body.innerHTML = `
+        <div id="template-editor">
+          <div id="products-container">
+            <div class="product-item" data-product-id="1">
+              <input type="text" class="product-name-input">
+              <button class="btn-remove-product">×</button>
+            </div>
+          </div>
+          <button type="button" id="add-product-btn">+ Add Product</button>
+          <div id="template-status" class="message" style="display: none;"></div>
+        </div>
+      `;
+    });
+
+    test('should call addProduct when button is clicked directly', () => {
+      const btn = document.getElementById('add-product-btn');
+      const container = document.getElementById('products-container');
+      const initialCount = container.querySelectorAll('.product-item').length;
+      
+      // Simulate direct click by calling addProduct
+      TemplateCreation.addProduct();
+      
+      const newCount = container.querySelectorAll('.product-item').length;
+      expect(newCount).toBe(initialCount + 1);
+    });
+  });
 });

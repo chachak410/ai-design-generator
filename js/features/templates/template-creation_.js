@@ -409,6 +409,42 @@ const TemplateCreation = {
     const editor = document.getElementById('template-editor');
     if (!editor) return;
 
+    // Add direct click listeners for critical buttons to ensure reliability.
+    // These are in addition to the delegated handlers below. stopPropagation()
+    // prevents the delegated handler from also firing (avoiding double-execution).
+    const addProductBtn = editor.querySelector('#add-product-btn');
+    if (addProductBtn && !addProductBtn.dataset.directListenerAttached) {
+      addProductBtn.addEventListener('click', (e) => {
+        console.debug('[TemplateCreation] Add Product button clicked (direct handler)');
+        e.preventDefault();
+        e.stopPropagation(); // Prevent delegated handler from also firing
+        this.addProduct();
+      });
+      addProductBtn.dataset.directListenerAttached = 'true';
+    }
+
+    const saveAndGenerateBtn = editor.querySelector('#save-and-generate-btn');
+    if (saveAndGenerateBtn && !saveAndGenerateBtn.dataset.directListenerAttached) {
+      saveAndGenerateBtn.addEventListener('click', (e) => {
+        console.debug('[TemplateCreation] Save & Generate button clicked (direct handler)');
+        e.preventDefault();
+        e.stopPropagation(); // Prevent delegated handler from also firing
+        this.saveAndGenerateCode();
+      });
+      saveAndGenerateBtn.dataset.directListenerAttached = 'true';
+    }
+
+    const addCustomSpecBtn = editor.querySelector('#add-custom-spec-btn');
+    if (addCustomSpecBtn && !addCustomSpecBtn.dataset.directListenerAttached) {
+      addCustomSpecBtn.addEventListener('click', (e) => {
+        console.debug('[TemplateCreation] Add Custom Spec button clicked (direct handler)');
+        e.preventDefault();
+        e.stopPropagation(); // Prevent delegated handler from also firing
+        this.addCustomSpecification();
+      });
+      addCustomSpecBtn.dataset.directListenerAttached = 'true';
+    }
+
     // Event delegation for all buttons - ensures clicks work even if DOM is replaced
     editor.addEventListener('click', (e) => {
       const target = e.target;
@@ -847,7 +883,10 @@ const TemplateCreation = {
    * Display generated code with proper event handling and auto-copy
    */
   async displayGeneratedCode(code) {
-    const statusEl = document.getElementById('template-status');
+    // Use querySelector to target the status element inside template-editor specifically
+    // This avoids conflicts with other #template-status elements in the page
+    const statusEl = document.querySelector('#template-editor #template-status') || 
+                     document.getElementById('template-status');
     if (!statusEl) {
       console.warn('[TemplateCreation] displayGeneratedCode: template-status element not found');
       return;
