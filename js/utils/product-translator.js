@@ -171,7 +171,7 @@ const ProductTranslator = {
             clearTimeout(timeoutId);
             // Fall back to script injection to load Google Translate widget
             // This ensures the widget is available for manual translation if needed
-            // Error is intentionally swallowed as this is a non-blocking fallback
+            // Script injection errors are logged for debugging but don't block the translation fallback
             this._injectGoogleTranslateScript().catch(scriptErr => {
               console.warn('[ProductTranslator] Script injection fallback failed:', scriptErr.message);
             });
