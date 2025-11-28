@@ -25,9 +25,9 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // Sanitize and validate numeric parameters
-    const validSeed = typeof seed === 'number' && !isNaN(seed) 
-      ? seed 
+    // Sanitize and validate numeric parameters with bounds checking
+    const validSeed = typeof seed === 'number' && !isNaN(seed) && seed >= 0 && seed <= 999999
+      ? Math.floor(seed)
       : Math.floor(Math.random() * 1000000);
     const validWidth = typeof width === 'number' && width > 0 && width <= 2048 
       ? width 

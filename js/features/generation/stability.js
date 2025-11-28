@@ -7,16 +7,18 @@
 const StabilityAPI = {
   async generate(prompt, seed) {
     try {
-      // Validate inputs
-      if (!prompt || typeof prompt !== 'string') {
-        throw new Error('Stability API: prompt is required and must be a string');
+      // Validate inputs - ensure prompt is a non-empty string
+      if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
+        throw new Error('Stability API: prompt is required and must be a non-empty string');
       }
       
-      // Ensure seed is a valid number
-      const validSeed = typeof seed === 'number' && !isNaN(seed) ? seed : Math.floor(Math.random() * 1000000);
+      // Ensure seed is a valid number within reasonable bounds
+      const validSeed = typeof seed === 'number' && !isNaN(seed) && seed >= 0 && seed <= 999999
+        ? Math.floor(seed)
+        : Math.floor(Math.random() * 1000000);
       
       const payload = {
-        text_prompts: [{ text: prompt, weight: 1 }],
+        text_prompts: [{ text: prompt.trim(), weight: 1 }],
         cfg_scale: 7,
         height: 1024,
         width: 1024,
