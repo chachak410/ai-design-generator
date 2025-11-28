@@ -509,13 +509,16 @@
 
       <!-- Client Details Modal -->
       <div id="client-modal" class="modal" style="display: none;">
-        <div class="modal-content">
+        <div class="modal-content large">
           <span class="close">&times;</span>
-          <h2 data-i18n="clientDetails">Client Details</h2>
+          <div class="modal-header-row">
+            <h2 data-i18n="clientDetails">Client Details</h2>
+            <button id="edit-client-btn" class="btn btn-primary btn-sm" data-i18n="editClient">✏️ Edit</button>
+          </div>
           
           <div class="modal-body">
-            <!-- Client Info Section -->
-            <section>
+            <!-- Client Info Section - View Mode -->
+            <section class="client-view-mode">
               <h3 data-i18n="accountInformation">Account Information</h3>
               <div class="info-grid">
                 <div class="info-item">
@@ -545,6 +548,48 @@
               </div>
             </section>
 
+            <!-- Client Info Section - Edit Mode -->
+            <section class="client-edit-mode" style="display: none;">
+              <h3 data-i18n="editAccountInfo">Edit Account Information</h3>
+              <div class="edit-form-grid">
+                <div class="form-group">
+                  <label for="edit-client-name" data-i18n="name">Name</label>
+                  <input type="text" id="edit-client-name" class="form-input" placeholder="Client name" required>
+                </div>
+                <div class="form-group">
+                  <label for="edit-client-email" data-i18n="emailLabel">Email</label>
+                  <input type="email" id="edit-client-email" class="form-input" disabled title="Email cannot be changed">
+                </div>
+                <div class="form-group">
+                  <label for="edit-client-phone" data-i18n="phone">Phone</label>
+                  <input type="tel" id="edit-client-phone" class="form-input" placeholder="Phone number">
+                </div>
+                <div class="form-group">
+                  <label for="edit-client-company" data-i18n="companyName">Company</label>
+                  <input type="text" id="edit-client-company" class="form-input" placeholder="Company name">
+                </div>
+                <div class="form-group">
+                  <label for="edit-client-industry" data-i18n="industry">Industry</label>
+                  <input type="text" id="edit-client-industry" class="form-input" placeholder="Industry">
+                </div>
+                <div class="form-group">
+                  <label for="edit-client-product" data-i18n="productName">Product Name(s)</label>
+                  <input type="text" id="edit-client-product" class="form-input" placeholder="Product names (comma separated)">
+                </div>
+                <div class="form-group">
+                  <label for="edit-client-status" data-i18n="status">Status</label>
+                  <select id="edit-client-status" class="form-input">
+                    <option value="active" data-i18n="active">Active</option>
+                    <option value="locked" data-i18n="locked">Locked</option>
+                  </select>
+                </div>
+              </div>
+              <div class="edit-actions">
+                <button id="save-client-btn" class="btn btn-success" style="display: none;" data-i18n="saveChanges">💾 Save Changes</button>
+                <button id="cancel-edit-btn" class="btn btn-secondary" style="display: none;" data-i18n="cancel">Cancel</button>
+              </div>
+            </section>
+
             <!-- Template Settings -->
             <section>
               <h3 data-i18n="templateSettings">Template Settings</h3>
@@ -557,6 +602,17 @@
                   <button id="update-template-btn" class="btn btn-primary" data-i18n="updateTemplate">Update Template</button>
                 </div>
               </div>
+              
+              <!-- Specifications Management -->
+              <div class="specs-management">
+                <div class="specs-header">
+                  <h4 data-i18n="specifications">Specifications</h4>
+                  <button id="add-spec-to-client-btn" class="btn btn-success btn-sm" data-i18n="addSpec">+ Add Spec</button>
+                </div>
+                <div id="client-specs-list" class="specs-list">
+                  <p class="no-specs-msg" data-i18n="noSpecifications">No specifications assigned</p>
+                </div>
+              </div>
             </section>
 
             <!-- Credit Management -->
@@ -567,10 +623,22 @@
                   <span data-i18n="currentBalance">Balance</span>: <span class="credit-amount" id="modal-credit-balance">0</span> <span data-i18n="credits">credits</span>
                 </div>
                 <div class="credit-actions">
-                  <input type="number" id="credit-adjustment" placeholder="Amount" min="1" data-i18n-ph="creditAmount">
-                  <button id="add-credits-btn" class="btn btn-success" data-i18n="addCredits">Add Credits</button>
-                  <button id="deduct-credits-btn" class="btn btn-warning" data-i18n="deductCredits">Deduct Credits</button>
-                  <button id="reset-credits-btn" class="btn btn-secondary" data-i18n="reset">Reset</button>
+                  <div class="credit-action-group">
+                    <label data-i18n="adjustCredits">Adjust Credits</label>
+                    <div class="credit-input-row">
+                      <input type="number" id="credit-adjustment" placeholder="Amount" min="1" data-i18n-ph="creditAmount">
+                      <button id="add-credits-btn" class="btn btn-success btn-sm" data-i18n="add">+Add</button>
+                      <button id="deduct-credits-btn" class="btn btn-warning btn-sm" data-i18n="deduct">-Deduct</button>
+                    </div>
+                  </div>
+                  <div class="credit-action-group">
+                    <label data-i18n="setCredits">Set Credits</label>
+                    <div class="credit-input-row">
+                      <input type="number" id="set-credit-amount" placeholder="New balance" min="0" data-i18n-ph="newBalance">
+                      <button id="set-credits-btn" class="btn btn-primary btn-sm" data-i18n="setBalance">Set</button>
+                      <button id="reset-credits-btn" class="btn btn-secondary btn-sm" data-i18n="resetTo100">Reset to 100</button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </section>
@@ -620,6 +688,26 @@
           </div>
 
           <div id="modal-message" class="message" style="display: none; margin-top: 15px;"></div>
+        </div>
+      </div>
+
+      <!-- Add Specification Modal -->
+      <div id="add-spec-modal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 500px;">
+          <span class="close" onclick="ClientManagement.hideAddSpecModal()">&times;</span>
+          <h3 data-i18n="addSpecification">Add Specification</h3>
+          <div class="form-group">
+            <label for="new-spec-name" data-i18n="specName">Specification Name</label>
+            <input type="text" id="new-spec-name" class="form-input" placeholder="e.g., Size, Color, Style" data-i18n-ph="specNamePlaceholder">
+          </div>
+          <div class="form-group">
+            <label for="new-spec-values" data-i18n="specValues">Values (comma separated)</label>
+            <input type="text" id="new-spec-values" class="form-input" placeholder="e.g., Small, Medium, Large" data-i18n-ph="specValuesPlaceholder">
+          </div>
+          <div class="form-actions" style="margin-top: 20px; display: flex; gap: 10px;">
+            <button id="save-new-spec-btn" class="btn btn-success" data-i18n="addSpec">Add Specification</button>
+            <button id="cancel-new-spec-btn" class="btn btn-secondary" data-i18n="cancel">Cancel</button>
+          </div>
         </div>
       </div>
 

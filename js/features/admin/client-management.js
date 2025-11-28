@@ -12,6 +12,9 @@ const ClientManagement = {
   allClients: [],
   filteredClients: [],
   currentClientId: null,
+  isEditMode: false,
+  availableTemplates: [],
+  clientSpecs: {}, // Current client's specifications
 
   /**
    * Initialize the client management (called when section is shown)
@@ -61,6 +64,19 @@ const ClientManagement = {
     byId('reset-password-btn')?.addEventListener('click', () => this.resetPassword());
     byId('toggle-lock-btn')?.addEventListener('click', () => this.toggleAccountLock());
     byId('delete-account-btn')?.addEventListener('click', () => this.deleteAccount());
+    
+    // Edit mode buttons
+    byId('edit-client-btn')?.addEventListener('click', () => this.toggleEditMode(true));
+    byId('cancel-edit-btn')?.addEventListener('click', () => this.toggleEditMode(false));
+    byId('save-client-btn')?.addEventListener('click', () => this.saveClientInfo());
+    
+    // Specification management
+    byId('add-spec-to-client-btn')?.addEventListener('click', () => this.showAddSpecModal());
+    byId('save-new-spec-btn')?.addEventListener('click', () => this.saveNewSpec());
+    byId('cancel-new-spec-btn')?.addEventListener('click', () => this.hideAddSpecModal());
+    
+    // Set credit balance directly
+    byId('set-credits-btn')?.addEventListener('click', () => this.setCreditsBalance());
   },
 
   /**
@@ -131,7 +147,8 @@ const ClientManagement = {
         <td><span class="status-badge status-${c.status || 'active'}">${c.status || 'active'}</span></td>
         <td>${c.lastActive ? new Date(c.lastActive).toLocaleDateString() : window.i18n?.t('never') || 'Never'}</td>
         <td><div class="action-btns">
-          <button class="btn-icon" onclick="ClientManagement.openClientModal('${c.id}')" title="View">👁️</button>
+          <button class="btn-icon" onclick="ClientManagement.openClientModal('${c.id}')" title="${window.i18n?.t('viewDetails') || 'View'}">👁️</button>
+          <button class="btn-icon btn-edit" onclick="ClientManagement.openClientModal('${c.id}', true)" title="${window.i18n?.t('editClient') || 'Edit'}">✏️</button>
         </div></td>
       </tr>
     `).join('');
@@ -144,17 +161,34 @@ const ClientManagement = {
     if (next) next.disabled = this.currentPage === this.totalPages;
   },
 
-  async openClientModal(id) {
+  async openClientModal(id, editMode = false) {
     this.currentClientId = id;
+    this.isEditMode = editMode;
     const c = this.allClients.find(x => x.id === id);
     if (!c) return alert(window.i18n?.t('clientNotFound') || 'Client not found');
 
+    // Store current client specs
+    this.clientSpecs = c.specifications || {};
+
+    // Set view mode display values
     this.setText('modal-client-name', c.displayName || window.i18n?.t('notSet') || 'Not set');
     this.setText('modal-client-email', c.email || '');
     this.setText('modal-client-industry', c.industry || window.i18n?.t('notSet') || 'Not set');
     this.setText('modal-client-status', c.status || 'active');
     this.setText('modal-client-created', c.createdAt ? new Date(c.createdAt).toLocaleDateString() : window.i18n?.t('notSet') || 'Not set');
     this.setText('modal-client-lastactive', c.lastActive ? new Date(c.lastActive).toLocaleDateString() : window.i18n?.t('never') || 'Never');
+    
+    // Set edit mode input values
+    this.setInputValue('edit-client-name', c.displayName || '');
+    this.setInputValue('edit-client-email', c.email || '');
+    this.setInputValue('edit-client-phone', c.phone || '');
+    this.setInputValue('edit-client-company', c.companyName || '');
+    this.setInputValue('edit-client-industry', c.industry || '');
+    this.setInputValue('edit-client-product', c.productName || '');
+    
+    // Set status dropdown
+    const statusSelect = document.getElementById('edit-client-status');
+    if (statusSelect) statusSelect.value = c.status || 'active';
 
     // Load available templates
     await this.loadTemplateOptions();
@@ -163,14 +197,383 @@ const ClientManagement = {
     if (sel) sel.value = c.assignedTemplate || '';
 
     this.setText('modal-credit-balance', c.credits || 0);
+    this.setInputValue('set-credit-amount', c.credits || 0);
+
+    // Load and render specifications
+    this.renderSpecifications();
 
     await this.loadGenerationHistory(id);
 
     const lockBtn = document.getElementById('toggle-lock-btn');
     if (lockBtn) lockBtn.textContent = (c.status === 'locked') ? (window.i18n?.t('unlockAccount') || 'Unlock Account') : (window.i18n?.t('lockAccountText') || 'Lock Account');
 
+    // Toggle edit mode display
+    this.toggleEditMode(editMode);
+
     const modal = document.getElementById('client-modal');
     if (modal) modal.style.display = 'block';
+  },
+
+  /**
+   * Toggle between view and edit mode
+   */
+  toggleEditMode(editMode) {
+    this.isEditMode = editMode;
+    
+    // Toggle visibility of view vs edit elements
+    const viewElements = document.querySelectorAll('.client-view-mode');
+    const editElements = document.querySelectorAll('.client-edit-mode');
+    
+    viewElements.forEach(el => el.style.display = editMode ? 'none' : '');
+    editElements.forEach(el => el.style.display = editMode ? '' : 'none');
+    
+    // Toggle edit/save buttons
+    const editBtn = document.getElementById('edit-client-btn');
+    const saveBtn = document.getElementById('save-client-btn');
+    const cancelBtn = document.getElementById('cancel-edit-btn');
+    
+    if (editBtn) editBtn.style.display = editMode ? 'none' : 'inline-block';
+    if (saveBtn) saveBtn.style.display = editMode ? 'inline-block' : 'none';
+    if (cancelBtn) cancelBtn.style.display = editMode ? 'inline-block' : 'none';
+    
+    // Update modal title
+    const modalTitle = document.querySelector('#client-modal h2');
+    if (modalTitle) {
+      modalTitle.textContent = editMode 
+        ? (window.i18n?.t('editClient') || 'Edit Client') 
+        : (window.i18n?.t('clientDetails') || 'Client Details');
+    }
+  },
+
+  /**
+   * Save edited client information
+   */
+  async saveClientInfo() {
+    if (!this.currentClientId) return;
+    
+    const name = document.getElementById('edit-client-name')?.value?.trim() || '';
+    const phone = document.getElementById('edit-client-phone')?.value?.trim() || '';
+    const company = document.getElementById('edit-client-company')?.value?.trim() || '';
+    const industry = document.getElementById('edit-client-industry')?.value?.trim() || '';
+    const product = document.getElementById('edit-client-product')?.value?.trim() || '';
+    const status = document.getElementById('edit-client-status')?.value || 'active';
+    
+    // Basic validation
+    if (!name) {
+      this.showToast(window.i18n?.t('nameRequired') || 'Name is required', 'error');
+      return;
+    }
+    
+    try {
+      const db = firebase.firestore();
+      const updates = {
+        displayName: name,
+        phone: phone,
+        companyName: company,
+        industry: industry,
+        productName: product,
+        status: status,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      
+      await db.collection('users').doc(this.currentClientId).update(updates);
+      
+      this.showToast(window.i18n?.t('clientUpdated') || 'Client information updated successfully', 'success');
+      
+      // Update local data
+      const idx = this.allClients.findIndex(x => x.id === this.currentClientId);
+      if (idx >= 0) {
+        this.allClients[idx] = { ...this.allClients[idx], ...updates };
+      }
+      
+      // Refresh the display
+      await this.loadClients();
+      this.toggleEditMode(false);
+      
+      // Update the view mode display
+      this.setText('modal-client-name', name);
+      this.setText('modal-client-industry', industry || window.i18n?.t('notSet') || 'Not set');
+      this.setText('modal-client-status', status);
+      
+    } catch (e) {
+      console.error('saveClientInfo error', e);
+      this.showToast(window.i18n?.t('failedUpdateClient') || 'Failed to update client information', 'error');
+    }
+  },
+
+  /**
+   * Render client specifications in the modal
+   */
+  renderSpecifications() {
+    const container = document.getElementById('client-specs-list');
+    if (!container) return;
+    
+    const specs = this.clientSpecs || {};
+    const specKeys = Object.keys(specs);
+    
+    if (specKeys.length === 0) {
+      container.innerHTML = `<p class="no-specs-msg">${window.i18n?.t('noSpecifications') || 'No specifications assigned'}</p>`;
+      return;
+    }
+    
+    container.innerHTML = specKeys.map(key => {
+      const values = Array.isArray(specs[key]) ? specs[key] : [specs[key]];
+      return `
+        <div class="spec-item" data-spec-key="${this.escapeHtml(key)}">
+          <div class="spec-header">
+            <strong>${this.escapeHtml(key)}</strong>
+            <button class="btn-icon btn-danger btn-sm" onclick="ClientManagement.removeSpec('${this.escapeHtml(key)}')" title="${window.i18n?.t('removeSpec') || 'Remove'}">✕</button>
+          </div>
+          <div class="spec-values">
+            ${values.map(v => `<span class="spec-value-tag">${this.escapeHtml(v)}</span>`).join('')}
+          </div>
+        </div>
+      `;
+    }).join('');
+  },
+
+  /**
+   * Show modal to add new specification
+   */
+  showAddSpecModal() {
+    const modal = document.getElementById('add-spec-modal');
+    if (modal) {
+      modal.style.display = 'block';
+      // Clear previous values
+      const nameInput = document.getElementById('new-spec-name');
+      const valuesInput = document.getElementById('new-spec-values');
+      if (nameInput) nameInput.value = '';
+      if (valuesInput) valuesInput.value = '';
+    }
+  },
+
+  /**
+   * Hide add specification modal
+   */
+  hideAddSpecModal() {
+    const modal = document.getElementById('add-spec-modal');
+    if (modal) modal.style.display = 'none';
+  },
+
+  /**
+   * Save new specification to client
+   */
+  async saveNewSpec() {
+    if (!this.currentClientId) return;
+    
+    const specName = document.getElementById('new-spec-name')?.value?.trim() || '';
+    const specValuesRaw = document.getElementById('new-spec-values')?.value?.trim() || '';
+    
+    if (!specName) {
+      this.showToast(window.i18n?.t('specNameRequired') || 'Specification name is required', 'error');
+      return;
+    }
+    
+    if (!specValuesRaw) {
+      this.showToast(window.i18n?.t('specValuesRequired') || 'At least one value is required', 'error');
+      return;
+    }
+    
+    // Parse values (comma-separated)
+    const specValues = specValuesRaw.split(',').map(v => v.trim()).filter(v => v.length > 0);
+    if (specValues.length === 0) {
+      this.showToast(window.i18n?.t('specValuesRequired') || 'At least one value is required', 'error');
+      return;
+    }
+    
+    try {
+      const db = firebase.firestore();
+      
+      // Update client specs
+      const updatedSpecs = { ...this.clientSpecs };
+      
+      // Check for duplicates
+      if (updatedSpecs[specName]) {
+        // Merge values, avoiding duplicates
+        const existingValues = Array.isArray(updatedSpecs[specName]) ? updatedSpecs[specName] : [updatedSpecs[specName]];
+        const newValues = [...new Set([...existingValues, ...specValues])];
+        updatedSpecs[specName] = newValues;
+      } else {
+        updatedSpecs[specName] = specValues;
+      }
+      
+      await db.collection('users').doc(this.currentClientId).update({
+        specifications: updatedSpecs,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      
+      // Update local state
+      this.clientSpecs = updatedSpecs;
+      
+      // Update local allClients array
+      const idx = this.allClients.findIndex(x => x.id === this.currentClientId);
+      if (idx >= 0) {
+        this.allClients[idx].specifications = updatedSpecs;
+      }
+      
+      this.renderSpecifications();
+      this.hideAddSpecModal();
+      this.showToast(window.i18n?.t('specAdded') || 'Specification added successfully', 'success');
+      
+    } catch (e) {
+      console.error('saveNewSpec error', e);
+      this.showToast(window.i18n?.t('failedAddSpec') || 'Failed to add specification', 'error');
+    }
+  },
+
+  /**
+   * Remove a specification from client
+   */
+  async removeSpec(specKey) {
+    if (!this.currentClientId) return;
+    
+    // The i18n key uses {spec} placeholder which needs to be replaced with actual specKey
+    let confirmMsg = window.i18n?.t('confirmRemoveSpec') || 'Remove specification "{spec}"? This may affect generated designs.';
+    confirmMsg = confirmMsg.replace('{spec}', specKey);
+    if (!confirm(confirmMsg)) return;
+    
+    try {
+      const db = firebase.firestore();
+      
+      const updatedSpecs = { ...this.clientSpecs };
+      delete updatedSpecs[specKey];
+      
+      await db.collection('users').doc(this.currentClientId).update({
+        specifications: updatedSpecs,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      
+      // Update local state
+      this.clientSpecs = updatedSpecs;
+      
+      // Update local allClients array
+      const idx = this.allClients.findIndex(x => x.id === this.currentClientId);
+      if (idx >= 0) {
+        this.allClients[idx].specifications = updatedSpecs;
+      }
+      
+      this.renderSpecifications();
+      this.showToast(window.i18n?.t('specRemoved') || 'Specification removed', 'success');
+      
+    } catch (e) {
+      console.error('removeSpec error', e);
+      this.showToast(window.i18n?.t('failedRemoveSpec') || 'Failed to remove specification', 'error');
+    }
+  },
+
+  /**
+   * Set credit balance to a specific amount
+   */
+  async setCreditsBalance() {
+    if (!this.currentClientId) return;
+    
+    const input = document.getElementById('set-credit-amount');
+    const amount = parseInt(input?.value || '0', 10);
+    
+    if (isNaN(amount) || amount < 0) {
+      this.showToast(window.i18n?.t('enterValidAmount') || 'Enter a valid amount', 'error');
+      return;
+    }
+    
+    try {
+      const db = firebase.firestore();
+      await db.collection('users').doc(this.currentClientId).update({
+        credits: amount,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      
+      this.setText('modal-credit-balance', amount);
+      
+      // Update local data
+      const idx = this.allClients.findIndex(x => x.id === this.currentClientId);
+      if (idx >= 0) {
+        this.allClients[idx].credits = amount;
+      }
+      
+      this.showToast(window.i18n?.t('creditsUpdated') || 'Credits updated', 'success');
+      await this.loadClients();
+      
+    } catch (e) {
+      console.error('setCreditsBalance error', e);
+      this.showToast(window.i18n?.t('failedUpdateCredits') || 'Failed to update credits', 'error');
+    }
+  },
+
+  /**
+   * Delete client account (with confirmation)
+   * 
+   * Note: Uses native prompt() for the second confirmation step. While a custom modal
+   * would provide better UX, the native prompt ensures the user must actively type
+   * "DELETE" which prevents accidental deletions. This is a common pattern for
+   * destructive operations. A future enhancement could replace this with a custom
+   * confirmation modal with an input field.
+   */
+  async deleteAccount() {
+    if (!this.currentClientId) return;
+    
+    const c = this.allClients.find(x => x.id === this.currentClientId);
+    if (!c) return;
+    
+    // First confirmation with account details
+    const confirmMsg = window.i18n?.t('confirmDeleteAccount') || 'Permanently delete this account? This action cannot be undone.';
+    const fullConfirmMsg = `${confirmMsg}\n\nEmail: ${c.email}\nName: ${c.displayName || 'N/A'}`;
+    if (!confirm(fullConfirmMsg)) return;
+    
+    // Second confirmation - user must type DELETE
+    const doubleConfirm = window.i18n?.t('typeDeleteToConfirm') || 'Type DELETE to confirm:';
+    const userInput = prompt(doubleConfirm);
+    if (!userInput || userInput.toUpperCase() !== 'DELETE') {
+      this.showToast(window.i18n?.t('deleteCancelled') || 'Delete cancelled', 'info');
+      return;
+    }
+    
+    try {
+      const db = firebase.firestore();
+      
+      // Note: This only deletes the Firestore document, not the Firebase Auth user
+      // Full deletion would require Firebase Admin SDK on the server
+      await db.collection('users').doc(this.currentClientId).delete();
+      
+      this.showToast(window.i18n?.t('accountDeleted') || 'Account deleted successfully', 'success');
+      this.closeModal();
+      await this.loadClients();
+      
+    } catch (e) {
+      console.error('deleteAccount error', e);
+      this.showToast(window.i18n?.t('failedDeleteAccount') || 'Failed to delete account', 'error');
+    }
+  },
+
+  /**
+   * Show toast notification
+   */
+  showToast(message, type = 'info') {
+    // Try to use existing toast system if available
+    if (window.UI && typeof window.UI.showMessage === 'function') {
+      const msgEl = document.getElementById('modal-message');
+      if (msgEl) {
+        msgEl.textContent = message;
+        msgEl.className = `message ${type}`;
+        msgEl.style.display = 'block';
+        setTimeout(() => { msgEl.style.display = 'none'; }, 3000);
+        return;
+      }
+    }
+    
+    // Fallback to alert for important messages
+    if (type === 'error') {
+      alert(message);
+    } else {
+      console.log(`[${type}] ${message}`);
+    }
+  },
+
+  /**
+   * Set input element value
+   */
+  setInputValue(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.value = value;
   },
 
   async loadTemplateOptions() {
@@ -204,6 +607,10 @@ const ClientManagement = {
     const modal = document.getElementById('client-modal');
     if (modal) modal.style.display = 'none';
     this.currentClientId = null;
+    this.isEditMode = false;
+    this.clientSpecs = {};
+    // Reset to view mode
+    this.toggleEditMode(false);
   },
 
   async loadGenerationHistory(clientId) {

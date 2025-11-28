@@ -133,6 +133,10 @@ app.post('/api/huggingface', async (req, res) => {
   }
 });
 
+// Proxy for Pollinations AI (handles CORS issues)
+const pollinationsProxy = require('./api/pollinations-proxy');
+app.use('/api/pollinations-proxy', pollinationsProxy);
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
