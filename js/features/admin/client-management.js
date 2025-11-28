@@ -12,7 +12,19 @@ const ClientManagement = {
   allClients: [],
   filteredClients: [],
   currentClientId: null,
-  useApiEndpoints: false, // Toggle to use API endpoints instead of direct Firestore
+  /**
+   * Toggle to use API endpoints instead of direct Firestore access.
+   * When true, all data operations use /api/clients endpoints.
+   * When false (default), uses direct Firebase Firestore client SDK.
+   * 
+   * To enable API mode, set: ClientManagement.useApiEndpoints = true
+   * 
+   * API mode requires:
+   * - Server running with routes mounted at /api/clients
+   * - Valid Firebase ID token for authentication
+   * - User must have master or admin role
+   */
+  useApiEndpoints: false,
 
   /**
    * Initialize the client management (called when section is shown)
@@ -340,7 +352,7 @@ const ClientManagement = {
         const data = doc.data();
         const currentTemplates = data.templates || [];
         
-        const templateItemId = `tpl_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const templateItemId = `tpl_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
         currentTemplates.push({
           id: templateItemId,
           templateId,

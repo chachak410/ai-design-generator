@@ -11,8 +11,6 @@ describe('Client Management API', () => {
   let router;
 
   beforeEach(() => {
-    jest.resetModules();
-    
     // Mock Firestore
     mockDb = {
       collection: jest.fn().mockReturnThis(),
@@ -56,12 +54,14 @@ describe('Client Management API', () => {
     test('validateClientData should reject invalid email', () => {
       const { validateClientData } = require('../server/models/client');
       
-      const result = validateClientData({
-        email: 'invalid-email'
-      });
+      // Test various invalid email formats
+      expect(validateClientData({ email: 'invalid-email' }).valid).toBe(false);
+      expect(validateClientData({ email: 'test@' }).valid).toBe(false);
+      expect(validateClientData({ email: '@domain.com' }).valid).toBe(false);
+      expect(validateClientData({ email: 'test' }).valid).toBe(false);
       
-      expect(result.valid).toBe(false);
-      expect(result.errors).toContain('Invalid email format');
+      // Valid email should pass
+      expect(validateClientData({ email: 'test@example.com' }).valid).toBe(true);
     });
 
     test('validateClientData should reject invalid status', () => {
@@ -125,6 +125,18 @@ describe('Client Management API', () => {
       const result = validateTemplateData({
         templateId: 'test',
         specs: 'not-an-object'
+      });
+      
+      expect(result.valid).toBe(false);
+      expect(result.errors).toContain('specs must be an object');
+    });
+
+    test('validateTemplateData should reject null specs', () => {
+      const { validateTemplateData } = require('../server/models/client');
+      
+      const result = validateTemplateData({
+        templateId: 'test',
+        specs: null
       });
       
       expect(result.valid).toBe(false);

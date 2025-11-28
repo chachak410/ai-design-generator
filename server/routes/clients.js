@@ -178,8 +178,13 @@ router.post('/:id/templates', requireMaster, async (req, res) => {
 
     const { templateId, specs } = req.body;
 
-    // Generate a unique ID for the template item
-    const templateItemId = `tpl_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    // Generate a unique ID for the template item using crypto if available
+    let templateItemId;
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+      templateItemId = `tpl_${crypto.randomUUID()}`;
+    } else {
+      templateItemId = `tpl_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+    }
 
     // Create the new template entry
     const newTemplateEntry = {

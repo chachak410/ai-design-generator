@@ -50,8 +50,14 @@ function validateClientData(data) {
   const errors = [];
 
   if (data.email !== undefined) {
-    if (typeof data.email !== 'string' || !data.email.includes('@')) {
+    if (typeof data.email !== 'string') {
       errors.push('Invalid email format');
+    } else {
+      // Basic email validation: must have @ with text before and after
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(data.email)) {
+        errors.push('Invalid email format');
+      }
     }
   }
 
@@ -97,7 +103,7 @@ function validateTemplateData(data) {
     errors.push('templateId is required and must be a string');
   }
 
-  if (data.specs !== undefined && typeof data.specs !== 'object') {
+  if (data.specs !== undefined && (typeof data.specs !== 'object' || data.specs === null)) {
     errors.push('specs must be an object');
   }
 
