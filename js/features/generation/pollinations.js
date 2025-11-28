@@ -47,19 +47,19 @@ const PollinationsAPI = {
 
       clearTimeout(timeoutId);
 
+      console.debug('Pollinations → response', response.status, 'type', response.type, 'content-type=', response.headers.get('content-type'), 'url', response.url);
+
       // Check response status
       if (!response.ok) {
         console.warn(`Pollinations → HTTP ${response.status}`);
-        
-        // Only retry on server errors (5xx) after a delay, not immediately
-        if ((response.status === 502 || response.status === 503 || response.status === 504) && retries > 0) {
-          const delay = 5000 + Math.random() * 5000;  // Wait 5-10 seconds before retrying on server error
-          console.warn(`Pollinations → Server error ${response.status}, retrying in ${Math.round(delay)}ms (${retries} left)`);
+        const retryable = [429, 502, 503, 504].includes(response.status);
+        if (retryable && retries > 0) {
+          const base = response.status === 429 ? 10000 : 5000; // 429: longer backoff
+          const delay = base + Math.random() * base;
+          console.warn(`Pollinations → Server/Rate limit ${response.status}, retrying in ${Math.round(delay)}ms (${retries} left)`);
           await new Promise(r => setTimeout(r, delay));
           return this.generateOne(prompt, seed, retries - 1);
         }
-        
-        // For other errors, don't retry
         throw new Error(`HTTP ${response.status}`);
       }
 

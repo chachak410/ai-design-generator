@@ -21,7 +21,9 @@
       });
 
       if (!response.ok) {
-        throw new Error(`Stability API error: ${response.status}`);
+        const text = await response.text().catch(() => '(failed to read body)');
+        console.error('Stability API error', response.status, text);
+        throw new Error(`Stability API error: ${response.status} ${text}`);
       }
 
       const data = await response.json();
