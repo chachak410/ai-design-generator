@@ -363,8 +363,8 @@ const TemplateCreation = {
           <p class="section-description">Add multiple products for this industry (clients can select from these)</p>
           <div id="products-container">
             <div class="product-item" data-product-id="1">
-              <input type="text" placeholder="Product name (e.g., T-shirt, Handbag)" class="product-name-input">
-              <button class="btn-remove-product" data-action="remove-product">×</button>
+              <input type="text" placeholder="Product name (e.g., T-shirt, Handbag)" class="product-name-input" aria-label="Product name 1" id="product-name-1">
+              <button class="btn-remove-product" data-action="remove-product" aria-label="Remove product 1">×</button>
             </div>
           </div>
           <button type="button" class="btn btn-secondary" id="add-product-btn">
@@ -542,8 +542,8 @@ const TemplateCreation = {
     newItem.className = 'product-item';
     newItem.dataset.productId = newProductId;
     newItem.innerHTML = `
-      <input type="text" placeholder="Product name (e.g., T-shirt, Handbag)" class="product-name-input">
-      <button class="btn-remove-product" data-action="remove-product">×</button>
+      <input type="text" placeholder="Product name (e.g., T-shirt, Handbag)" class="product-name-input" aria-label="Product name ${newProductId}" id="product-name-${newProductId}">
+      <button class="btn-remove-product" data-action="remove-product" aria-label="Remove product ${newProductId}">×</button>
     `;
     container.appendChild(newItem);
     
@@ -592,13 +592,13 @@ const TemplateCreation = {
 
     specGroup.innerHTML = `
       <div class="custom-spec-header">
-        <input type="text" placeholder="Specification name (e.g., Material, Finish)" class="custom-spec-name" data-spec-id="${specId}">
-        <button class="btn-remove-custom-spec" data-spec-id="${specId}">×</button>
+        <input type="text" placeholder="Specification name (e.g., Material, Finish)" class="custom-spec-name" data-spec-id="${specId}" aria-label="Custom specification name ${specId}" id="custom-spec-name-${specId}">
+        <button class="btn-remove-custom-spec" data-spec-id="${specId}" aria-label="Remove custom specification ${specId}">×</button>
       </div>
       <div class="custom-spec-values" data-spec-id="${specId}">
         <div class="custom-spec-value-item">
-          <input type="text" placeholder="Value" class="custom-spec-value">
-          <button class="btn-add-value" data-spec-id="${specId}">+</button>
+          <input type="text" placeholder="Value" class="custom-spec-value" aria-label="Custom specification ${specId} value 1" id="custom-spec-${specId}-value-1">
+          <button class="btn-add-value" data-spec-id="${specId}" aria-label="Add value to specification ${specId}">+</button>
         </div>
       </div>
     `;
@@ -632,11 +632,12 @@ const TemplateCreation = {
       return;
     }
 
+    const valueNumber = values.length + 1;
     const valueItem = document.createElement('div');
     valueItem.className = 'custom-spec-value-item';
     valueItem.innerHTML = `
-      <input type="text" placeholder="Value" class="custom-spec-value">
-      <button class="btn-remove-value">−</button>
+      <input type="text" placeholder="Value" class="custom-spec-value" aria-label="Custom specification ${parsedId} value ${valueNumber}" id="custom-spec-${parsedId}-value-${valueNumber}">
+      <button class="btn-remove-value" aria-label="Remove value ${valueNumber} from specification ${parsedId}">−</button>
     `;
     container.appendChild(valueItem);
   },
