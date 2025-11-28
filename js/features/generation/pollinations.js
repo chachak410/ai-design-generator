@@ -14,6 +14,19 @@
 
 const PollinationsAPI = {
   /**
+   * Calculate exponential backoff delay with jitter
+   * @param {number} attempt - Current attempt number (0-based)
+   * @param {number} baseDelay - Base delay in milliseconds
+   * @param {number} maxDelay - Maximum delay cap in milliseconds
+   * @returns {number} - Delay in milliseconds
+   */
+  calculateBackoffDelay(attempt, baseDelay, maxDelay) {
+    const exponentialDelay = baseDelay * Math.pow(1.5, attempt);
+    const jitter = Math.random() * baseDelay;
+    return Math.min(exponentialDelay + jitter, maxDelay);
+  },
+
+  /**
    * Attempt to generate an image via the server-side proxy
    * @param {string} prompt
    * @param {number} seed
@@ -123,12 +136,9 @@ const PollinationsAPI = {
         
         const retryable = [429, 502, 503, 504].includes(response.status);
         if (retryable && retries > 0) {
-          // Exponential backoff with jitter
           const attempt = 6 - retries;
           const base = response.status === 429 ? 10000 : 5000; // 429: longer backoff
-          const exponentialDelay = base * Math.pow(1.5, attempt);
-          const jitter = Math.random() * base;
-          const delay = Math.min(exponentialDelay + jitter, 60000); // Cap at 60 seconds
+          const delay = this.calculateBackoffDelay(attempt, base, 60000);
           console.warn(`Pollinations → Server/Rate limit ${response.status}, retrying in ${Math.round(delay)}ms (${retries} left)`);
           await new Promise(r => setTimeout(r, delay));
           return this.generateOne(prompt, seed, retries - 1, overallStartTime);
@@ -222,10 +232,7 @@ const PollinationsAPI = {
         // If proxy failed, retry with backoff (CORS issues can be transient)
         if (retries > 0) {
           const attempt = 6 - retries;
-          const baseDelay = 2000;
-          const exponentialDelay = baseDelay * Math.pow(1.5, attempt);
-          const jitter = Math.random() * baseDelay;
-          const delay = Math.min(exponentialDelay + jitter, 30000);
+          const delay = this.calculateBackoffDelay(attempt, 2000, 30000);
           console.log(`Pollinations → CORS/Network error, retrying in ${Math.round(delay)}ms (${retries} left)`);
           await new Promise(r => setTimeout(r, delay));
           return this.generateOne(prompt, seed, retries - 1, overallStartTime);
