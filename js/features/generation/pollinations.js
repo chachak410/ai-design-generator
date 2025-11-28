@@ -4,13 +4,63 @@
  * Returns: { images: [url1, url2] }  ← exactly what TemplateManager expects
  * Features:
  *   • Two different seeds → two unique images
- *   • 45-second timeout + retry on 502/524
+ *   • 45-second timeout + retry on 502/524/429
  *   • Safe mode + flux model
  *   • CORS + no-cache
+ *   • Proxy fallback for network/CORS errors
  *   • Logs everything to console
  */
 
 const PollinationsAPI = {
+  /**
+   * Attempt to generate image via proxy fallback
+   * @param {string} prompt
+   * @param {number} width
+   * @param {number} height
+   * @param {number} seed
+   * @param {string} model
+   * @param {string} safe
+   * @returns {Promise<{provider: string, url: string}|null>}
+   */
+  async generateViaProxy(prompt, width, height, seed, model, safe) {
+    console.log(`Pollinations → Attempting proxy fallback for seed ${seed}`);
+    try {
+      const proxyResponse = await fetch('/api/pollinations-proxy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, width, height, seed, model, safe })
+      });
+
+      console.log(`Pollinations proxy → response status=${proxyResponse.status}, type=${proxyResponse.type}, content-type=${proxyResponse.headers.get('content-type')}, url=${proxyResponse.url}`);
+
+      if (!proxyResponse.ok) {
+        const errorBody = await proxyResponse.text().catch(() => '(failed to read body)');
+        console.warn(`Pollinations proxy → HTTP ${proxyResponse.status}: ${errorBody}`);
+        return null;
+      }
+
+      const blob = await proxyResponse.blob();
+      if (blob.size === 0) {
+        console.warn(`Pollinations proxy → Empty blob received`);
+        return null;
+      }
+
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          console.log(`Pollinations proxy → Success (seed: ${seed}, size: ${blob.size} bytes)`);
+          resolve({ provider: 'Pollinations AI', url: reader.result });
+        };
+        reader.onerror = () => reject(new Error('Proxy FileReader error'));
+        reader.onabort = () => reject(new Error('Proxy FileReader aborted'));
+        reader.readAsDataURL(blob);
+      });
+    } catch (proxyErr) {
+      console.error(`Pollinations proxy → Failed:`, proxyErr.message || proxyErr);
+      return null;
+    }
+  },
+
   /**
    * Generate a single image from Pollinations
    * @param {string} prompt
@@ -47,15 +97,21 @@ const PollinationsAPI = {
 
       clearTimeout(timeoutId);
 
-      console.debug('Pollinations → response', response.status, 'type', response.type, 'content-type=', response.headers.get('content-type'), 'url', response.url);
+      // Enhanced diagnostic logging
+      console.log(`Pollinations → response status=${response.status}, type=${response.type}, content-type=${response.headers.get('content-type')}, url=${response.url}`);
 
       // Check response status
       if (!response.ok) {
-        console.warn(`Pollinations → HTTP ${response.status}`);
-        const retryable = [429, 502, 503, 504].includes(response.status);
+        // Log response body for non-ok responses
+        const errorBody = await response.text().catch(() => '(failed to read body)');
+        console.warn(`Pollinations → HTTP ${response.status}: ${errorBody}`);
+        
+        const retryable = [429, 500, 502, 503, 504].includes(response.status);
         if (retryable && retries > 0) {
-          const base = response.status === 429 ? 10000 : 5000; // 429: longer backoff
-          const delay = base + Math.random() * base;
+          // 429: longer base backoff (10000ms) with jitter; 5xx: 5000ms base
+          const base = response.status === 429 ? 10000 : 5000;
+          const jitter = Math.random() * base;
+          const delay = base + jitter;
           console.warn(`Pollinations → Server/Rate limit ${response.status}, retrying in ${Math.round(delay)}ms (${retries} left)`);
           await new Promise(r => setTimeout(r, delay));
           return this.generateOne(prompt, seed, retries - 1);
@@ -117,12 +173,31 @@ const PollinationsAPI = {
       // Handle different error types
       if (err.name === 'AbortError') {
         console.error('Pollinations generation failed: request aborted (timeout or cancelled)');
+      } else if (err instanceof TypeError) {
+        // TypeError typically indicates network failure or CORS issues
+        console.error('Pollinations generation failed: network/CORS error, attempting proxy fallback...');
+        const proxyResult = await this.generateViaProxy(prompt, width, height, seed, model, safe);
+        if (proxyResult) {
+          return proxyResult;
+        }
+        // If proxy also fails and we have retries left, try direct again
+        if (retries > 0) {
+          const delay = 3000 + Math.random() * 2000;
+          console.log(`Pollinations → Proxy failed, retrying direct in ${Math.round(delay)}ms (${retries} left)`);
+          await new Promise(r => setTimeout(r, delay));
+          return this.generateOne(prompt, seed, retries - 1);
+        }
       } else if (err.message && err.message.includes('CORS')) {
-        console.error('Pollinations generation failed: CORS error, will retry...');
-        // For CORS errors, retry with backoff
+        console.error('Pollinations generation failed: CORS error, attempting proxy fallback...');
+        const proxyResult = await this.generateViaProxy(prompt, width, height, seed, model, safe);
+        if (proxyResult) {
+          return proxyResult;
+        }
+        // If proxy also fails and we have retries left, try direct again
         if (retries > 0) {
           const delay = 2000 + Math.random() * 3000;
-          console.log(`Pollinations → CORS error, retrying in ${Math.round(delay)}ms (${retries} left)`);
+          console.log(`Pollinations → Proxy failed, retrying direct in ${Math.round(delay)}ms (${retries} left)`);
+          await new Promise(r => setTimeout(r, delay));
           return this.generateOne(prompt, seed, retries - 1);
         }
       } else {
