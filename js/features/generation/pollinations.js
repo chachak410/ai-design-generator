@@ -437,5 +437,6 @@ const PollinationsAPI = {
   }
 };
 
-// Export globally so TemplateManager can use it
+// Export globally so TemplateManager and Generator can use it
 window.ImageGenerator = PollinationsAPI;
+window.PollinationsAPI = PollinationsAPI;
