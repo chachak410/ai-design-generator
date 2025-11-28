@@ -74,6 +74,10 @@ app.get('/api/me', (req, res) => {
   });
 });
 
+// Pollinations proxy endpoint
+const pollinationsProxyHandler = require('./api/pollinations-proxy');
+app.post('/api/pollinations-proxy', pollinationsProxyHandler);
+
 // Proxy for Stability AI
 app.post('/api/generate-image', async (req, res) => {
   try {
@@ -132,6 +136,10 @@ app.post('/api/huggingface', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// Proxy for Pollinations AI (handles CORS issues)
+const pollinationsProxy = require('./api/pollinations-proxy');
+app.use('/api/pollinations-proxy', pollinationsProxy);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
