@@ -116,26 +116,18 @@ const ProductTranslator = {
   },
 
   /**
-   * Try Google Translate API
+   * Try Google Translate API using DOM script injection
    * @private
+   * @param {string} text - Text to translate
+   * @param {number} maxRetries - Maximum retry attempts (default 3)
+   * @returns {Promise<string|null>} - Translated text or null
    */
-  async _tryGoogleTranslate(text, maxRetries) {
+  async _tryGoogleTranslate(text, maxRetries = 3) {
+    const TIMEOUT_MS = 3000; // 3 second timeout per attempt
+
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
-        // Using Google's unofficial API endpoint
-        // Note: This endpoint may change, but it's commonly used for translations
-        const response = await Promise.race([
-          fetch('https://translate.googleapis.com/translate_a/element.js?cb=googleTranslateElementInit', {
-            method: 'GET',
-            headers: {
-              'User-Agent': 'Mozilla/5.0'
-            }
-          }),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
-        ]);
-
-        // Alternative: Use simple JSON endpoint
-        const result = await this._simpleGoogleTranslate(text);
+        const result = await this._attemptGoogleTranslateWithScriptInjection(text, TIMEOUT_MS);
         if (result) return result;
       } catch (err) {
         console.warn(`[ProductTranslator] Google Translate attempt ${attempt + 1} failed:`, err.message);
@@ -145,6 +137,93 @@ const ProductTranslator = {
       }
     }
     return null;
+  },
+
+  /**
+   * Single attempt to translate using script injection
+   * @private
+   * @param {string} text - Text to translate
+   * @param {number} timeoutMs - Timeout in milliseconds
+   * @returns {Promise<string|null>} - Translated text or null
+   */
+  async _attemptGoogleTranslateWithScriptInjection(text, timeoutMs) {
+    return new Promise((resolve, reject) => {
+      let settled = false;
+      const timeoutId = setTimeout(() => {
+        if (!settled) {
+          settled = true;
+          reject(new Error('Timeout'));
+        }
+      }, timeoutMs);
+
+      // Try the simple JSON endpoint as the primary translation method
+      this._simpleGoogleTranslate(text)
+        .then(result => {
+          if (!settled) {
+            settled = true;
+            clearTimeout(timeoutId);
+            resolve(result);
+          }
+        })
+        .catch(err => {
+          if (!settled) {
+            settled = true;
+            clearTimeout(timeoutId);
+            // Fall back to script injection to load Google Translate widget
+            // This ensures the widget is available for manual translation if needed
+            // Script injection errors are logged for debugging but don't block the translation fallback
+            this._injectGoogleTranslateScript().catch(scriptErr => {
+              console.warn('[ProductTranslator] Script injection fallback failed:', scriptErr.message);
+            });
+            // Return null to fall back to other translation methods
+            resolve(null);
+          }
+        });
+    });
+  },
+
+  /**
+   * Inject Google Translate script element (for widget loading)
+   * Note: This loads the Google Translate widget script, which doesn't provide
+   * direct translation results but makes the widget available on the page.
+   * @private
+   * @returns {Promise<void>}
+   */
+  _injectGoogleTranslateScript() {
+    return new Promise((resolve, reject) => {
+      // Check if script is already loaded
+      if (window.google && window.google.translate) {
+        resolve();
+        return;
+      }
+
+      // Define the callback function if not already defined
+      // This prevents script errors when the Google Translate script loads
+      if (typeof window.googleTranslateElementInit !== 'function') {
+        window.googleTranslateElementInit = function() {
+          console.log('[ProductTranslator] Google Translate widget initialized');
+        };
+      }
+
+      // Create and inject script element
+      const script = document.createElement('script');
+      script.type = 'text/javascript';
+      script.src = 'https://translate.googleapis.com/translate_a/element.js?cb=googleTranslateElementInit';
+      script.async = true;
+
+      script.onload = () => {
+        console.log('[ProductTranslator] Google Translate script loaded via injection');
+        resolve();
+      };
+
+      script.onerror = (err) => {
+        console.warn('[ProductTranslator] Failed to inject Google Translate script:', err);
+        reject(new Error('Script injection failed'));
+      };
+
+      // Inject into document head
+      (document.head || document.documentElement).appendChild(script);
+    });
   },
 
   /**
