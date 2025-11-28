@@ -2,7 +2,24 @@
   temp: {
     email: null,
     industryCode: null,
-    verificationCode: null
+    verificationCode: null,
+    verificationToken: null
+  },
+
+  /**
+   * Helper: Get Firebase Functions callable
+   * Returns the httpsCallable function if available, otherwise null
+   */
+  getCallable(functionName) {
+    // Check if AppState has functions initialized
+    if (window.AppState?.functions && window.firebase?.functions) {
+      try {
+        return window.firebase.functions().httpsCallable(functionName);
+      } catch (e) {
+        console.warn('[Registration] Failed to get callable:', e);
+      }
+    }
+    return null;
   },
 
   async sendVerificationCode() {
@@ -29,11 +46,45 @@
         return;
       }
 
-      this.temp.verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
       this.temp.email = email;
       this.temp.industryCode = industryCode;
 
       UI.showMessage('register-msg-step1', 'Sending verification code...', 'info');
+
+      // Try to use the Cloud Function first
+      const sendVerificationCodeFn = this.getCallable('sendVerificationCode');
+      
+      if (sendVerificationCodeFn) {
+        try {
+          const result = await sendVerificationCodeFn({
+            email: email,
+            industryCode: industryCode
+          });
+
+          if (result.data?.success) {
+            // Store the token for verification
+            this.temp.verificationToken = result.data.token;
+            // If debug code is returned (development mode), store it for fallback
+            if (result.data.debugCode) {
+              this.temp.verificationCode = result.data.debugCode;
+            }
+            
+            UI.showMessage('register-msg-step1', ' Verification code sent to your email!', 'success');
+            UI.hideElement('register-step1');
+            UI.showElement('register-step2');
+            return;
+          } else {
+            throw new Error(result.data?.error || 'Failed to send verification code');
+          }
+        } catch (fnErr) {
+          console.warn('[Registration] Cloud Function failed, falling back to emailjs:', fnErr);
+          // Fall through to emailjs fallback
+        }
+      }
+
+      // Fallback to emailjs if Cloud Function is not available or failed
+      this.temp.verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+      this.temp.verificationToken = null;
 
       await emailjs.send(
         AppConfig.emailjs.serviceId,
@@ -54,9 +105,44 @@
     }
   },
 
-  verifyCode() {
+  async verifyCode() {
     const code = document.getElementById('register-code')?.value.trim();
     
+    if (!code) {
+      UI.showMessage('register-msg-step2', 'Please enter the verification code.', 'error');
+      return;
+    }
+
+    // If we have a token from Cloud Function, verify server-side
+    if (this.temp.verificationToken) {
+      const verifyCodeFn = this.getCallable('verifyCode');
+      
+      if (verifyCodeFn) {
+        try {
+          UI.showMessage('register-msg-step2', 'Verifying code...', 'info');
+          
+          const result = await verifyCodeFn({
+            token: this.temp.verificationToken,
+            code: code
+          });
+
+          if (result.data?.success) {
+            UI.hideElement('register-step2');
+            UI.showElement('register-step3');
+            UI.hideMessage('register-msg-step2');
+            return;
+          } else {
+            UI.showMessage('register-msg-step2', result.data?.error || 'Incorrect verification code.', 'error');
+            return;
+          }
+        } catch (fnErr) {
+          console.warn('[Registration] Cloud Function verification failed:', fnErr);
+          // Fall through to local verification if available
+        }
+      }
+    }
+
+    // Fallback to local verification (for emailjs or debug mode)
     if (code === this.temp.verificationCode) {
       UI.hideElement('register-step2');
       UI.showElement('register-step3');
@@ -170,7 +256,7 @@
       UI.showMessage('register-msg-step3', ' Account created successfully!', 'success');
       console.log('[REGISTRATION] ✓✓✓ Registration complete! Registered email:', this.temp.email, 'UID:', user.uid);
 
-      this.temp = { email: null, industryCode: null, verificationCode: null };
+      this.temp = { email: null, industryCode: null, verificationCode: null, verificationToken: null };
 
       // 等待 1.5 秒后跳转到 setup.html
       setTimeout(() => {
