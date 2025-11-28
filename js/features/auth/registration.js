@@ -8,13 +8,19 @@
 
   /**
    * Helper: Get Firebase Functions callable
-   * Returns the httpsCallable function if available, otherwise null
+   * Uses FirebaseHelper if available, otherwise falls back to AppState
+   * @param {string} functionName - Name of the Cloud Function
+   * @returns {Function|null} - The callable function or null if not available
    */
   getCallable(functionName) {
-    // Check if AppState has functions initialized
-    if (window.AppState?.functions && window.firebase?.functions) {
+    // Prefer FirebaseHelper if available (ensures consistency)
+    if (window.FirebaseHelper?.getCallable) {
+      return window.FirebaseHelper.getCallable(functionName);
+    }
+    // Fallback to AppState.functions if FirebaseHelper is not available
+    if (window.AppState?.functions) {
       try {
-        return window.firebase.functions().httpsCallable(functionName);
+        return window.AppState.functions.httpsCallable(functionName);
       } catch (e) {
         console.warn('[Registration] Failed to get callable:', e);
       }

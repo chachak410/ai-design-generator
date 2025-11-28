@@ -5,6 +5,7 @@ const FirebaseHelper = {
   app: null,
   auth: null,
   db: null,
+  functions: null,
   init(config) {
     const cfg = config || window.AppConfig?.firebase;
     if (!cfg) { console.error('Firebase config missing'); return null; }
@@ -13,7 +14,23 @@ const FirebaseHelper = {
     this.app = (firebase.apps && firebase.apps.length) ? firebase.app() : firebase.initializeApp(cfg);
     this.auth = firebase.auth();
     this.db = firebase.firestore();
+    // Initialize Functions if available
+    if (typeof firebase.functions === 'function') {
+      this.functions = firebase.functions();
+    }
     return this.app;
+  },
+
+  /**
+   * Get a callable function reference
+   * @param {string} name - The name of the Cloud Function
+   * @returns {Function|null} - The callable function or null if not available
+   */
+  getCallable(name) {
+    if (this.functions) {
+      return this.functions.httpsCallable(name);
+    }
+    return null;
   },
 
   /**

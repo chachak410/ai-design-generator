@@ -68,6 +68,9 @@ async function verifyRecaptcha(token, secret) {
   }
 }
 
+// Rate limiting constants
+const IP_RATE_LIMIT_MULTIPLIER = 2; // IP limit is more lenient than per-email limit
+
 /**
  * Helper: Check rate limiting for email/IP
  * @param {string} email - Email address
@@ -98,14 +101,14 @@ async function checkRateLimit(email, ip, maxPerHour = 5) {
       }
     }
 
-    // Check IP rate limit (separate limit, slightly higher threshold)
+    // Check IP rate limit (separate limit, more lenient to allow multiple users from same IP)
     const ipDoc = await ipRateLimitRef.get();
     if (ipDoc.exists) {
       const data = ipDoc.data();
       const recentAttempts = (data.attempts || []).filter(
         (ts) => new Date(ts).getTime() > oneHourAgo.getTime()
       );
-      if (recentAttempts.length >= maxPerHour * 2) {
+      if (recentAttempts.length >= maxPerHour * IP_RATE_LIMIT_MULTIPLIER) {
         return { allowed: false, reason: 'Too many requests from this IP. Please try again later.' };
       }
     }
@@ -288,8 +291,11 @@ exports.sendVerificationCode = functions.https.onCall(async (data, context) => {
   }
 
   // 9. Return success (optionally return debug code in development)
+  // WARNING: Debug mode should ONLY be enabled in local development environments.
+  // Never enable in production as it exposes the verification code in the response.
   const isDebug = process.env.DEBUG_SEND_CODE === 'true' || functions.config().debug?.sendcode === 'true';
   if (isDebug) {
+    console.warn('⚠️ DEBUG MODE ENABLED: Verification code exposed in response. This should ONLY be used in local development!');
     console.log(`DEBUG: Verification code for ${email}: ${code}`);
     return { success: true, token: token, debugCode: code };
   }
