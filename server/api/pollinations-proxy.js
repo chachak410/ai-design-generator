@@ -6,10 +6,11 @@
  * Includes simple in-memory throttling to prevent upstream spam.
  */
 
-// Simple in-memory throttle tracking
+// Simple in-memory throttle tracking with mutex-like behavior
 const throttleState = {
   lastRequest: 0,
-  minInterval: 1000 // Minimum 1 second between requests
+  minInterval: 1000, // Minimum 1 second between requests
+  pending: null // Promise to serialize concurrent requests
 };
 
 /**
@@ -37,13 +38,20 @@ async function pollinationsProxyHandler(req, res) {
       return res.status(400).json({ error: 'Prompt is required' });
     }
 
-    // Simple throttle check
+    // Wait for any pending throttle to complete first (serializes concurrent requests)
+    if (throttleState.pending) {
+      await throttleState.pending;
+    }
+
+    // Calculate throttle delay and create new pending promise if needed
     const now = Date.now();
     const elapsed = now - throttleState.lastRequest;
     if (elapsed < throttleState.minInterval) {
       const waitTime = throttleState.minInterval - elapsed;
       console.log(`[pollinations-proxy] Throttling: waiting ${waitTime}ms`);
-      await new Promise(resolve => setTimeout(resolve, waitTime));
+      throttleState.pending = new Promise(resolve => setTimeout(resolve, waitTime));
+      await throttleState.pending;
+      throttleState.pending = null;
     }
     throttleState.lastRequest = Date.now();
 
@@ -102,4 +110,3 @@ async function pollinationsProxyHandler(req, res) {
 }
 
 module.exports = pollinationsProxyHandler;
-module.exports.pollinationsProxyHandler = pollinationsProxyHandler;

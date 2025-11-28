@@ -106,7 +106,9 @@ const PollinationsAPI = {
         const errorBody = await response.text().catch(() => '(failed to read body)');
         console.warn(`Pollinations → HTTP ${response.status}: ${errorBody}`);
         
-        const retryable = [429, 500, 502, 503, 504].includes(response.status);
+        // Retry on rate limiting (429) and gateway/server errors (502, 503, 504)
+        // Note: 500 is not retried as it typically indicates persistent server-side issues
+        const retryable = [429, 502, 503, 504].includes(response.status);
         if (retryable && retries > 0) {
           // 429: longer base backoff (10000ms) with jitter; 5xx: 5000ms base
           const base = response.status === 429 ? 10000 : 5000;
