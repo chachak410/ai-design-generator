@@ -12,13 +12,18 @@ const UNIT_TESTING = process.env.UNIT_TESTING === '1' || process.env.UNIT_TESTIN
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname)));
+// Serve static files from the parent directory (where index.html, css, js are)
+app.use(express.static(path.join(__dirname, '..')));
+
+// Client Management Routes
+const clientsRouter = require('./routes/clients');
+app.use('/api/clients', clientsRouter);
 
 // Serve index.html for root
 // NOTE: Role-based redirect is handled on the client side after Firebase auth completes.
 // The client-side main.js will redirect to role-specific homepage after authentication.
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(__dirname, '..', 'index.html'));
 });
 
 // Health check endpoint
