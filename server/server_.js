@@ -40,6 +40,10 @@ app.get('/api/health', (req, res) => {
 // For Firebase Auth integration, see server/api/me.js for example middleware
 const apiMeHandler = require('./api/me');
 app.get('/api/me', apiMeHandler);
+
+// Pollinations proxy endpoint - proxies image generation to avoid CORS issues
+const pollinationsProxyHandler = require('./api/pollinations-proxy');
+app.post('/api/pollinations-proxy', pollinationsProxyHandler);
 /**
  * API endpoint to get current user information.
  * 
@@ -74,6 +78,10 @@ app.get('/api/me', (req, res) => {
     note: 'This endpoint is a placeholder for future server-side auth integration.'
   });
 });
+
+// Pollinations proxy endpoint
+const pollinationsProxyHandler = require('./api/pollinations-proxy');
+app.post('/api/pollinations-proxy', pollinationsProxyHandler);
 
 // Proxy for Stability AI
 app.post('/api/generate-image', async (req, res) => {
@@ -133,6 +141,10 @@ app.post('/api/huggingface', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// Proxy for Pollinations AI (handles CORS issues)
+const pollinationsProxy = require('./api/pollinations-proxy');
+app.use('/api/pollinations-proxy', pollinationsProxy);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
