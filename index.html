@@ -272,9 +272,26 @@
         <div id="spec-selections"></div>
         <!-- Reference Image Upload -->
         <div id="image-upload" class="form-group">
-          <label for="reference-image" data-i18n="uploadReference">Upload Reference Image</label>
-          <input id="reference-image" type="file" accept="image/*">
+      <label data-i18n="uploadReference">Upload Reference Images (up to 2)</label>
+      <div class="dual-upload-container">
+        <p style="text-align:center; color:#7f8c8d; margin-bottom:20px;">
+          Upload up to two reference images for better results
+        </p>
+
+        <div class="dual-image-grid">
+          <div>
+            <label class="dual-label" for="ref-img1">Reference Image 1 (Optional)</label><br>
+            <input type="file" id="ref-img1" accept="image/*">
+            <img id="dual-preview1" class="dual-preview" src="" alt="Preview 1">
+          </div>
+          <div>
+            <label class="dual-label" for="ref-img2">Reference Image 2 (Optional)</label><br>
+            <input type="file" id="ref-img2" accept="image/*">
+            <img id="dual-preview2" class="dual-preview" src="" alt="Preview 2">
+          </div>
         </div>
+      </div>
+    </div>
         <!-- Prompt Display -->
         <div id="prompt-display" class="info-box" style="display: none;"></div>
         <!-- Generation Counter -->
@@ -299,6 +316,7 @@
             <button id="download-all" class="btn btn-success" data-i18n="downloadAll">Download all</button>
             <button id="both-bad" class="btn btn-danger" data-i18n="bothBad">Both bad</button>
           </div>
+          
           <!-- ADDED: AI learning indicator -->
           <div id="learning-indicator" class="hidden" style="text-align:center; margin-top:8px; font-size:0.9em; color:#007bff;" data-i18n="aiLearning">
             AI learning from your taste…
