@@ -12,6 +12,7 @@ const ClientManagement = {
   allClients: [],
   filteredClients: [],
   currentClientId: null,
+  useApiEndpoints: false, // Toggle to use API endpoints instead of direct Firestore
 
   /**
    * Initialize the client management (called when section is shown)
@@ -61,16 +62,61 @@ const ClientManagement = {
     byId('reset-password-btn')?.addEventListener('click', () => this.resetPassword());
     byId('toggle-lock-btn')?.addEventListener('click', () => this.toggleAccountLock());
     byId('delete-account-btn')?.addEventListener('click', () => this.deleteAccount());
+    
+    // Template management event listeners
+    byId('add-client-template-btn')?.addEventListener('click', () => this.addClientTemplate());
   },
 
   /**
-   * Load all clients from Firestore
+   * Get authorization headers for API calls
+   */
+  async getAuthHeaders() {
+    const headers = { 'Content-Type': 'application/json' };
+    // If Firebase Auth is available, include the ID token
+    if (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser) {
+      try {
+        const token = await firebase.auth().currentUser.getIdToken();
+        headers['Authorization'] = `Bearer ${token}`;
+      } catch (e) {
+        console.warn('Failed to get Firebase ID token:', e);
+      }
+    }
+    return headers;
+  },
+
+  /**
+   * Load all clients from Firestore or API
    */
   async loadClients() {
     try {
-      const db = firebase.firestore();
-      const snap = await db.collection('users').where('role', '==', 'client').get();
-      this.allClients = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      if (this.useApiEndpoints) {
+        // Use API endpoint
+        const headers = await this.getAuthHeaders();
+        const response = await fetch('/api/clients', { headers });
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status}`);
+        }
+        const data = await response.json();
+        this.allClients = data.clients.map(c => ({
+          id: c._id,
+          displayName: c.name,
+          email: c.email,
+          status: c.status,
+          templates: c.templates,
+          notes: c.notes,
+          billingInfo: c.billingInfo,
+          industry: c.industry,
+          credits: c.credits,
+          createdAt: c.createdAt,
+          updatedAt: c.updatedAt,
+          lastActive: c.lastActive
+        }));
+      } else {
+        // Use direct Firestore
+        const db = firebase.firestore();
+        const snap = await db.collection('users').where('role', '==', 'client').get();
+        this.allClients = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      }
       this.filteredClients = [...this.allClients];
       this.currentPage = 1;
       this.renderClients();
@@ -90,7 +136,7 @@ const ClientManagement = {
     this.filteredClients = this.allClients.filter(c => {
       const s = !q || c.email?.toLowerCase().includes(q) || c.displayName?.toLowerCase().includes(q);
       const i = !ind || c.industry === ind;
-      const t = !tpl || c.assignedTemplate === tpl;
+      const t = !tpl || c.assignedTemplate === tpl || (c.templates && c.templates.some(tmpl => tmpl.templateId === tpl));
       const st = !status || (c.status || 'active') === status;
       return s && i && t && st;
     });
@@ -121,12 +167,18 @@ const ClientManagement = {
     const start = (this.currentPage - 1) * this.itemsPerPage;
     const page = this.filteredClients.slice(start, start + this.itemsPerPage);
 
-    tbody.innerHTML = page.map(c => `
+    tbody.innerHTML = page.map(c => {
+      // Display templates count or assignedTemplate
+      const templateDisplay = c.templates && c.templates.length > 0 
+        ? `${c.templates.length} template(s)` 
+        : this.escapeHtml(c.assignedTemplate || 'None');
+      
+      return `
       <tr>
         <td>${this.escapeHtml(c.displayName || 'N/A')}</td>
         <td>${this.escapeHtml(c.email || '')}</td>
         <td>${this.escapeHtml(c.industry || 'N/A')}</td>
-        <td>${this.escapeHtml(c.assignedTemplate || 'None')}</td>
+        <td>${templateDisplay}</td>
         <td>${c.credits || 0}</td>
         <td><span class="status-badge status-${c.status || 'active'}">${c.status || 'active'}</span></td>
         <td>${c.lastActive ? new Date(c.lastActive).toLocaleDateString() : window.i18n?.t('never') || 'Never'}</td>
@@ -134,7 +186,8 @@ const ClientManagement = {
           <button class="btn-icon" onclick="ClientManagement.openClientModal('${c.id}')" title="View">👁️</button>
         </div></td>
       </tr>
-    `).join('');
+    `;
+    }).join('');
 
     const info = document.getElementById('page-info');
     const prev = document.getElementById('prev-page');
@@ -146,7 +199,39 @@ const ClientManagement = {
 
   async openClientModal(id) {
     this.currentClientId = id;
-    const c = this.allClients.find(x => x.id === id);
+    let c;
+    
+    if (this.useApiEndpoints) {
+      // Fetch from API
+      try {
+        const headers = await this.getAuthHeaders();
+        const response = await fetch(`/api/clients/${id}`, { headers });
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status}`);
+        }
+        const data = await response.json();
+        c = {
+          id: data._id,
+          displayName: data.name,
+          email: data.email,
+          status: data.status,
+          templates: data.templates,
+          notes: data.notes,
+          billingInfo: data.billingInfo,
+          industry: data.industry,
+          credits: data.credits,
+          createdAt: data.createdAt,
+          updatedAt: data.updatedAt,
+          lastActive: data.lastActive
+        };
+      } catch (e) {
+        console.error('Failed to fetch client details:', e);
+        return alert(window.i18n?.t('clientNotFound') || 'Client not found');
+      }
+    } else {
+      c = this.allClients.find(x => x.id === id);
+    }
+    
     if (!c) return alert(window.i18n?.t('clientNotFound') || 'Client not found');
 
     this.setText('modal-client-name', c.displayName || window.i18n?.t('notSet') || 'Not set');
@@ -163,6 +248,9 @@ const ClientManagement = {
     if (sel) sel.value = c.assignedTemplate || '';
 
     this.setText('modal-credit-balance', c.credits || 0);
+    
+    // Render client's assigned templates list
+    this.renderClientTemplates(c.templates || []);
 
     await this.loadGenerationHistory(id);
 
@@ -171,6 +259,208 @@ const ClientManagement = {
 
     const modal = document.getElementById('client-modal');
     if (modal) modal.style.display = 'block';
+  },
+  
+  /**
+   * Render the client's assigned templates list in the modal
+   */
+  renderClientTemplates(templates) {
+    const container = document.getElementById('client-templates-list');
+    if (!container) return;
+    
+    if (!templates || templates.length === 0) {
+      container.innerHTML = `<p style="color: #666; font-style: italic;">${window.i18n?.t('noTemplatesAssigned') || 'No templates assigned'}</p>`;
+      return;
+    }
+    
+    container.innerHTML = templates.map(t => `
+      <div class="template-item" style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f9f9f9; border-radius: 4px; margin-bottom: 8px;">
+        <div>
+          <strong>${this.escapeHtml(t.templateId)}</strong>
+          ${t.specs && Object.keys(t.specs).length > 0 ? `<br><small style="color: #666;">Specs: ${this.escapeHtml(JSON.stringify(t.specs))}</small>` : ''}
+          <br><small style="color: #999;">Added: ${t.addedAt ? new Date(t.addedAt).toLocaleDateString() : 'N/A'}</small>
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="ClientManagement.removeClientTemplate('${t.id}')" title="Remove">✕</button>
+      </div>
+    `).join('');
+  },
+  
+  /**
+   * Add a template to the current client
+   */
+  async addClientTemplate() {
+    if (!this.currentClientId) return;
+    
+    const templateIdInput = document.getElementById('new-template-id');
+    const specsInput = document.getElementById('new-template-specs');
+    
+    const templateId = templateIdInput?.value?.trim();
+    let specs = {};
+    
+    if (!templateId) {
+      return alert(window.i18n?.t('templateIdRequired') || 'Template ID is required');
+    }
+    
+    // Parse specs JSON if provided
+    if (specsInput?.value?.trim()) {
+      try {
+        specs = JSON.parse(specsInput.value.trim());
+      } catch (e) {
+        return alert(window.i18n?.t('invalidSpecsJson') || 'Invalid specs JSON format');
+      }
+    }
+    
+    try {
+      if (this.useApiEndpoints) {
+        // Use API endpoint
+        const headers = await this.getAuthHeaders();
+        const response = await fetch(`/api/clients/${this.currentClientId}/templates`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ templateId, specs })
+        });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || `API error: ${response.status}`);
+        }
+        
+        const updatedClient = await response.json();
+        this.renderClientTemplates(updatedClient.templates || []);
+      } else {
+        // Use direct Firestore
+        const db = firebase.firestore();
+        const docRef = db.collection('users').doc(this.currentClientId);
+        const doc = await docRef.get();
+        
+        if (!doc.exists) {
+          throw new Error('Client not found');
+        }
+        
+        const data = doc.data();
+        const currentTemplates = data.templates || [];
+        
+        const templateItemId = `tpl_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        currentTemplates.push({
+          id: templateItemId,
+          templateId,
+          specs,
+          addedAt: new Date().toISOString()
+        });
+        
+        await docRef.update({
+          templates: currentTemplates,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        this.renderClientTemplates(currentTemplates);
+      }
+      
+      // Clear inputs
+      if (templateIdInput) templateIdInput.value = '';
+      if (specsInput) specsInput.value = '';
+      
+      alert(window.i18n?.t('templateAdded') || 'Template added successfully');
+      await this.loadClients();
+    } catch (e) {
+      console.error('addClientTemplate error', e);
+      alert(window.i18n?.t('failedAddTemplate') || 'Failed to add template.');
+    }
+  },
+  
+  /**
+   * Remove a template from the current client
+   */
+  async removeClientTemplate(templateItemId) {
+    if (!this.currentClientId || !templateItemId) return;
+    
+    if (!confirm(window.i18n?.t('confirmRemoveTemplate') || 'Remove this template?')) {
+      return;
+    }
+    
+    try {
+      if (this.useApiEndpoints) {
+        // Use API endpoint
+        const headers = await this.getAuthHeaders();
+        const response = await fetch(`/api/clients/${this.currentClientId}/templates/${templateItemId}`, {
+          method: 'DELETE',
+          headers
+        });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || `API error: ${response.status}`);
+        }
+        
+        const updatedClient = await response.json();
+        this.renderClientTemplates(updatedClient.templates || []);
+      } else {
+        // Use direct Firestore
+        const db = firebase.firestore();
+        const docRef = db.collection('users').doc(this.currentClientId);
+        const doc = await docRef.get();
+        
+        if (!doc.exists) {
+          throw new Error('Client not found');
+        }
+        
+        const data = doc.data();
+        const currentTemplates = data.templates || [];
+        const filteredTemplates = currentTemplates.filter(t => t.id !== templateItemId);
+        
+        await docRef.update({
+          templates: filteredTemplates,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        this.renderClientTemplates(filteredTemplates);
+      }
+      
+      alert(window.i18n?.t('templateRemoved') || 'Template removed successfully');
+      await this.loadClients();
+    } catch (e) {
+      console.error('removeClientTemplate error', e);
+      alert(window.i18n?.t('failedRemoveTemplate') || 'Failed to remove template.');
+    }
+  },
+  
+  /**
+   * Update client information using API
+   */
+  async updateClientInfo(updates) {
+    if (!this.currentClientId) return;
+    
+    try {
+      if (this.useApiEndpoints) {
+        const headers = await this.getAuthHeaders();
+        const response = await fetch(`/api/clients/${this.currentClientId}`, {
+          method: 'PUT',
+          headers,
+          body: JSON.stringify(updates)
+        });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || `API error: ${response.status}`);
+        }
+        
+        return await response.json();
+      } else {
+        // Use direct Firestore
+        const db = firebase.firestore();
+        const updateData = { ...updates };
+        if (updates.name) {
+          updateData.displayName = updates.name;
+          delete updateData.name;
+        }
+        updateData.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+        await db.collection('users').doc(this.currentClientId).update(updateData);
+        return { success: true };
+      }
+    } catch (e) {
+      console.error('updateClientInfo error', e);
+      throw e;
+    }
   },
 
   async loadTemplateOptions() {
@@ -407,11 +697,15 @@ const ClientManagement = {
       (window.i18n?.t('confirmUnlock') || 'Unlock this account?');
     if (!confirm(confirmMsg)) return;
     try {
-      const db = firebase.firestore();
-      await db.collection('users').doc(this.currentClientId).update({
-        status: newStatus,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
+      if (this.useApiEndpoints) {
+        await this.updateClientInfo({ status: newStatus });
+      } else {
+        const db = firebase.firestore();
+        await db.collection('users').doc(this.currentClientId).update({
+          status: newStatus,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
       const successMsg = newStatus === 'locked' ? 
         (window.i18n?.t('accountLocked') || 'Account locked') : 
         (window.i18n?.t('accountUnlocked') || 'Account unlocked');

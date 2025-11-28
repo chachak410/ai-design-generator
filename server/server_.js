@@ -12,13 +12,18 @@ const UNIT_TESTING = process.env.UNIT_TESTING === '1' || process.env.UNIT_TESTIN
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname)));
+// Serve static files from the parent directory (where index.html, css, js are)
+app.use(express.static(path.join(__dirname, '..')));
+
+// Client Management Routes
+const clientsRouter = require('./routes/clients');
+app.use('/api/clients', clientsRouter);
 
 // Serve index.html for root
 // NOTE: Role-based redirect is handled on the client side after Firebase auth completes.
 // The client-side main.js will redirect to role-specific homepage after authentication.
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(__dirname, '..', 'index.html'));
 });
 
 // Health check endpoint
@@ -33,7 +38,7 @@ app.get('/api/health', (req, res) => {
 // TODO: Implement authentication middleware to populate req.user
 // The apiMeHandler expects req.user to have: { uid, email, role }
 // For Firebase Auth integration, see server/api/me.js for example middleware
-const apiMeHandler = require('./server/api/me');
+const apiMeHandler = require('./api/me');
 app.get('/api/me', apiMeHandler);
 /**
  * API endpoint to get current user information.

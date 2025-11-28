@@ -557,6 +557,30 @@
                   <button id="update-template-btn" class="btn btn-primary" data-i18n="updateTemplate">Update Template</button>
                 </div>
               </div>
+              
+              <!-- Client Assigned Templates List -->
+              <div class="template-settings" style="margin-top: 20px;">
+                <h4 data-i18n="assignedTemplates" style="margin-bottom: 12px;">Assigned Templates (Specifications)</h4>
+                <div id="client-templates-list">
+                  <!-- Templates will be rendered here by JavaScript -->
+                </div>
+                
+                <!-- Add New Template Form -->
+                <div style="margin-top: 16px; padding: 16px; background: #f0f8ff; border-radius: 8px; border: 1px solid #bee3f8;">
+                  <h5 data-i18n="addNewTemplate" style="margin: 0 0 12px 0;">Add New Template</h5>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; align-items: end;">
+                    <div class="form-group" style="margin: 0;">
+                      <label for="new-template-id" data-i18n="templateId" style="font-size: 12px;">Template ID</label>
+                      <input type="text" id="new-template-id" placeholder="e.g., ecommerce" data-i18n-ph="templateIdPlaceholder" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                    </div>
+                    <div class="form-group" style="margin: 0;">
+                      <label for="new-template-specs" data-i18n="specsJson" style="font-size: 12px;">Specs (JSON, optional)</label>
+                      <input type="text" id="new-template-specs" placeholder='{"size": "1:1"}' data-i18n-ph="specsJsonPlaceholder" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                    </div>
+                    <button id="add-client-template-btn" class="btn btn-success" data-i18n="addTemplate" style="padding: 8px 16px;">Add</button>
+                  </div>
+                </div>
+              </div>
             </section>
 
             <!-- Credit Management -->
