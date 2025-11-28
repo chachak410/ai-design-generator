@@ -70,6 +70,10 @@ app.get('/api/me', (req, res) => {
   });
 });
 
+// Pollinations proxy endpoint
+const pollinationsProxyHandler = require('./api/pollinations-proxy');
+app.post('/api/pollinations-proxy', pollinationsProxyHandler);
+
 // Proxy for Stability AI
 app.post('/api/generate-image', async (req, res) => {
   try {
