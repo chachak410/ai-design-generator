@@ -409,14 +409,15 @@ const TemplateCreation = {
     const editor = document.getElementById('template-editor');
     if (!editor) return;
 
-    // Add direct click listeners for critical buttons to ensure reliability
-    // These are in addition to the delegated handlers below
+    // Add direct click listeners for critical buttons to ensure reliability.
+    // These are in addition to the delegated handlers below. stopPropagation()
+    // prevents the delegated handler from also firing (avoiding double-execution).
     const addProductBtn = editor.querySelector('#add-product-btn');
     if (addProductBtn && !addProductBtn.dataset.directListenerAttached) {
       addProductBtn.addEventListener('click', (e) => {
         console.debug('[TemplateCreation] Add Product button clicked (direct handler)');
         e.preventDefault();
-        e.stopPropagation();
+        e.stopPropagation(); // Prevent delegated handler from also firing
         this.addProduct();
       });
       addProductBtn.dataset.directListenerAttached = 'true';
@@ -427,7 +428,7 @@ const TemplateCreation = {
       saveAndGenerateBtn.addEventListener('click', (e) => {
         console.debug('[TemplateCreation] Save & Generate button clicked (direct handler)');
         e.preventDefault();
-        e.stopPropagation();
+        e.stopPropagation(); // Prevent delegated handler from also firing
         this.saveAndGenerateCode();
       });
       saveAndGenerateBtn.dataset.directListenerAttached = 'true';
@@ -438,7 +439,7 @@ const TemplateCreation = {
       addCustomSpecBtn.addEventListener('click', (e) => {
         console.debug('[TemplateCreation] Add Custom Spec button clicked (direct handler)');
         e.preventDefault();
-        e.stopPropagation();
+        e.stopPropagation(); // Prevent delegated handler from also firing
         this.addCustomSpecification();
       });
       addCustomSpecBtn.dataset.directListenerAttached = 'true';
