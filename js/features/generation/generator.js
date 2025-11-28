@@ -250,8 +250,16 @@
     
     console.log('[Generator] ✅ Starting image generation with CLEAN prompt (no Chinese):', basePrompt);
 
-    // First, try Pollinations with limited retries
-    while (images.length < 2 && attempts < maxAttempts && AppState.generationCount < 20) {
+    // Defensive check: Ensure PollinationsAPI is available before attempting to use it
+    // Note: Include pollinations-api.js (stub) or pollinations.js (real) before generator.js in your HTML
+    const pollinationsAvailable = typeof PollinationsAPI !== 'undefined' && PollinationsAPI !== null;
+    if (!pollinationsAvailable) {
+      console.error('[Generator] ❌ PollinationsAPI is not defined. Ensure pollinations.js or pollinations-api.js is loaded before generator.js.');
+      this.updateProgress('Image provider (Pollinations) unavailable. Please check configuration.');
+    }
+
+    // First, try Pollinations with limited retries (only if available)
+    while (pollinationsAvailable && images.length < 2 && attempts < maxAttempts && AppState.generationCount < 20) {
       const prompt = images.length === 0 
         ? basePrompt 
         : `${basePrompt} (variation ${images.length + 1})`;
@@ -290,30 +298,39 @@
 
     // If Pollinations failed completely, try Stability as backup
     if (images.length < 2) {
-      console.warn('[Generator] Pollinations failed, switching to Stability AI backup...');
-      this.updateProgress('Pollinations unavailable, trying Stability AI backup...');
+      // Defensive check: Ensure StabilityAPI is available before attempting to use it
+      // Note: Include stability-api.js (stub) or stability.js (real) before generator.js in your HTML
+      const stabilityAvailable = typeof StabilityAPI !== 'undefined' && StabilityAPI !== null;
       
-      try {
-        const seed2 = Date.now() + 1;
-        for (let i = images.length; i < 2; i++) {
-          const backupPrompt = i === 0 ? basePrompt : `${basePrompt} (variation ${i + 1})`;
-          console.log('[Generator] Trying Stability backup for image', i + 1);
-          
-          const backupImage = await StabilityAPI.generate(backupPrompt, seed2 + i);
-          
-          if (backupImage && backupImage.url) {
-            images.push(backupImage);
-            AppState.generationCount++;
-            TemplateManager.updateGenerationCounter();
-            this.updateProgress(` Image ${images.length}/2 generated with Stability backup!`);
-          } else {
-            console.warn('[Generator] Stability backup also failed for image', i + 1);
-            this.updateProgress(`Stability backup failed for image ${i + 1}`);
+      if (!stabilityAvailable) {
+        console.error('[Generator] ❌ StabilityAPI is not defined. Ensure stability.js or stability-api.js is loaded before generator.js.');
+        this.updateProgress('Backup image provider (Stability) unavailable. Please check configuration.');
+      } else {
+        console.warn('[Generator] Pollinations failed, switching to Stability AI backup...');
+        this.updateProgress('Pollinations unavailable, trying Stability AI backup...');
+        
+        try {
+          const seed2 = Date.now() + 1;
+          for (let i = images.length; i < 2; i++) {
+            const backupPrompt = i === 0 ? basePrompt : `${basePrompt} (variation ${i + 1})`;
+            console.log('[Generator] Trying Stability backup for image', i + 1);
+            
+            const backupImage = await StabilityAPI.generate(backupPrompt, seed2 + i);
+            
+            if (backupImage && backupImage.url) {
+              images.push(backupImage);
+              AppState.generationCount++;
+              TemplateManager.updateGenerationCounter();
+              this.updateProgress(` Image ${images.length}/2 generated with Stability backup!`);
+            } else {
+              console.warn('[Generator] Stability backup also failed for image', i + 1);
+              this.updateProgress(`Stability backup failed for image ${i + 1}`);
+            }
           }
+        } catch (err) {
+          console.error('[Generator] Stability backup failed:', err.message);
+          this.updateProgress('Both APIs failed, please try again later');
         }
-      } catch (err) {
-        console.error('[Generator] Stability backup failed:', err.message);
-        this.updateProgress('Both APIs failed, please try again later');
       }
     }
 
