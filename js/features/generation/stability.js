@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Stability AI Image Generator
  * -------------------------------------------------
  * Backup generator when Pollinations fails.
@@ -26,8 +26,6 @@ const StabilityAPI = {
         seed: validSeed
       };
 
-      console.log('Stability → Generating image with seed:', seed);
-      console.log('Stability → Sending request with payload:', JSON.stringify(payload));
       // Explicitly stringify the payload to ensure valid JSON
       let jsonBody;
       try {
@@ -42,7 +40,7 @@ const StabilityAPI = {
       const response = await fetch('https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',  // Required: tells server we're sending JSON
+          'Content-Type': 'application/json',
           'Accept': 'application/json',
           'Authorization': `Bearer ${AppConfig.api.stability}`
         },
@@ -59,7 +57,6 @@ const StabilityAPI = {
           statusText: response.statusText,
           body: errorText
         });
-        // Include full error details in thrown error for upstream logging
         throw new Error(`Stability API error ${response.status}: ${errorText}`);
       }
 
@@ -68,9 +65,6 @@ const StabilityAPI = {
 
       // Handle data.artifacts[0].base64 format (v1 API)
       if (data.artifacts && data.artifacts.length > 0 && data.artifacts[0].base64) {
-        console.log('Stability → Success (artifacts format)');
-      // Support artifacts array (legacy format) or images array (newer format)
-      if (data.artifacts && data.artifacts.length > 0) {
         const base64 = data.artifacts[0].base64;
         const url = `data:image/png;base64,${base64}`;
         console.log('Stability → Success (artifacts format)');
@@ -80,31 +74,18 @@ const StabilityAPI = {
         };
       }
 
-      if (data.images && data.images.length > 0) {
-        // images[0] may already be a base64 string or a URL
-        const imageData = data.images[0];
-        const url = imageData.startsWith('data:') ? imageData : `data:image/png;base64,${imageData}`;
-        console.log('Stability → Success (images format)');
-        console.log('Stability API → Success');
-        return {
-          provider: 'Stability AI',
-          url: url
-        };
-      }
-
       // Handle data.images[0] format (alternative response format)
       if (data.images && data.images.length > 0) {
         const imageData = data.images[0];
-        console.log('Stability → Success (images format)');
         // If it's already a data URL, use as-is; otherwise, construct one
         const url = imageData.startsWith('data:') ? imageData : `data:image/png;base64,${imageData}`;
+        console.log('Stability → Success (images format)');
         return {
           provider: 'Stability AI',
           url: url
         };
       }
 
-      throw new Error('No images returned from Stability AI');
       throw new Error('Stability API: No images returned in response');
 
     } catch (err) {
