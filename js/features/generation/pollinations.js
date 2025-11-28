@@ -47,7 +47,7 @@ const PollinationsAPI = {
 
       clearTimeout(timeoutId);
 
-      console.log('Pollinations → response', response.status, 'type', response.type, 'content-type=', response.headers.get('content-type'), 'url', response.url);
+      console.debug('Pollinations → response', response.status, 'type', response.type, 'content-type=', response.headers.get('content-type'), 'url', response.url);
 
       // Check response status
       if (!response.ok) {

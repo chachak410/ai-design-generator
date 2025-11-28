@@ -421,7 +421,7 @@ function setupEventListeners() {
       } else {
         console.error('TemplateManager.generateImages is not available');
         if (window.UI && typeof UI.showMessage === 'function') {
-          UI.showMessage('template-status', 'Internal error: generator not initialised.', 'error');
+          UI.showMessage('template-status', 'Internal error: generator not initialized.', 'error');
         }
       }
     });
