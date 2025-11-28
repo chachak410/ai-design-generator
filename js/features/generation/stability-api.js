@@ -17,7 +17,8 @@ const StabilityAPIStub = {
    * Generate a placeholder image for development/testing
    * @param {string} prompt - The image generation prompt (logged for debugging)
    * @param {number} seed - Seed for deterministic placeholder images
-   * @returns {Promise<{provider: string, url: string}|null>} - Object with provider name and placeholder image URL
+   * @returns {Promise<{provider: string, url: string}>} - Object with provider name and placeholder image URL
+   * @throws {Error} If prompt is invalid
    */
   async generate(prompt, seed) {
     console.log('[StabilityAPI Stub] generate() called with:', { prompt, seed });

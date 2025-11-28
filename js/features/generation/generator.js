@@ -252,7 +252,7 @@
 
     // Defensive check: Ensure PollinationsAPI is available before attempting to use it
     // Note: Include pollinations-api.js (stub) or pollinations.js (real) before generator.js in your HTML
-    const pollinationsAvailable = typeof PollinationsAPI !== 'undefined' && PollinationsAPI !== null;
+    const pollinationsAvailable = typeof PollinationsAPI !== 'undefined';
     if (!pollinationsAvailable) {
       console.error('[Generator] ❌ PollinationsAPI is not defined. Ensure pollinations.js or pollinations-api.js is loaded before generator.js.');
       this.updateProgress('Image provider (Pollinations) unavailable. Please check configuration.');
@@ -300,7 +300,7 @@
     if (images.length < 2) {
       // Defensive check: Ensure StabilityAPI is available before attempting to use it
       // Note: Include stability-api.js (stub) or stability.js (real) before generator.js in your HTML
-      const stabilityAvailable = typeof StabilityAPI !== 'undefined' && StabilityAPI !== null;
+      const stabilityAvailable = typeof StabilityAPI !== 'undefined';
       
       if (!stabilityAvailable) {
         console.error('[Generator] ❌ StabilityAPI is not defined. Ensure stability.js or stability-api.js is loaded before generator.js.');
