@@ -20,7 +20,7 @@ const THROTTLE_MS = 1000; // Minimum 1 second between requests per IP
  * @returns {string}
  */
 function getClientIP(req) {
-  return req.ip || req.headers['x-forwarded-for'] || req.connection?.remoteAddress || 'unknown';
+  return req.ip || req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';
 }
 
 /**

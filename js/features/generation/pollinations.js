@@ -124,7 +124,7 @@ const PollinationsAPI = {
           const jitter = Math.random() * base;
           const delay = base + jitter;
           console.warn(`Pollinations → ${is429 ? 'Rate limit' : 'Server error'} ${response.status}, retrying in ${Math.round(delay)}ms (${retries} left)`);
-          await new Promise(r => setTimeout(r, delay));
+          await new Promise(resolve => setTimeout(resolve, delay));
           return this.generateOne(prompt, seed, retries - 1);
         }
         throw new Error(`HTTP ${response.status}`);
@@ -138,7 +138,7 @@ const PollinationsAPI = {
         if (retries > 0) {
           const delay = 3000 + Math.random() * 2000;
           console.warn(`Pollinations → Retrying in ${Math.round(delay)}ms (${retries} left)`);
-          await new Promise(r => setTimeout(r, delay));
+          await new Promise(resolve => setTimeout(resolve, delay));
           return this.generateOne(prompt, seed, retries - 1);
         }
         throw blobErr;
@@ -149,7 +149,7 @@ const PollinationsAPI = {
         if (retries > 0) {
           const delay = 3000 + Math.random() * 2000;
           console.warn(`Pollinations → Retrying in ${Math.round(delay)}ms (${retries} left)`);
-          await new Promise(r => setTimeout(r, delay));
+          await new Promise(resolve => setTimeout(resolve, delay));
           return this.generateOne(prompt, seed, retries - 1);
         }
         throw new Error('Empty blob');
@@ -196,7 +196,7 @@ const PollinationsAPI = {
         if (retries > 0) {
           const delay = 2000 + Math.random() * 3000;
           console.log(`Pollinations → Network/CORS error, retrying in ${Math.round(delay)}ms (${retries} left)`);
-          await new Promise(r => setTimeout(r, delay));
+          await new Promise(resolve => setTimeout(resolve, delay));
           return this.generateOne(prompt, seed, retries - 1);
         }
       } else if (err.message && err.message.includes('CORS')) {
@@ -209,7 +209,7 @@ const PollinationsAPI = {
         if (retries > 0) {
           const delay = 2000 + Math.random() * 3000;
           console.log(`Pollinations → CORS error, retrying in ${Math.round(delay)}ms (${retries} left)`);
-          await new Promise(r => setTimeout(r, delay));
+          await new Promise(resolve => setTimeout(resolve, delay));
           return this.generateOne(prompt, seed, retries - 1);
         }
       } else {

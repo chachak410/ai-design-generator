@@ -19,7 +19,7 @@ function mockRequest(body = {}, method = 'POST') {
     method,
     ip,
     headers: {},
-    connection: { remoteAddress: ip }
+    socket: { remoteAddress: ip }
   };
 }
 
