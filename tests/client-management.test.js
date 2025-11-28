@@ -89,17 +89,31 @@ describe('Client Management Module', () => {
       }
     };
 
-    // Load the ClientManagement module
+    // Load the ClientManagement module using vm for safer execution
     const fs = require('fs');
     const path = require('path');
+    const vm = require('vm');
+    
     const code = fs.readFileSync(
       path.join(__dirname, '../js/features/admin/client-management.js'),
       'utf8'
     );
     
-    // Execute the code to define ClientManagement
-    eval(code);
-    ClientManagement = global.ClientManagement || window.ClientManagement;
+    // Create a sandboxed context with necessary globals
+    const context = {
+      window: global.window,
+      document: global.document,
+      firebase: global.firebase,
+      AppState: global.window.AppState,
+      console: console
+    };
+    vm.createContext(context);
+    
+    // Execute the code in the sandboxed context
+    vm.runInContext(code, context);
+    
+    // Get the ClientManagement object from the context
+    ClientManagement = context.window.ClientManagement || context.ClientManagement;
   });
 
   afterEach(() => {

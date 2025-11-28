@@ -427,8 +427,10 @@ const ClientManagement = {
   async removeSpec(specKey) {
     if (!this.currentClientId) return;
     
-    const confirmMsg = window.i18n?.t('confirmRemoveSpec') || `Remove specification "${specKey}"? This may affect generated designs.`;
-    if (!confirm(confirmMsg.replace('{spec}', specKey))) return;
+    // The i18n key uses {spec} placeholder which needs to be replaced with actual specKey
+    let confirmMsg = window.i18n?.t('confirmRemoveSpec') || 'Remove specification "{spec}"? This may affect generated designs.';
+    confirmMsg = confirmMsg.replace('{spec}', specKey);
+    if (!confirm(confirmMsg)) return;
     
     try {
       const db = firebase.firestore();
@@ -499,6 +501,12 @@ const ClientManagement = {
 
   /**
    * Delete client account (with confirmation)
+   * 
+   * Note: Uses native prompt() for the second confirmation step. While a custom modal
+   * would provide better UX, the native prompt ensures the user must actively type
+   * "DELETE" which prevents accidental deletions. This is a common pattern for
+   * destructive operations. A future enhancement could replace this with a custom
+   * confirmation modal with an input field.
    */
   async deleteAccount() {
     if (!this.currentClientId) return;
@@ -506,13 +514,15 @@ const ClientManagement = {
     const c = this.allClients.find(x => x.id === this.currentClientId);
     if (!c) return;
     
-    const confirmMsg = window.i18n?.t('confirmDeleteAccount') || `Permanently delete account for ${c.email}? This action cannot be undone.`;
-    if (!confirm(confirmMsg)) return;
+    // First confirmation with account details
+    const confirmMsg = window.i18n?.t('confirmDeleteAccount') || 'Permanently delete this account? This action cannot be undone.';
+    const fullConfirmMsg = `${confirmMsg}\n\nEmail: ${c.email}\nName: ${c.displayName || 'N/A'}`;
+    if (!confirm(fullConfirmMsg)) return;
     
-    // Double confirmation for safety
+    // Second confirmation - user must type DELETE
     const doubleConfirm = window.i18n?.t('typeDeleteToConfirm') || 'Type DELETE to confirm:';
     const userInput = prompt(doubleConfirm);
-    if (userInput?.toUpperCase() !== 'DELETE') {
+    if (!userInput || userInput.toUpperCase() !== 'DELETE') {
       this.showToast(window.i18n?.t('deleteCancelled') || 'Delete cancelled', 'info');
       return;
     }
