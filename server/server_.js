@@ -33,8 +33,12 @@ app.get('/api/health', (req, res) => {
 // TODO: Implement authentication middleware to populate req.user
 // The apiMeHandler expects req.user to have: { uid, email, role }
 // For Firebase Auth integration, see server/api/me.js for example middleware
-const apiMeHandler = require('./server/api/me');
+const apiMeHandler = require('./api/me');
 app.get('/api/me', apiMeHandler);
+
+// Pollinations proxy endpoint - proxies image generation to avoid CORS issues
+const pollinationsProxyHandler = require('./api/pollinations-proxy');
+app.post('/api/pollinations-proxy', pollinationsProxyHandler);
 /**
  * API endpoint to get current user information.
  * 

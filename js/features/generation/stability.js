@@ -26,6 +26,7 @@ const StabilityAPI = {
         seed: validSeed
       };
 
+      console.log('Stability → Generating image with seed:', seed);
       console.log('Stability → Sending request with payload:', JSON.stringify(payload));
       // Explicitly stringify the payload to ensure valid JSON
       let jsonBody;
@@ -65,6 +66,9 @@ const StabilityAPI = {
       const data = await response.json();
       console.debug('Stability → response data keys:', Object.keys(data));
 
+      // Handle data.artifacts[0].base64 format (v1 API)
+      if (data.artifacts && data.artifacts.length > 0 && data.artifacts[0].base64) {
+        console.log('Stability → Success (artifacts format)');
       // Support artifacts array (legacy format) or images array (newer format)
       if (data.artifacts && data.artifacts.length > 0) {
         const base64 = data.artifacts[0].base64;
@@ -88,6 +92,19 @@ const StabilityAPI = {
         };
       }
 
+      // Handle data.images[0] format (alternative response format)
+      if (data.images && data.images.length > 0) {
+        const imageData = data.images[0];
+        console.log('Stability → Success (images format)');
+        // If it's already a data URL, use as-is; otherwise, construct one
+        const url = imageData.startsWith('data:') ? imageData : `data:image/png;base64,${imageData}`;
+        return {
+          provider: 'Stability AI',
+          url: url
+        };
+      }
+
+      throw new Error('No images returned from Stability AI');
       throw new Error('Stability API: No images returned in response');
 
     } catch (err) {
