@@ -205,7 +205,14 @@ function setupEventListeners() {
   const generateBtn = document.getElementById('generate-images-btn');
   if (generateBtn) {
     generateBtn.addEventListener('click', () => {
-      if (window.TemplateManager) TemplateManager.generateImages(null);
+      if (window.TemplateManager && typeof TemplateManager.generateImages === 'function') {
+        TemplateManager.generateImages(null);
+      } else {
+        console.warn('[main.js] TemplateManager.generateImages is not available. Generation skipped.');
+        if (window.UI && typeof UI.showMessage === 'function') {
+          UI.showMessage('template-status', 'Internal error: generator not initialized.', 'error');
+        }
+      }
     });
   }
 
