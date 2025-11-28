@@ -148,34 +148,41 @@ const ProductTranslator = {
    */
   async _attemptGoogleTranslateWithScriptInjection(text, timeoutMs) {
     return new Promise((resolve, reject) => {
+      let settled = false;
       const timeoutId = setTimeout(() => {
-        reject(new Error('Timeout'));
+        if (!settled) {
+          settled = true;
+          reject(new Error('Timeout'));
+        }
       }, timeoutMs);
 
-      // Try the simple JSON endpoint first as it's more reliable for programmatic use
+      // Try the simple JSON endpoint as the primary translation method
       this._simpleGoogleTranslate(text)
         .then(result => {
-          clearTimeout(timeoutId);
-          resolve(result);
+          if (!settled) {
+            settled = true;
+            clearTimeout(timeoutId);
+            resolve(result);
+          }
         })
         .catch(err => {
-          clearTimeout(timeoutId);
-          // Fallback: attempt script injection for Google Translate element
-          this._injectGoogleTranslateScript()
-            .then(() => {
-              // Script loaded but element.js doesn't return translations directly
-              // Return null to fallback to other methods
-              resolve(null);
-            })
-            .catch(scriptErr => {
-              reject(scriptErr);
-            });
+          if (!settled) {
+            settled = true;
+            clearTimeout(timeoutId);
+            // Fall back to script injection to load Google Translate widget
+            // This ensures the widget is available for manual translation if needed
+            this._injectGoogleTranslateScript().catch(() => {});
+            // Return null to fall back to other translation methods
+            resolve(null);
+          }
         });
     });
   },
 
   /**
-   * Inject Google Translate script element
+   * Inject Google Translate script element (for widget loading)
+   * Note: This loads the Google Translate widget script, which doesn't provide
+   * direct translation results but makes the widget available on the page.
    * @private
    * @returns {Promise<void>}
    */
