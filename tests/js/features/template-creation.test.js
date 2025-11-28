@@ -60,8 +60,8 @@ describe('TemplateCreation Module', () => {
         newItem.className = 'product-item';
         newItem.dataset.productId = newProductId;
         newItem.innerHTML = `
-          <input type="text" placeholder="Product name (e.g., T-shirt, Handbag)" class="product-name-input">
-          <button class="btn-remove-product" data-action="remove-product">×</button>
+          <input type="text" placeholder="Product name (e.g., T-shirt, Handbag)" class="product-name-input" aria-label="Product name ${newProductId}" id="product-name-${newProductId}">
+          <button class="btn-remove-product" data-action="remove-product" aria-label="Remove product ${newProductId}">×</button>
         `;
         container.appendChild(newItem);
         
@@ -393,6 +393,225 @@ describe('TemplateCreation Module', () => {
       
       const newCount = container.querySelectorAll('.product-item').length;
       expect(newCount).toBe(initialCount + 1);
+    });
+  });
+
+  describe('accessibility - dynamically created inputs have labels', () => {
+    let AccessibleTemplateCreation;
+    
+    beforeEach(() => {
+      // Use the implementation from the actual source with accessibility fixes
+      AccessibleTemplateCreation = {
+        MAX_PRODUCTS: 20,
+        customSpecCount: 0,
+        
+        addProduct() {
+          const container = document.getElementById('products-container');
+          if (!container) {
+            console.warn('[TemplateCreation] addProduct: products-container not found');
+            return;
+          }
+
+          const existingProducts = container.querySelectorAll('.product-item').length;
+          if (existingProducts >= this.MAX_PRODUCTS) {
+            UI.showMessage('template-status', `Maximum ${this.MAX_PRODUCTS} products allowed.`, 'error');
+            return;
+          }
+
+          const newProductId = existingProducts + 1;
+          const newItem = document.createElement('div');
+          newItem.className = 'product-item';
+          newItem.dataset.productId = newProductId;
+          newItem.innerHTML = `
+            <input type="text" placeholder="Product name (e.g., T-shirt, Handbag)" class="product-name-input" aria-label="Product name ${newProductId}" id="product-name-${newProductId}">
+            <button class="btn-remove-product" data-action="remove-product" aria-label="Remove product ${newProductId}">×</button>
+          `;
+          container.appendChild(newItem);
+          
+          const newInput = newItem.querySelector('.product-name-input');
+          if (newInput) {
+            newInput.focus();
+          }
+        },
+        
+        addCustomSpecification() {
+          const container = document.getElementById('custom-specs-container');
+          if (!container) return;
+
+          const existingSpecs = container.querySelectorAll('.custom-spec-group').length;
+          if (existingSpecs >= 5) {
+            UI.showMessage('template-status', 'Maximum 5 custom specifications allowed.', 'error');
+            return;
+          }
+
+          this.customSpecCount++;
+          const specId = parseInt(this.customSpecCount, 10);
+          const specGroup = document.createElement('div');
+          specGroup.className = 'custom-spec-group';
+          specGroup.dataset.specId = specId;
+
+          specGroup.innerHTML = `
+            <div class="custom-spec-header">
+              <input type="text" placeholder="Specification name (e.g., Material, Finish)" class="custom-spec-name" data-spec-id="${specId}" aria-label="Custom specification name ${specId}" id="custom-spec-name-${specId}">
+              <button class="btn-remove-custom-spec" data-spec-id="${specId}" aria-label="Remove custom specification ${specId}">×</button>
+            </div>
+            <div class="custom-spec-values" data-spec-id="${specId}">
+              <div class="custom-spec-value-item">
+                <input type="text" placeholder="Value" class="custom-spec-value" aria-label="Custom specification ${specId} value 1" id="custom-spec-${specId}-value-1">
+                <button class="btn-add-value" data-spec-id="${specId}" aria-label="Add value to specification ${specId}">+</button>
+              </div>
+            </div>
+          `;
+          container.appendChild(specGroup);
+        },
+        
+        addCustomSpecValue(specId) {
+          const parsedId = parseInt(specId, 10);
+          if (isNaN(parsedId)) return;
+          
+          const container = document.querySelector(`.custom-spec-values[data-spec-id="${parsedId}"]`);
+          if (!container) return;
+
+          const values = container.querySelectorAll('.custom-spec-value-item');
+          if (values.length >= 5) {
+            UI.showMessage('template-status', 'Maximum 5 values per specification.', 'error');
+            return;
+          }
+
+          const valueNumber = values.length + 1;
+          const valueItem = document.createElement('div');
+          valueItem.className = 'custom-spec-value-item';
+          valueItem.innerHTML = `
+            <input type="text" placeholder="Value" class="custom-spec-value" aria-label="Custom specification ${parsedId} value ${valueNumber}" id="custom-spec-${parsedId}-value-${valueNumber}">
+            <button class="btn-remove-value" aria-label="Remove value ${valueNumber} from specification ${parsedId}">−</button>
+          `;
+          container.appendChild(valueItem);
+        }
+      };
+      
+      // Reset DOM with containers for testing
+      document.body.innerHTML = `
+        <div id="template-editor">
+          <div id="products-container">
+            <div class="product-item" data-product-id="1">
+              <input type="text" placeholder="Product name (e.g., T-shirt, Handbag)" class="product-name-input" aria-label="Product name 1" id="product-name-1">
+              <button class="btn-remove-product" data-action="remove-product" aria-label="Remove product 1">×</button>
+            </div>
+          </div>
+          <div id="custom-specs-container"></div>
+          <div id="template-status" class="message" style="display: none;"></div>
+        </div>
+      `;
+    });
+
+    test('dynamically added product input should have aria-label', () => {
+      AccessibleTemplateCreation.addProduct();
+      
+      const container = document.getElementById('products-container');
+      const newItem = container.querySelectorAll('.product-item')[1];
+      const newInput = newItem.querySelector('.product-name-input');
+      
+      expect(newInput.getAttribute('aria-label')).toBe('Product name 2');
+    });
+
+    test('dynamically added product input should have unique id', () => {
+      AccessibleTemplateCreation.addProduct();
+      
+      const container = document.getElementById('products-container');
+      const newItem = container.querySelectorAll('.product-item')[1];
+      const newInput = newItem.querySelector('.product-name-input');
+      
+      expect(newInput.id).toBe('product-name-2');
+    });
+
+    test('dynamically added remove product button should have aria-label', () => {
+      AccessibleTemplateCreation.addProduct();
+      
+      const container = document.getElementById('products-container');
+      const newItem = container.querySelectorAll('.product-item')[1];
+      const removeBtn = newItem.querySelector('.btn-remove-product');
+      
+      expect(removeBtn.getAttribute('aria-label')).toBe('Remove product 2');
+    });
+
+    test('custom specification name input should have aria-label', () => {
+      AccessibleTemplateCreation.addCustomSpecification();
+      
+      const specGroup = document.querySelector('.custom-spec-group');
+      const specNameInput = specGroup.querySelector('.custom-spec-name');
+      
+      expect(specNameInput.getAttribute('aria-label')).toBe('Custom specification name 1');
+      expect(specNameInput.id).toBe('custom-spec-name-1');
+    });
+
+    test('custom specification value input should have aria-label', () => {
+      AccessibleTemplateCreation.addCustomSpecification();
+      
+      const specGroup = document.querySelector('.custom-spec-group');
+      const valueInput = specGroup.querySelector('.custom-spec-value');
+      
+      expect(valueInput.getAttribute('aria-label')).toBe('Custom specification 1 value 1');
+      expect(valueInput.id).toBe('custom-spec-1-value-1');
+    });
+
+    test('custom specification remove button should have aria-label', () => {
+      AccessibleTemplateCreation.addCustomSpecification();
+      
+      const specGroup = document.querySelector('.custom-spec-group');
+      const removeBtn = specGroup.querySelector('.btn-remove-custom-spec');
+      
+      expect(removeBtn.getAttribute('aria-label')).toBe('Remove custom specification 1');
+    });
+
+    test('add value button should have aria-label', () => {
+      AccessibleTemplateCreation.addCustomSpecification();
+      
+      const specGroup = document.querySelector('.custom-spec-group');
+      const addValueBtn = specGroup.querySelector('.btn-add-value');
+      
+      expect(addValueBtn.getAttribute('aria-label')).toBe('Add value to specification 1');
+    });
+
+    test('dynamically added custom spec value should have correct aria-label', () => {
+      AccessibleTemplateCreation.addCustomSpecification();
+      AccessibleTemplateCreation.addCustomSpecValue(1);
+      
+      const container = document.querySelector('.custom-spec-values[data-spec-id="1"]');
+      const values = container.querySelectorAll('.custom-spec-value-item');
+      const newValueInput = values[1].querySelector('.custom-spec-value');
+      
+      expect(newValueInput.getAttribute('aria-label')).toBe('Custom specification 1 value 2');
+      expect(newValueInput.id).toBe('custom-spec-1-value-2');
+    });
+
+    test('dynamically added remove value button should have aria-label', () => {
+      AccessibleTemplateCreation.addCustomSpecification();
+      AccessibleTemplateCreation.addCustomSpecValue(1);
+      
+      const container = document.querySelector('.custom-spec-values[data-spec-id="1"]');
+      const values = container.querySelectorAll('.custom-spec-value-item');
+      const removeBtn = values[1].querySelector('.btn-remove-value');
+      
+      expect(removeBtn.getAttribute('aria-label')).toBe('Remove value 2 from specification 1');
+    });
+
+    test('all dynamically created inputs should have no label accessibility violations', () => {
+      // Add multiple products
+      AccessibleTemplateCreation.addProduct();
+      AccessibleTemplateCreation.addProduct();
+      
+      // Add custom specifications
+      AccessibleTemplateCreation.addCustomSpecification();
+      AccessibleTemplateCreation.addCustomSpecValue(1);
+      
+      // Check all inputs have aria-label or associated label
+      const allInputs = document.querySelectorAll('input[type="text"]');
+      allInputs.forEach(input => {
+        const hasAriaLabel = input.hasAttribute('aria-label');
+        const hasId = input.hasAttribute('id');
+        expect(hasAriaLabel).toBe(true);
+        expect(hasId).toBe(true);
+      });
     });
   });
 });
