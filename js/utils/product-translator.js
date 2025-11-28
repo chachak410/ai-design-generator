@@ -171,7 +171,10 @@ const ProductTranslator = {
             clearTimeout(timeoutId);
             // Fall back to script injection to load Google Translate widget
             // This ensures the widget is available for manual translation if needed
-            this._injectGoogleTranslateScript().catch(() => {});
+            // Error is intentionally swallowed as this is a non-blocking fallback
+            this._injectGoogleTranslateScript().catch(scriptErr => {
+              console.warn('[ProductTranslator] Script injection fallback failed:', scriptErr.message);
+            });
             // Return null to fall back to other translation methods
             resolve(null);
           }
@@ -192,6 +195,14 @@ const ProductTranslator = {
       if (window.google && window.google.translate) {
         resolve();
         return;
+      }
+
+      // Define the callback function if not already defined
+      // This prevents script errors when the Google Translate script loads
+      if (typeof window.googleTranslateElementInit !== 'function') {
+        window.googleTranslateElementInit = function() {
+          console.log('[ProductTranslator] Google Translate widget initialized');
+        };
       }
 
       // Create and inject script element
