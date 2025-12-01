@@ -7,6 +7,7 @@
   // Safe Firebase initialization - guard against missing SDKs or config
   var firebaseAuth = null;
   var firebaseDb = null;
+  var firebaseFunctions = null;
 
   try {
     // Check if Firebase SDK and AppConfig are available
@@ -29,6 +30,10 @@
       if (typeof firebase.firestore === 'function') {
         firebaseDb = firebase.firestore();
       }
+      // Get functions reference if available
+      if (typeof firebase.functions === 'function') {
+        firebaseFunctions = firebase.functions();
+      }
     } else {
       console.warn('[state.js] Firebase SDK or AppConfig not available. Auth/DB will be null.');
     }
@@ -40,6 +45,7 @@
   window.AppState = {
     auth: firebaseAuth,
     db: firebaseDb,
+    functions: firebaseFunctions,
     currentUser: null,
     userRole: null,
     isAdmin: false, // Admin flag - set based on email or role
@@ -58,5 +64,5 @@
     allowedProducts: []
   };
 
-  console.log('[state.js] AppState created with auth:', !!firebaseAuth, 'db:', !!firebaseDb);
+  console.log('[state.js] AppState created with auth:', !!firebaseAuth, 'db:', !!firebaseDb, 'functions:', !!firebaseFunctions);
 })();
